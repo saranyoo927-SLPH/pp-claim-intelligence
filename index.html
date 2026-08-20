@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.0.2 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.1.1 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -673,6 +673,134 @@ button,input,select,textarea{font-family:var(--font-ui)}
 .live-warning{font-size:11px;color:#b54708;margin-top:8px}
 @media(max-width:900px){.live-source-grid{grid-template-columns:1fr}.live-source-meta{grid-template-columns:1fr 1fr}}
 
+
+/* ===== v6.1 Exception Center ===== */
+.exception-nav-count{
+  display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;
+  padding:0 6px;border-radius:999px;background:#fee4e2;color:#b42318;font-size:10px;
+  font-weight:850;margin-left:auto
+}
+.exception-hero{
+  background:linear-gradient(135deg,#fff 0%,#fff8f3 58%,#f5f8ff 100%);
+  border:1px solid #f4ded0;border-radius:22px;padding:20px;box-shadow:var(--shadow-soft)
+}
+.exception-hero-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.exception-hero-title h3{margin:0;font-size:20px}
+.exception-mode{
+  display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;
+  background:#fff1e8;color:#b54708;font-size:10px;font-weight:850
+}
+.exception-kpis{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:14px}
+.exception-kpi{
+  border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;min-width:0
+}
+.exception-kpi .ek-label{font-size:10px;color:#667085;font-weight:750}
+.exception-kpi .ek-value{font-size:22px;font-weight:900;margin-top:5px;letter-spacing:-.03em}
+.exception-kpi .ek-note{font-size:10px;color:#98a2b3;margin-top:3px;line-height:1.35}
+.queue-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.queue-card{
+  border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;cursor:pointer;
+  transition:.16s ease;position:relative;overflow:hidden
+}
+.queue-card:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(16,24,40,.07)}
+.queue-card.active{outline:2px solid #2f6bff;outline-offset:-2px}
+.queue-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#98a2b3}
+.queue-card.q-unpaid:before{background:#d92d20}.queue-card.q-partial:before{background:#f79009}
+.queue-card.q-rep:before{background:#2e90fa}.queue-card.q-ambiguous:before{background:#7a5af8}
+.queue-card.q-data:before{background:#b42318}.queue-card.q-price:before{background:#667085}
+.queue-card.q-stm:before{background:#12b76a}.queue-card.q-residual:before{background:#dc6803}
+.queue-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.queue-name{font-size:12px;font-weight:850;color:#101828}
+.queue-count{font-size:20px;font-weight:900}
+.queue-money{font-size:11px;color:#667085;margin-top:8px}
+.queue-desc{font-size:10px;color:#98a2b3;margin-top:5px;line-height:1.4}
+.exception-filters{display:grid;grid-template-columns:1.2fr .9fr .9fr .9fr .9fr auto;gap:9px;align-items:end}
+.exception-filter-field label{display:block;font-size:10px;color:#667085;font-weight:750;margin:0 0 5px}
+.exception-filter-field input,.exception-filter-field select{
+  width:100%;box-sizing:border-box;border:1px solid #d0d5dd;border-radius:12px;background:#fff;
+  padding:10px 11px;font:inherit;font-size:11px;color:#344054;outline:none
+}
+.exception-table{min-width:1540px}
+.exception-table th{white-space:nowrap}
+.exception-table td{vertical-align:top}
+.priority-pill{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;font-weight:850;
+  font-size:10px;white-space:nowrap
+}
+.p-critical{background:#fee4e2;color:#b42318}.p-high{background:#fff1e8;color:#b54708}
+.p-medium{background:#fef0c7;color:#93370d}.p-low{background:#eff8ff;color:#175cd3}
+.issue-title{font-weight:850;color:#101828;font-size:11px}
+.issue-reason{font-size:10px;color:#667085;line-height:1.4;margin-top:3px;max-width:250px}
+.patient-mini{font-size:10px;color:#667085;line-height:1.45}
+.patient-mini b{font-size:11px;color:#344054}
+.recommendation{max-width:260px;font-size:10px;line-height:1.45;color:#475467}
+.money-risk{font-weight:900;color:#b42318}
+.money-review{font-weight:850;color:#b54708}
+.exception-empty{text-align:center;padding:36px;color:#667085}
+.exception-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+@media(max-width:1250px){
+  .exception-kpis{grid-template-columns:repeat(3,1fr)}
+  .queue-grid{grid-template-columns:repeat(2,1fr)}
+  .exception-filters{grid-template-columns:1fr 1fr 1fr}
+}
+@media(max-width:700px){
+  .exception-kpis{grid-template-columns:1fr 1fr}
+  .queue-grid{grid-template-columns:1fr}
+  .exception-filters{grid-template-columns:1fr}
+}
+
+
+/* ===== v6.1.1 KPI Innovation Dashboard ===== */
+.kpi-innovation-hero{
+  background:linear-gradient(135deg,#0b4a6f 0%,#175cd3 48%,#2e90fa 100%);
+  color:#fff;border-radius:24px;padding:22px;box-shadow:0 14px 34px rgba(23,92,211,.18)
+}
+.kpi-innovation-hero h3{margin:0;font-size:22px}
+.kpi-innovation-hero p{margin:7px 0 0;color:rgba(255,255,255,.82);font-size:11px;line-height:1.55}
+.kpi-hero-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+.kpi-hero-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:14px}
+.kpi-hero-card .label{font-size:10px;color:rgba(255,255,255,.75);font-weight:750}
+.kpi-hero-card .value{font-size:24px;font-weight:900;margin-top:4px}
+.kpi-hero-card .note{font-size:9px;color:rgba(255,255,255,.7);margin-top:3px}
+.kpi-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.kpi-section-title h3{margin:0;font-size:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.kpi-card{
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;
+  box-shadow:var(--shadow-soft)
+}
+.kpi-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.kpi-card-title{font-size:13px;font-weight:900;color:#101828}
+.kpi-card-code{font-size:9px;color:#98a2b3;margin-top:3px}
+.kpi-status{
+  display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:850;white-space:nowrap
+}
+.kpi-status.good{background:#dcfae6;color:#067647}
+.kpi-status.watch{background:#fef0c7;color:#93370d}
+.kpi-status.bad{background:#fee4e2;color:#b42318}
+.kpi-status.na{background:#f2f4f7;color:#667085}
+.kpi-main{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
+.kpi-current-value{font-size:28px;font-weight:900;letter-spacing:-.03em;color:#101828}
+.kpi-target{font-size:10px;color:#667085;margin-top:4px}
+.kpi-desc{font-size:10px;color:#667085;line-height:1.5;margin-top:9px}
+.kpi-progress{height:8px;background:#eef2f6;border-radius:999px;overflow:hidden;margin-top:10px}
+.kpi-progress > span{display:block;height:100%;background:linear-gradient(90deg,#12b76a,#2e90fa);border-radius:999px}
+.kpi-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi-mini{background:#f8fafc;border:1px solid #eef2f6;border-radius:12px;padding:9px}
+.kpi-mini .l{font-size:9px;color:#98a2b3}
+.kpi-mini .v{font-size:12px;font-weight:850;color:#344054;margin-top:2px}
+.kpi-table-wrap{overflow:auto}
+.kpi-table{min-width:1200px}
+.kpi-table input{
+  width:92px;border:1px solid #d0d5dd;border-radius:9px;padding:7px 8px;font:inherit;font-size:10px;text-align:right
+}
+.kpi-evidence{font-size:9px;color:#667085;line-height:1.4;max-width:230px}
+.kpi-category{font-size:10px;font-weight:850;color:#175cd3}
+.kpi-method{font-size:9px;color:#667085;max-width:260px;line-height:1.45}
+.kpi-footnote{font-size:10px;color:#667085;line-height:1.55}
+@media(max-width:1100px){.kpi-hero-grid{grid-template-columns:repeat(2,1fr)}.kpi-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.kpi-hero-grid{grid-template-columns:1fr}.kpi-main{grid-template-columns:1fr}}
+
 </style>
 <script src="./config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -683,12 +811,14 @@ button,input,select,textarea{font-family:var(--font-ui)}
 <aside class="sidebar">
   <div class="brand"><h1>PP Claim Intelligence</h1><p>Selaphum Hospital · Smart PP Verification Dashboard<br>ตรวจสอบการชดเชย สปสช. แบบออฟไลน์ในเครื่อง</p></div>
   <button class="navbtn active" data-page="overview">◫ ภาพรวม</button>
+  <button class="navbtn" data-page="exceptions">⚠ ศูนย์งานที่ต้องดำเนินการ <span id="exceptionNavCount" class="exception-nav-count">0</span></button>
   <button class="navbtn" data-page="serviceReport">▣ รายงานรายบริการ</button>
   <button class="navbtn" data-page="fund">▦ แดชบอร์ดรายกองทุน</button>
   <button class="navbtn" data-page="fundAudit">▤ ตรวจสอบรายกองทุน</button>
   <button class="navbtn" data-page="month">◷ รายงานจำแนกเดือน</button>
   <button class="navbtn" data-page="individual">⌕ ตรวจสอบรายบุคคล</button>
   <button class="navbtn" data-page="prices">฿ ตารางราคา PP</button>
+  <button class="navbtn" data-page="innovationkpi">◎ KPI ระบบ PP Claim Intelligence</button>
   <button class="navbtn" data-page="data">↻ แหล่งข้อมูล / ซิงก์</button>
   <div class="sidefoot">จับคู่ตามลำดับความน่าเชื่อถือ: REP+CID/HN + PP(AI) → SEQ → PID+วันที่ → HN+วันที่<br><br>ประมวลผลในเครื่องผู้ใช้ ไม่ส่งไฟล์ผู้ป่วยไปยังเซิร์ฟเวอร์ของโปรแกรม</div>
 </aside>
@@ -707,6 +837,106 @@ button,input,select,textarea{font-family:var(--font-ui)}
   <div class="card"><h3 class="section-title">ประเด็นที่ควรติดตาม</h3><div id="issues"></div></div>
  </div>
 </section>
+
+<section id="exceptions" class="page">
+ <div class="page-head">
+   <div>
+     <h2>ศูนย์งานที่ต้องดำเนินการ</h2>
+     <p>Exception-first workflow · ระบบคัดเฉพาะรายการที่ต้องติดตาม จัดลำดับความสำคัญ และประเมิน Revenue at Risk อัตโนมัติ</p>
+   </div>
+   <div class="toolbar">
+     <button class="btn" onclick="clearExceptionFilters()">ล้างตัวกรอง</button>
+     <button class="btn primary" onclick="exportExceptionCSV()">ส่งออก Action List CSV</button>
+   </div>
+ </div>
+
+ <div class="exception-hero">
+   <div class="exception-hero-title">
+     <h3>Revenue Recovery Action Center</h3>
+     <span class="exception-mode">⚡ PRIORITIZED AUTOMATICALLY</span>
+   </div>
+   <div class="small muted" style="margin-top:6px">
+     Revenue at Risk นับเฉพาะยอดที่ยังไม่ได้รับ/ได้รับไม่ครบ ส่วน “มูลค่ารอตรวจสอบ” คือเงินที่พบใน Statement แล้วแต่ยังต้องจัดสรรหรือยืนยันหลักฐาน
+   </div>
+   <div class="grid exception-kpis" id="exceptionKPIs"></div>
+ </div>
+
+ <div class="queue-grid" id="exceptionQueues"></div>
+
+ <div class="card" style="margin-top:16px">
+   <div class="exception-filters">
+     <div class="exception-filter-field">
+       <label>ค้นหา</label>
+       <input id="exceptionSearch" placeholder="HN / CID / ชื่อ / REP / กองทุน" oninput="renderExceptionCenter()">
+     </div>
+     <div class="exception-filter-field">
+       <label>ประเภท Exception</label>
+       <select id="exceptionType" onchange="renderExceptionCenter()">
+         <option value="">ทุกประเภท</option>
+         <option value="unpaid">ยังไม่พบ Statement</option>
+         <option value="partial">ชดเชยบางส่วน</option>
+         <option value="rep-confirmed">พบ REP รอจัดสรร</option>
+         <option value="ambiguous">ยอดรวมกำกวม</option>
+         <option value="data-error">ข้อมูลไม่สมบูรณ์</option>
+         <option value="price-mismatch">ราคา/Rule ต้องตรวจ</option>
+         <option value="statement-unmatched">Statement ผูกบริการไม่ได้</option>
+         <option value="residual">ยอดคงเหลืออธิบายไม่ได้</option>
+       </select>
+     </div>
+     <div class="exception-filter-field">
+       <label>ระดับความสำคัญ</label>
+       <select id="exceptionPriority" onchange="renderExceptionCenter()">
+         <option value="">ทุกระดับ</option>
+         <option value="critical">วิกฤต</option>
+         <option value="high">สูง</option>
+         <option value="medium">ปานกลาง</option>
+         <option value="low">ต่ำ</option>
+       </select>
+     </div>
+     <div class="exception-filter-field">
+       <label>กองทุน / โปรแกรม</label>
+       <select id="exceptionFund" onchange="renderExceptionCenter()"><option value="">ทุกกองทุน</option></select>
+     </div>
+     <div class="exception-filter-field">
+       <label>เดือนบริการ</label>
+       <select id="exceptionMonth" onchange="renderExceptionCenter()"><option value="">ทุกเดือน</option></select>
+     </div>
+     <button class="btn" onclick="renderExceptionCenter()">ประมวลผล</button>
+   </div>
+ </div>
+
+ <div class="card" style="margin-top:16px">
+   <div class="exception-caption">
+     <div>
+       <h3 class="section-title" style="margin-bottom:4px">Action List</h3>
+       <div class="small muted" id="exceptionCaption">ทุก Exception</div>
+     </div>
+     <div class="small muted" id="exceptionCount"></div>
+   </div>
+   <div class="table-wrap">
+     <table class="table exception-table">
+       <thead>
+         <tr>
+           <th>Priority</th>
+           <th>Exception</th>
+           <th>กองทุน / บริการ</th>
+           <th>ผู้รับบริการ</th>
+           <th>วันที่</th>
+           <th>REP / SEQ</th>
+           <th class="num">ตามสิทธิ</th>
+           <th class="num">รับแล้ว</th>
+           <th class="num">Revenue at Risk</th>
+           <th class="num">มูลค่ารอตรวจ</th>
+           <th>Next Best Action</th>
+           <th>ตรวจสอบ</th>
+         </tr>
+       </thead>
+       <tbody id="exceptionBody"></tbody>
+     </table>
+   </div>
+ </div>
+</section>
+
 <section id="serviceReport" class="page">
  <div class="page-head"><div><h2>รายงานแยกรายการบริการ</h2><p>สรุปตามชีตบริการจากทะเบียน PP FS เช่น ฝากครรภ์, FPG, HDL, HepB, HepC, ทันตกรรม และบริการอื่น</p></div><div class="toolbar"><button class="btn" onclick="exportServiceSummaryCSV()">ส่งออกสรุปรายบริการ CSV</button></div></div>
  <div class="grid kpis" id="serviceKpis"></div>
@@ -819,6 +1049,77 @@ button,input,select,textarea{font-family:var(--font-ui)}
  <div id="priceNotice" class="notice warning"></div>
  <div class="card"><div class="filters"><input id="priceSearch" placeholder="ค้นหารหัส/รายการ" oninput="renderPrices()"><select id="priceSourceFilter" onchange="renderPrices()"><option value="">ทุกแหล่งราคา</option><option value="official">ทางการ/นำเข้า</option><option value="inferred">อนุมาน</option><option value="missing">ยังไม่มีราคา</option></select></div><div id="priceList"></div></div>
 </section>
+
+<section id="innovationkpi" class="page">
+ <div class="page-head">
+   <div>
+     <h2>KPI ระบบ PP Claim Intelligence</h2>
+     <p>Innovation Performance Dashboard · ตัวชี้วัดสำหรับพิสูจน์ประสิทธิผล ประสิทธิภาพ ผลกระทบด้านรายได้ และคุณค่าต่อการบริหาร</p>
+   </div>
+   <div class="toolbar">
+     <button class="btn" onclick="resetInnovationKPIBaseline()">ล้างค่า Baseline</button>
+     <button class="btn primary" onclick="exportInnovationKPI()">ส่งออก KPI CSV</button>
+   </div>
+ </div>
+
+ <div class="kpi-innovation-hero">
+   <h3>PP Claim Intelligence · Innovation Performance Scorecard</h3>
+   <p>ติดตามผลลัพธ์จาก Automated Claim Reconciliation → Revenue Intelligence → Executive Intelligence โดยใช้ข้อมูลจริงจากระบบร่วมกับ Baseline ก่อนใช้นวัตกรรม</p>
+   <div class="kpi-hero-grid" id="innovationKPIHero"></div>
+ </div>
+
+ <div class="card" style="margin-top:16px">
+   <div class="kpi-section-title">
+     <div><h3>Core KPI Dashboard</h3><div class="small muted">ตัวชี้วัดที่ระบบคำนวณจากข้อมูลปัจจุบันอัตโนมัติ</div></div>
+   </div>
+   <div class="kpi-grid" id="innovationKPICards"></div>
+ </div>
+
+ <div class="card" style="margin-top:16px">
+   <div class="kpi-section-title">
+     <div>
+       <h3>Innovation Evaluation Matrix</h3>
+       <div class="small muted">กรอกค่า Baseline ก่อนใช้ระบบเฉพาะตัวชี้วัดที่ต้องเปรียบเทียบ ระบบจะบันทึกไว้ใน Browser เครื่องนี้</div>
+     </div>
+   </div>
+   <div class="kpi-table-wrap">
+    <table class="table kpi-table">
+      <thead>
+       <tr>
+        <th>รหัส</th>
+        <th>มิติ</th>
+        <th>KPI</th>
+        <th class="num">Baseline</th>
+        <th class="num">Current</th>
+        <th class="num">Target</th>
+        <th class="num">การเปลี่ยนแปลง</th>
+        <th>สถานะ</th>
+        <th>วิธีคำนวณ / หลักฐาน</th>
+       </tr>
+      </thead>
+      <tbody id="innovationKPITableBody"></tbody>
+    </table>
+   </div>
+ </div>
+
+ <div class="card" style="margin-top:16px">
+   <h3 class="section-title">แนวทางใช้ KPI เพื่อพิสูจน์นวัตกรรม</h3>
+   <div class="split">
+     <div class="notice">
+       <b>ก่อนใช้ระบบ (Baseline)</b><br>
+       เก็บระยะเวลาเฉลี่ยในการ Reconcile, จำนวนเคสที่ต้องตรวจด้วยมือ, Claim error, unresolved claim, revenue leakage และเวลาจัดทำรายงานผู้บริหาร อย่างน้อย 1–3 เดือน
+     </div>
+     <div class="notice">
+       <b>หลังใช้ระบบ</b><br>
+       ใช้ค่า Current จากระบบร่วมกับ Time study และข้อมูลการเงินจริง เพื่อเปรียบเทียบก่อน–หลัง และรายงานทั้งร้อยละการเปลี่ยนแปลง มูลค่าเงิน และผลลัพธ์เชิงบริหาร
+     </div>
+   </div>
+   <div class="kpi-footnote" style="margin-top:12px">
+     หมายเหตุ: KPI ที่ระบบยังไม่สามารถทราบค่า Baseline ได้เองจะไม่สร้างตัวเลขสมมติ ผู้ใช้ต้องกรอกข้อมูลก่อนใช้ระบบจากการเก็บข้อมูลจริง จึงจะคำนวณผลลัพธ์ก่อน–หลังได้อย่างถูกต้อง
+   </div>
+ </div>
+</section>
+
 <section id="data" class="page">
  <div class="page-head">
   <div><h2>แหล่งข้อมูลและการซิงก์</h2><p>เชื่อม Google Sheets ผ่านบัญชี Google ที่ได้รับอนุญาตโดยตรงจาก GitHub Pages · Read-only</p></div>
@@ -875,7 +1176,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.0.2 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
+<div class="footer">PP Claim Intelligence v6.1.1.1 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -1400,7 +1701,439 @@ function recomputeAll(){
  state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
  renderAll();
 }
-function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();}
+
+const EXCEPTION_META={
+ 'unpaid':{label:'ยังไม่พบ Statement',short:'ยังไม่พบชดเชย',css:'unpaid',base:85,desc:'มีบริการในทะเบียน แต่ยังไม่พบ Statement ที่ยืนยันการชดเชย',action:'ตรวจงวด Statement, REP/SEQ และสถานะการส่งเบิก หากพ้นรอบจ่ายให้ติดตาม Claim'},
+ 'partial':{label:'ชดเชยบางส่วน',short:'ชดเชยบางส่วน',css:'partial',base:82,desc:'ได้รับ PP(AI) ต่ำกว่ามูลค่าตามสิทธิที่คำนวณได้',action:'ตรวจอัตรา PPFS69 เงื่อนไขการจ่าย และเหตุผลที่ยอดถูกหัก/จ่ายไม่ครบ'},
+ 'rep-confirmed':{label:'พบ REP · รอจัดสรร',short:'REP รอจัดสรร',css:'rep',base:70,desc:'Statement ยืนยันว่าจ่ายแล้วตาม REP แต่ระบบยังแยกองค์ประกอบบริการไม่ได้',action:'เปิดหลักฐาน REP และบริการของผู้ป่วยในวัน/REP เดียวกัน แล้วอืนยันองค์ประกอบการจัดสรร'},
+ 'ambiguous':{label:'ยอดรวมกำกวม',short:'ยอดกำกวม',css:'ambiguous',base:75,desc:'พบ Statement แต่มีมากกว่าหนึ่งชุดบริการที่อธิบายยอด PP(AI) ได้',action:'ตรวจบริการจริงในวันเดียวกัน, เวชระเบียน และ PPFS69 ก่อนยืนยันชุดการจัดสรร'},
+ 'data-error':{label:'ข้อมูลไม่สมบูรณ์',short:'Data Quality',css:'data',base:90,desc:'ข้อมูลสำคัญสำหรับการจับคู่หรือการตรวจสอบไม่ครบ/ผิดรูปแบบ',action:'แก้ CID/HN/REP/SEQ หรือข้อมูลอ้างอิงในทะเบียนต้นทางก่อนประมวลผลใหม่'},
+ 'price-mismatch':{label:'ราคา / Rule ต้องตรวจ',short:'Price / Rule',css:'price',base:60,desc:'ไม่มีราคาทางการที่ชัดเจน หรือยอดทะเบียนไม่สอดคล้องกับอัตรา PPFS69',action:'ตรวจ PPFS Rule Master, วันที่มีผลบังคับใช้ และอัตราเรียกเก็บของบริการ'},
+ 'statement-unmatched':{label:'Statement ผูกบริการไม่ได้',short:'STM Unmatched',css:'stm',base:68,desc:'มี PP(AI) ใน Statement แต่ยังไม่พบบริการต้นทางที่จับคู่ได้',action:'ตรวจช่วงวันที่นำเข้าทะเบียนบริการ, HN/CID/REP และค้นว่าบริการอยู่ในชีตอื่นหรือไม่'},
+ 'residual':{label:'ยอดคงเหลืออธิบายไม่ได้',short:'Residual',css:'residual',base:80,desc:'ระบบอธิบายยอด PP(AI) ได้บางส่วน แต่ยังเหลือยอดที่ไม่สามารถผูกบริการได้',action:'ตรวจองค์ประกอบบริการที่อาจตกหล่นและ Rule/ราคา PPFS69 ของยอดคงเหลือ'}
+};
+
+function exceptionFundKey(r){
+ return r.service_type||r.source_sheet||r.fund_sub||r.item_detail||'ไม่ระบุ'
+}
+function exceptionExpectedAmount(r){
+ let vals=[r.expected,r.registeredExpected,r.claim_expected];
+ for(let v of vals){if(v!=null&&Number.isFinite(Number(v))&&num(v)>0)return num(v)}
+ return 0
+}
+function exceptionRepValue(r){
+ let ev=Array.isArray(r.repPaymentEvidence)?r.repPaymentEvidence:[];
+ let seen=new Set(),sum=0;
+ for(let x of ev){
+   let k=[x.rep||'',x.tran||'',x.cid||'',x.hn||'',x.date||'',num(x.pp_paid)].join('|');
+   if(seen.has(k))continue;seen.add(k);sum+=num(x.pp_paid)
+ }
+ if(sum>0)return sum;
+ let claims=Array.isArray(r.claims)?r.claims:[];
+ return claims.reduce((a,c)=>a+num(c.stmPP??c.pp_paid),0)
+}
+function exceptionDaysOpen(date){
+ if(!date)return 0;
+ let d=new Date(date+'T00:00:00');
+ if(Number.isNaN(d.getTime()))return 0;
+ return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000))
+}
+function exceptionPriority(type,financialRisk,reviewAmount,date){
+ let meta=EXCEPTION_META[type]||{base:50},score=meta.base||50;
+ let money=Math.max(num(financialRisk),num(reviewAmount));
+ if(money>=10000)score+=10;else if(money>=5000)score+=7;else if(money>=1000)score+=4;else if(money>0)score+=2;
+ let days=exceptionDaysOpen(date);
+ if(days>=60)score+=8;else if(days>=30)score+=5;else if(days>=14)score+=2;
+ score=Math.min(100,score);
+ let level=score>=95?'critical':score>=80?'high':score>=65?'medium':'low';
+ return {score,level,days}
+}
+function addException(arr,type,r,financialRisk=0,reviewAmount=0,reason=''){
+ let p=exceptionPriority(type,financialRisk,reviewAmount,r.date);
+ arr.push({
+   id:`${type}|${r._id||r.rep||r.tran||Math.random()}`,
+   type,serviceId:r._id||'',fund:exceptionFundKey(r),
+   service:r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', ')||r.ppfs||'-',
+   hn:r.hn||'',cid:r.cid||'',name:r.name||'',date:r.date||'',rep:r.rep_ref||r.rep||'',seq:r.seq||'',
+   expected:exceptionExpectedAmount(r),paid:num(r.paid),financialRisk:Math.max(0,num(financialRisk)),
+   reviewAmount:Math.max(0,num(reviewAmount)),reason:reason||EXCEPTION_META[type]?.desc||'',
+   recommendation:EXCEPTION_META[type]?.action||'',priority:p.level,score:p.score,days:p.days,
+   source:r
+ })
+}
+function buildExceptionItems(){
+ let arr=[];
+ for(let r of state.recon){
+   let exp=exceptionExpectedAmount(r),paid=num(r.paid);
+   if(r.matchStatus==='unpaid'){
+     let risk=Math.max(exp-paid,0);
+     if(!risk&&num(r.claim_expected)>0)risk=Math.max(num(r.claim_expected)-paid,0);
+     addException(arr,'unpaid',r,risk,0)
+   }
+   if(r.matchStatus==='partial'){
+     addException(arr,'partial',r,Math.max(exp-paid,0),0)
+   }
+   if(r.matchStatus==='rep-confirmed'){
+     addException(arr,'rep-confirmed',r,0,exceptionRepValue(r)||exp)
+   }
+   if(r.matchStatus==='ambiguous'){
+     let review=0;
+     if(Array.isArray(r.priceHints)&&r.priceHints.length)review=Math.max(...r.priceHints.map(x=>num(x.pp_paid||x.target||0)));
+     addException(arr,'ambiguous',r,0,review||exceptionRepValue(r)||exp)
+   }
+
+   let dataProblems=[];
+   if(!r.cid)dataProblems.push('ไม่มี CID');
+   else if(String(r.cid).replace(/\D/g,'').length!==13)dataProblems.push('CID ไม่ครบ 13 หลัก');
+   if(!r.hn)dataProblems.push('ไม่มี HN');
+   if(!r.rep_ref&&!r.seq)dataProblems.push('ไม่มี REP/SEQ อ้างอิง');
+   if(dataProblems.length)addException(arr,'data-error',r,0,exp,dataProblems.join(' · '));
+
+   if(r.priceMismatch||((r.priceMissing||[]).length>0)){
+     let reason=r.priceMismatch?'ยอดทะเบียนไม่สอดคล้องกับอัตรา PPFS69':'ยังไม่มีราคาทางการ: '+(r.priceMissing||[]).join(', ');
+     addException(arr,'price-mismatch',r,0,exp,reason)
+   }
+ }
+
+ // STM with payment but no service match
+ for(let x of state.unmatchedSTM||[]){
+   let pseudo={...x,_id:'stm-'+[x.rep,x.tran,x.hn,x.cid,x.date].join('-'),service_type:'Statement',source_sheet:x.sheet||'Statement',paid:0,expected:0,rep_ref:x.rep};
+   addException(arr,'statement-unmatched',pseudo,0,num(x.pp_paid),x.analysisNote||'PP(AI) มีการจ่าย แต่ยังผูกกับทะเบียนบริการไม่ได้')
+ }
+
+ // Residual amount from an otherwise partially explained statement
+ for(let x of state.residualSTM||[]){
+   let svc=(state.recon||[]).find(r=>(r.claims||[]).some(c=>c.rep===x.rep&&c.tran===x.tran))||{};
+   let pseudo={...svc,...x,_id:'res-'+[x.rep,x.tran,x.hn,x.cid,x.date].join('-'),rep_ref:x.rep,paid:num(x.explained)};
+   addException(arr,'residual',pseudo,0,num(x.residual),x.analysisNote||'มี PP(AI) ที่ยังอธิบายองค์ประกอบไม่ได้')
+ }
+ return arr
+}
+function exceptionQueueSummary(items){
+ let m={};
+ for(let k of Object.keys(EXCEPTION_META))m[k]={type:k,count:0,risk:0,review:0};
+ for(let x of items){
+   if(!m[x.type])m[x.type]={type:x.type,count:0,risk:0,review:0};
+   m[x.type].count++;m[x.type].risk+=num(x.financialRisk);m[x.type].review+=num(x.reviewAmount)
+ }
+ return Object.values(m)
+}
+function refreshExceptionFilterOptions(items){
+ let fund=document.getElementById('exceptionFund'),month=document.getElementById('exceptionMonth');
+ if(!fund||!month)return;
+ let currentFund=fund.value,currentMonth=month.value;
+ let funds=[...new Set(items.map(x=>x.fund).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+ let months=[...new Set(items.map(x=>monthKey(x.date)).filter(Boolean))].sort();
+ fund.innerHTML='<option value="">ทุกกองทุน</option>'+funds.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+ month.innerHTML='<option value="">ทุกเดือน</option>'+months.map(x=>`<option value="${esc(x)}">${esc(thMonth(x))}</option>`).join('');
+ if(funds.includes(currentFund))fund.value=currentFund;
+ if(months.includes(currentMonth))month.value=currentMonth
+}
+function setExceptionType(type){
+ let sel=document.getElementById('exceptionType');if(sel)sel.value=type||'';
+ renderExceptionCenter()
+}
+function filteredExceptionItems(all){
+ let q=normText(document.getElementById('exceptionSearch')?.value||'').toLowerCase(),
+     type=document.getElementById('exceptionType')?.value||'',
+     pr=document.getElementById('exceptionPriority')?.value||'',
+     fund=document.getElementById('exceptionFund')?.value||'',
+     month=document.getElementById('exceptionMonth')?.value||'';
+ let rows=all.filter(x=>{
+   if(type&&x.type!==type)return false;
+   if(pr&&x.priority!==pr)return false;
+   if(fund&&x.fund!==fund)return false;
+   if(month&&monthKey(x.date)!==month)return false;
+   if(q){
+     let hay=[x.hn,x.cid,x.name,x.rep,x.seq,x.fund,x.service,x.reason].join(' ').toLowerCase();
+     if(!hay.includes(q))return false
+   }
+   return true
+ });
+ return rows.sort((a,b)=>b.score-a.score||b.financialRisk-a.financialRisk||b.reviewAmount-a.reviewAmount||String(a.date).localeCompare(String(b.date)))
+}
+function priorityBadge(x){
+ let label=x.priority==='critical'?'วิกฤต':x.priority==='high'?'สูง':x.priority==='medium'?'ปานกลาง':'ต่ำ';
+ return `<span class="priority-pill p-${x.priority}">● ${label} · ${x.score}</span>`
+}
+function exceptionDetailAction(x){
+ if(x.serviceId&&state.recon.some(r=>r._id===x.serviceId)){
+   return `<button class="btn" onclick="showDetail('${encodeURIComponent(x.serviceId)}')">รายละเอียด</button>`
+ }
+ if(x.fund&&x.fund!=='Statement'){
+   return `<button class="btn" onclick="openFundAuditFromDashboard('${String(x.fund).replace(/'/g,"\\'")}')">กองทุน</button>`
+ }
+ return '<span class="small muted">ตรวจทะเบียนต้นทาง</span>'
+}
+function renderExceptionCenter(){
+ let all=buildExceptionItems();
+ refreshExceptionFilterOptions(all);
+
+ let unique=new Set(all.map(x=>x.serviceId||[x.type,x.rep,x.hn,x.cid,x.date].join('|'))).size;
+ let risk=all.reduce((a,x)=>a+num(x.financialRisk),0);
+ let review=all.reduce((a,x)=>a+num(x.reviewAmount),0);
+ let critical=all.filter(x=>x.priority==='critical').length;
+ let older30=all.filter(x=>x.days>=30).length;
+ let nav=document.getElementById('exceptionNavCount');if(nav)nav.textContent=intFmt.format(all.length);
+
+ let kpis=[
+   ['Action Items',intFmt.format(all.length),'รายการที่ระบบแนะนำให้ตรวจ'],
+   ['Unique Cases',intFmt.format(unique),'บริการ/Statement ไม่ซ้ำ'],
+   ['Revenue at Risk',moneyFmt.format(risk),'บาท · ยังไม่ได้รับ/ได้รับไม่ครบ'],
+   ['รอตรวจสอบ/จัดสรร',moneyFmt.format(review),'บาท · พบเงินแล้วแต่ยังต้องยืนยัน'],
+   ['Critical',intFmt.format(critical),'รายการความสำคัญสูงสุด'],
+   ['ค้าง ≥ 30 วัน',intFmt.format(older30),'รายการตามวันที่บริการ']
+ ];
+ let kp=document.getElementById('exceptionKPIs');
+ if(kp)kp.innerHTML=kpis.map(x=>`<div class="exception-kpi"><div class="ek-label">${x[0]}</div><div class="ek-value">${x[1]}</div><div class="ek-note">${x[2]}</div></div>`).join('');
+
+ let summary=exceptionQueueSummary(all),active=document.getElementById('exceptionType')?.value||'';
+ let q=document.getElementById('exceptionQueues');
+ if(q)q.innerHTML=summary.map(x=>{
+   let meta=EXCEPTION_META[x.type],money=x.risk>0?`Revenue at Risk ${moneyFmt.format(x.risk)} บาท`:x.review>0?`รอตรวจ ${moneyFmt.format(x.review)} บาท`:'ไม่มีมูลค่าเงินที่คำนวณได้';
+   return `<div class="queue-card q-${meta.css} ${active===x.type?'active':''}" onclick="setExceptionType('${x.type}')">
+      <div class="queue-head"><div class="queue-name">${meta.label}</div><div class="queue-count">${intFmt.format(x.count)}</div></div>
+      <div class="queue-money">${money}</div><div class="queue-desc">${meta.desc}</div>
+   </div>`
+ }).join('');
+
+ let rows=filteredExceptionItems(all),body=document.getElementById('exceptionBody');
+ if(body)body.innerHTML=rows.length?rows.map(x=>`<tr>
+   <td>${priorityBadge(x)}${x.days?`<div class="small muted" style="margin-top:5px">${intFmt.format(x.days)} วัน</div>`:''}</td>
+   <td><div class="issue-title">${esc(EXCEPTION_META[x.type]?.label||x.type)}</div><div class="issue-reason">${esc(x.reason)}</div></td>
+   <td><b>${esc(x.fund)}</b><div class="small muted" style="margin-top:4px;max-width:220px">${esc(x.service)}</div></td>
+   <td><div class="patient-mini"><b>${esc(x.name||'-')}</b><br>HN ${esc(x.hn||'-')}<br>CID ${esc(x.cid||'-')}</div></td>
+   <td>${esc(x.date||'-')}</td>
+   <td><b>${esc(x.rep||'-')}</b><div class="small muted">${x.seq?'SEQ '+esc(x.seq):''}</div></td>
+   <td class="num">${x.expected?moneyFmt.format(x.expected):'-'}</td>
+   <td class="num">${x.paid?moneyFmt.format(x.paid):'-'}</td>
+   <td class="num">${x.financialRisk?`<span class="money-risk">${moneyFmt.format(x.financialRisk)}</span>`:'-'}</td>
+   <td class="num">${x.reviewAmount?`<span class="money-review">${moneyFmt.format(x.reviewAmount)}</span>`:'-'}</td>
+   <td><div class="recommendation">${esc(x.recommendation)}</div></td>
+   <td>${exceptionDetailAction(x)}</td>
+ </tr>`).join(''):'<tr><td colspan="12"><div class="exception-empty">ไม่พบ Exception ตามเงื่อนไขที่เลือก</div></td></tr>';
+
+ let caption=document.getElementById('exceptionCaption'),count=document.getElementById('exceptionCount');
+ if(caption){
+   let type=document.getElementById('exceptionType')?.value||'',pr=document.getElementById('exceptionPriority')?.value||'';
+   caption.textContent=[type?EXCEPTION_META[type]?.label:'ทุก Exception',pr?`Priority: ${pr}`:''].filter(Boolean).join(' · ')
+ }
+ if(count)count.textContent=`แสดง ${intFmt.format(rows.length)} จาก ${intFmt.format(all.length)} Action Items`
+}
+function clearExceptionFilters(){
+ ['exceptionSearch','exceptionType','exceptionPriority','exceptionFund','exceptionMonth'].forEach(id=>{
+   let e=document.getElementById(id);if(e)e.value=''
+ });
+ renderExceptionCenter()
+}
+function exportExceptionCSV(){
+ let all=buildExceptionItems(),rows=filteredExceptionItems(all);
+ let head=['Priority','Score','Exception','กองทุน/โปรแกรม','บริการ','HN','CID','ชื่อผู้ป่วย','วันที่','REP','SEQ','มูลค่าตามสิทธิ','รับแล้ว','Revenue at Risk','มูลค่ารอตรวจ','Days Open','เหตุผล','Next Best Action'];
+ let data=[head,...rows.map(x=>[
+   x.priority,x.score,EXCEPTION_META[x.type]?.label||x.type,x.fund,x.service,x.hn,x.cid,x.name,x.date,x.rep,x.seq,
+   x.expected,x.paid,x.financialRisk,x.reviewAmount,x.days,x.reason,x.recommendation
+ ])];
+ downloadCSV(data,'PP_Exception_Action_Center.csv')
+}
+
+
+const INNOVATION_KPI_DEF=[
+ {id:'KPI01',category:'Automated Reconciliation',name:'Automatic Matching Rate',unit:'%',target:95,direction:'up',auto:true,
+  desc:'สัดส่วนรายการบริการที่ระบบสามารถจับคู่และสรุปผลได้โดยไม่ต้องเข้าสถานะ unresolved/ambiguous',
+  method:'จำนวนบริการที่ระบบจับคู่ได้อัตโนมัติ ÷ จำนวนบริการทั้งหมด × 100'},
+ {id:'KPI02',category:'Efficiency',name:'Claim Reconciliation Time Reduction',unit:'%',target:80,direction:'up',auto:false,
+  desc:'ร้อยละการลดลงของเวลาที่ใช้ตรวจสอบและกระทบยอด Claim ก่อนและหลังใช้ระบบ',
+  method:'(Baseline time − Current time) ÷ Baseline time × 100'},
+ {id:'KPI03',category:'Efficiency',name:'Manual Review Cases Reduction',unit:'%',target:70,direction:'up',auto:true,
+  desc:'การลดภาระรายการที่ต้องตรวจสอบด้วยมือเมื่อเทียบกับ Baseline',
+  method:'(Baseline manual cases − Current exception cases) ÷ Baseline manual cases × 100'},
+ {id:'KPI04',category:'Claim Quality',name:'Unresolved Claim Reduction',unit:'%',target:50,direction:'up',auto:true,
+  desc:'การลดลงของ Claim ที่ยังไม่สามารถสรุปผลการชดเชยได้',
+  method:'(Baseline unresolved − Current unresolved) ÷ Baseline unresolved × 100'},
+ {id:'KPI05',category:'Claim Quality',name:'Claim Error Rate Reduction',unit:'%',target:50,direction:'up',auto:false,
+  desc:'การลดลงของข้อผิดพลาด Claim/Data ที่ตรวจพบก่อนและหลังใช้ระบบ',
+  method:'(Baseline error rate − Current error rate) ÷ Baseline error rate × 100'},
+ {id:'KPI06',category:'Revenue Intelligence',name:'Revenue Leakage Reduction',unit:'%',target:30,direction:'up',auto:true,
+  desc:'การลดลงของมูลค่ารายได้ที่เสี่ยงสูญเสียจาก Claim ที่ยังไม่ได้รับ/ได้รับไม่ครบ',
+  method:'(Baseline leakage − Current Revenue at Risk) ÷ Baseline leakage × 100'},
+ {id:'KPI07',category:'Revenue Intelligence',name:'Revenue Recovery',unit:'บาท',target:null,direction:'up',auto:true,
+  desc:'มูลค่า PP(AI) ที่ระบบสามารถจับคู่และจัดสรรกลับรายการบริการได้',
+  method:'ผลรวมยอดชดเชยที่จัดสรรสำเร็จจาก Statement'},
+ {id:'KPI08',category:'Efficiency',name:'Days to Reconcile',unit:'วัน',target:null,direction:'down',auto:false,
+  desc:'ระยะเวลาเฉลี่ยตั้งแต่รับ Statement จน Reconcile เสร็จ',
+  method:'ค่าเฉลี่ยวันที่ปิด Reconcile − วันที่รับ Statement'},
+ {id:'KPI09',category:'Data Quality',name:'Data Quality Score',unit:'%',target:95,direction:'up',auto:true,
+  desc:'ความสมบูรณ์ของข้อมูลสำคัญที่ใช้ Matching ได้แก่ HN/CID, วันที่ และ REP/SEQ',
+  method:'คะแนน completeness ของ key fields ในทะเบียนบริการ'},
+ {id:'KPI10',category:'Executive Intelligence',name:'Executive Report Preparation Time Reduction',unit:'%',target:90,direction:'up',auto:false,
+  desc:'การลดเวลาจัดเตรียมรายงานสำหรับผู้บริหาร จากกระบวนการ Manual เป็น Dashboard อัตโนมัติ',
+  method:'(Baseline report time − Current report time) ÷ Baseline report time × 100'}
+];
+
+function loadInnovationKPIInput(){
+ try{return JSON.parse(localStorage.getItem('ppInnovationKPIInput')||'{}')}catch(e){return {}}
+}
+function saveInnovationKPIInput(obj){
+ try{localStorage.setItem('ppInnovationKPIInput',JSON.stringify(obj))}catch(e){}
+}
+function setInnovationKPIInput(id,field,value){
+ let d=loadInnovationKPIInput();if(!d[id])d[id]={};
+ d[id][field]=value===''?null:Number(value);
+ saveInnovationKPIInput(d);renderInnovationKPI()
+}
+function innovationMetrics(){
+ let total=state.recon.length;
+ let unresolved=state.recon.filter(r=>['unpaid','ambiguous','rep-confirmed'].includes(r.matchStatus)).length;
+ let manual=buildExceptionItems().length;
+ let autoMatched=Math.max(0,total-unresolved);
+ let autoRate=total?autoMatched/total*100:0;
+
+ let paid=state.recon.reduce((a,r)=>a+num(r.paid),0);
+ let risk=buildExceptionItems().reduce((a,x)=>a+num(x.financialRisk),0);
+
+ let services=state.services||[],good=0;
+ for(let s of services){
+   let identity=!!(s.hn||s.cid),date=!!s.date,ref=!!(s.rep_ref||s.seq);
+   if(identity&&date&&ref)good++
+ }
+ let dataQuality=services.length?good/services.length*100:0;
+
+ return {total,unresolved,manual,autoMatched,autoRate,paid,risk,dataQuality}
+}
+function pctReduction(base,current){
+ base=num(base);current=num(current);
+ return base>0?((base-current)/base*100):null
+}
+function innovationCurrentValue(def,m,input){
+ let b=input?.baseline,c=input?.current;
+ switch(def.id){
+   case 'KPI01': return m.autoRate;
+   case 'KPI02': return (b!=null&&c!=null)?pctReduction(b,c):null;
+   case 'KPI03': return b!=null?pctReduction(b,m.manual):null;
+   case 'KPI04': return b!=null?pctReduction(b,m.unresolved):null;
+   case 'KPI05': return (b!=null&&c!=null)?pctReduction(b,c):null;
+   case 'KPI06': return b!=null?pctReduction(b,m.risk):null;
+   case 'KPI07': return m.paid;
+   case 'KPI08': return c!=null?num(c):null;
+   case 'KPI09': return m.dataQuality;
+   case 'KPI10': return (b!=null&&c!=null)?pctReduction(b,c):null;
+ }
+ return null
+}
+function kpiFormat(v,unit){
+ if(v==null||!Number.isFinite(Number(v)))return '—';
+ if(unit==='บาท')return moneyFmt.format(v);
+ if(unit==='%')return num(v).toFixed(1)+'%';
+ if(unit==='วัน')return num(v).toFixed(1)+' วัน';
+ return String(v)
+}
+function innovationKPIStatus(def,current){
+ if(current==null||def.target==null)return {label:'รอข้อมูล',cls:'na'};
+ let ok=def.direction==='down'?current<=def.target:current>=def.target;
+ if(ok)return {label:'บรรลุเป้าหมาย',cls:'good'};
+ let ratio=def.direction==='down'?(def.target/current):(current/def.target);
+ return ratio>=.8?{label:'ใกล้เป้าหมาย',cls:'watch'}:{label:'ต้องพัฒนา',cls:'bad'}
+}
+function innovationEvidence(def,m,current){
+ switch(def.id){
+  case 'KPI01':return `จับคู่อัตโนมัติ ${intFmt.format(m.autoMatched)} / ${intFmt.format(m.total)} รายการ`;
+  case 'KPI03':return `Exception/Manual review ปัจจุบัน ${intFmt.format(m.manual)} รายการ`;
+  case 'KPI04':return `Unresolved ปัจจุบัน ${intFmt.format(m.unresolved)} รายการ`;
+  case 'KPI06':return `Revenue at Risk ปัจจุบัน ${moneyFmt.format(m.risk)} บาท`;
+  case 'KPI07':return `ยอด PP(AI) ที่จัดสรรในระบบ ${moneyFmt.format(m.paid)} บาท`;
+  case 'KPI09':return `ข้อมูล key fields สมบูรณ์ ${intFmt.format(Math.round(m.dataQuality))}%`;
+  default:return def.method
+ }
+}
+function renderInnovationKPI(){
+ let m=innovationMetrics(),inputs=loadInnovationKPIInput(),rows=INNOVATION_KPI_DEF.map(def=>{
+   let input=inputs[def.id]||{},current=innovationCurrentValue(def,m,input),status=innovationKPIStatus(def,current);
+   return {def,input,current,status}
+ });
+
+ let measurable=rows.filter(x=>x.current!=null&&x.def.target!=null);
+ let achieved=measurable.filter(x=>x.status.cls==='good').length;
+ let achievement=measurable.length?achieved/measurable.length*100:0;
+ let hero=document.getElementById('innovationKPIHero');
+ if(hero)hero.innerHTML=[
+   ['KPI ที่ติดตาม',`${INNOVATION_KPI_DEF.length}`,'ตัวชี้วัดหลัก'],
+   ['KPI ที่คำนวณได้',`${rows.filter(x=>x.current!=null).length}`,'จากระบบ + Baseline'],
+   ['บรรลุเป้าหมาย',`${achieved}/${measurable.length||0}`,'เฉพาะ KPI ที่มีค่าเป้าหมาย'],
+   ['Innovation KPI Score',measurable.length?`${achievement.toFixed(0)}%`:'—','สัดส่วน KPI ที่บรรลุเป้าหมาย']
+ ].map(x=>`<div class="kpi-hero-card"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="note">${x[2]}</div></div>`).join('');
+
+ let cardDefs=['KPI01','KPI04','KPI06','KPI07','KPI09','KPI10'];
+ let cards=document.getElementById('innovationKPICards');
+ if(cards)cards.innerHTML=rows.filter(x=>cardDefs.includes(x.def.id)).map(x=>{
+   let d=x.def,progress=d.target&&x.current!=null?(d.direction==='down'?Math.min(100,d.target/x.current*100):Math.min(100,x.current/d.target*100)):0;
+   return `<div class="kpi-card">
+    <div class="kpi-card-head">
+      <div><div class="kpi-card-title">${esc(d.name)}</div><div class="kpi-card-code">${d.id} · ${esc(d.category)}</div></div>
+      <span class="kpi-status ${x.status.cls}">${x.status.label}</span>
+    </div>
+    <div class="kpi-main">
+      <div>
+        <div class="kpi-current-value">${kpiFormat(x.current,d.unit)}</div>
+        <div class="kpi-target">เป้าหมาย ${d.target!=null?(d.direction==='down'?'≤ ':'≥ ')+kpiFormat(d.target,d.unit):'ติดตามแนวโน้ม'}</div>
+        ${d.target!=null?`<div class="kpi-progress"><span style="width:${progress.toFixed(0)}%"></span></div>`:''}
+        <div class="kpi-desc">${esc(d.desc)}</div>
+      </div>
+      <div class="kpi-metrics">
+        <div class="kpi-mini"><div class="l">หลักฐานปัจจุบัน</div><div class="v">${esc(innovationEvidence(d,m,x.current))}</div></div>
+        <div class="kpi-mini"><div class="l">มิติ</div><div class="v">${esc(d.category)}</div></div>
+      </div>
+    </div>
+   </div>`
+ }).join('');
+
+ let body=document.getElementById('innovationKPITableBody');
+ if(body)body.innerHTML=rows.map(x=>{
+   let d=x.def,baseline=x.input.baseline,currentManual=x.input.current;
+   let delta='—';
+   if(x.current!=null&&baseline!=null && ['KPI01','KPI07','KPI08','KPI09'].includes(d.id)){
+     delta=(x.current-num(baseline));
+     delta=(delta>0?'+':'')+kpiFormat(delta,d.unit)
+   }else if(x.current!=null && ['KPI02','KPI03','KPI04','KPI05','KPI06','KPI10'].includes(d.id)){
+     delta=kpiFormat(x.current,'%')
+   }
+
+   let baselineInput = `<input type="number" step="any" value="${baseline??''}" placeholder="กรอก" onchange="setInnovationKPIInput('${d.id}','baseline',this.value)">`;
+   let currentCell;
+   if(['KPI02','KPI05','KPI08','KPI10'].includes(d.id)){
+     currentCell=`<input type="number" step="any" value="${currentManual??''}" placeholder="กรอก" onchange="setInnovationKPIInput('${d.id}','current',this.value)">`;
+   }else{
+     currentCell=`<b>${kpiFormat(x.current,d.unit)}</b>`
+   }
+
+   return `<tr>
+    <td><b>${d.id}</b></td>
+    <td><span class="kpi-category">${esc(d.category)}</span></td>
+    <td><b>${esc(d.name)}</b><div class="small muted" style="margin-top:4px;max-width:270px">${esc(d.desc)}</div></td>
+    <td class="num">${baselineInput}</td>
+    <td class="num">${currentCell}</td>
+    <td class="num">${d.target!=null?(d.direction==='down'?'≤ ':'≥ ')+kpiFormat(d.target,d.unit):'Trend'}</td>
+    <td class="num"><b>${delta}</b></td>
+    <td><span class="kpi-status ${x.status.cls}">${x.status.label}</span></td>
+    <td><div class="kpi-method">${esc(d.method)}</div><div class="kpi-evidence" style="margin-top:5px">${esc(innovationEvidence(d,m,x.current))}</div></td>
+   </tr>`
+ }).join('')
+}
+function resetInnovationKPIBaseline(){
+ if(!confirm('ล้างค่า Baseline / Current ที่กรอกไว้สำหรับ KPI ทั้งหมดหรือไม่?'))return;
+ try{localStorage.removeItem('ppInnovationKPIInput')}catch(e){}
+ renderInnovationKPI()
+}
+function exportInnovationKPI(){
+ let m=innovationMetrics(),inputs=loadInnovationKPIInput();
+ let rows=[['รหัส','มิติ','KPI','Baseline','Current','หน่วย','Target','สถานะ','วิธีคำนวณ','หลักฐาน']];
+ for(let d of INNOVATION_KPI_DEF){
+   let input=inputs[d.id]||{},cur=innovationCurrentValue(d,m,input),st=innovationKPIStatus(d,cur);
+   rows.push([d.id,d.category,d.name,input.baseline??'',cur??'',d.unit,d.target??'',st.label,d.method,innovationEvidence(d,m,cur)])
+ }
+ downloadCSV(rows,'PP_Claim_Intelligence_Innovation_KPI.csv')
+}
+
+function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderExceptionCenter();renderInnovationKPI();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();}
 function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length,partial=state.recon.filter(x=>x.matchStatus==='partial').length,amb=state.recon.filter(x=>x.matchStatus==='ambiguous').length,unpaid=total-paid-amb;let stmPP=state.stm.reduce((a,x)=>a+num(x.pp_paid),0),matchedPaid=state.recon.reduce((a,x)=>a+num(x.paid),0);let expRows=state.recon.filter(x=>x.expected!=null),expected=expRows.reduce((a,x)=>a+x.expected,0);let pct=total?paid/total*100:0;
  let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(state.unmatchedSTM.length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
  document.getElementById('matchDonut').style.setProperty('--angle',(pct*3.6)+'deg');document.getElementById('matchPct').innerHTML=`${pct.toFixed(1)}%<div class="small muted">จับคู่ได้</div>`;document.getElementById('statusLegend').innerHTML=`<div class="hbars"><div class="hrow"><span>ได้รับชดเชย</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><b class="right">${intFmt.format(paid)}</b></div><div class="hrow"><span>ยังไม่พบชดเชย</span><div class="track"><div class="fill" style="width:${total?unpaid/total*100:0}%;background:#dc2626"></div></div><b class="right">${intFmt.format(unpaid)}</b></div><div class="hrow"><span>จับคู่กำกวม</span><div class="track"><div class="fill" style="width:${total?amb/total*100:0}%;background:#d97706"></div></div><b class="right">${intFmt.format(amb)}</b></div></div>`;
@@ -1999,7 +2732,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.0.2-stable-sync',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.1-kpi-innovation',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
