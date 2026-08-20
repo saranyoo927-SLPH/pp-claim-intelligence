@@ -12,7 +12,7 @@
  * the Google account that signs in and the sharing permissions of the sheets.
  */
 window.PP_GITHUB_CONFIG = {
-  GOOGLE_CLIENT_ID: "PUT_YOUR_GOOGLE_OAUTH_CLIENT_ID_HERE.apps.googleusercontent.com",
+  GOOGLE_CLIENT_ID: "1038652470102-kd6fqbndv45ir5sb7tm5gjmvc1bn0qt5.apps.googleusercontent.com",
 
   SERVICE_SHEET_ID: "1NdQ_f-oTWEeYgf0ijSEdEizrML_pqIMFXmN8HIa_7pQ",
   STATEMENT_SHEET_ID: "1Psmp2tKYDDMIjIZy01kn89u7FN0sn-SRHGcQxjCjKRY"
