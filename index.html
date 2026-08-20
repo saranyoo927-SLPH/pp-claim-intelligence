@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.1.1 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.5.1 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -801,8 +801,45 @@ button,input,select,textarea{font-family:var(--font-ui)}
 @media(max-width:1100px){.kpi-hero-grid{grid-template-columns:repeat(2,1fr)}.kpi-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.kpi-hero-grid{grid-template-columns:1fr}.kpi-main{grid-template-columns:1fr}}
 
+
+/* ===== v6.1.2 User Management / RBAC ===== */
+.auth-account{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.auth-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:7px 10px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+.auth-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#eff4ff;color:#175cd3;font-weight:900;font-size:11px}
+.auth-meta{line-height:1.2}.auth-meta b{font-size:10px;color:#101828;display:block}.auth-meta span{font-size:9px;color:#667085}
+.auth-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:9998;display:none;align-items:center;justify-content:center;padding:18px}
+.auth-modal-backdrop.show{display:flex}
+.auth-modal{width:min(560px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:22px;padding:22px;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+.auth-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.auth-modal-head h3{margin:0;font-size:20px}.auth-modal-head p{margin:5px 0 0;color:#667085;font-size:10px}
+.auth-tabs{display:flex;background:#f2f4f7;border-radius:12px;padding:4px;margin-bottom:16px}
+.auth-tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px;font-weight:800;color:#667085;cursor:pointer}
+.auth-tabs button.active{background:#fff;color:#175cd3;box-shadow:0 1px 4px rgba(16,24,40,.08)}
+.auth-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.auth-field{margin-bottom:11px}.auth-field label{display:block;font-size:10px;font-weight:800;color:#475467;margin-bottom:5px}
+.auth-field input,.auth-field select{width:100%;box-sizing:border-box;border:1px solid #d0d5dd;border-radius:11px;padding:10px 11px;font:inherit;font-size:11px;outline:none}
+.auth-msg{font-size:10px;line-height:1.5;margin-top:10px}
+.auth-msg.error{color:#b42318}.auth-msg.good{color:#067647}.auth-msg.info{color:#175cd3}
+.access-card{max-width:650px;margin:28px auto;text-align:left}
+.access-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.role-badge{display:inline-flex;padding:4px 7px;border-radius:999px;background:#eff4ff;color:#175cd3;font-size:9px;font-weight:850}
+.status-approved{background:#dcfae6;color:#067647}.status-pending{background:#fef0c7;color:#93370d}.status-suspended{background:#fee4e2;color:#b42318}.status-rejected{background:#f2f4f7;color:#667085}
+.user-admin-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.user-table{min-width:1200px}.user-table select{border:1px solid #d0d5dd;border-radius:9px;padding:7px 8px;font:inherit;font-size:10px;background:#fff}
+.user-email{font-weight:850;color:#101828}.user-sub{font-size:9px;color:#667085;margin-top:3px}
+.user-actions{display:flex;gap:6px;flex-wrap:wrap}.user-actions .btn{padding:7px 9px;font-size:9px}
+.protected-lock{display:inline-flex;align-items:center;gap:6px;font-size:9px;color:#667085}
+@media(max-width:760px){.auth-form-grid{grid-template-columns:1fr}.user-admin-kpis{grid-template-columns:1fr 1fr}}
+
+
+/* ===== v6.1.4 Fiscal Year Rule ===== */
+.badge-prior-fy{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#f2f4f7;color:#475467;font-size:9px;font-weight:850}
+
 </style>
 <script src="./config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23155eef%22/><text x=%2232%22 y=%2241%22 text-anchor=%22middle%22 font-size=%2230%22 fill=%22white%22>PP</text></svg>">
 </head>
@@ -811,19 +848,20 @@ button,input,select,textarea{font-family:var(--font-ui)}
 <aside class="sidebar">
   <div class="brand"><h1>PP Claim Intelligence</h1><p>Selaphum Hospital · Smart PP Verification Dashboard<br>ตรวจสอบการชดเชย สปสช. แบบออฟไลน์ในเครื่อง</p></div>
   <button class="navbtn active" data-page="overview">◫ ภาพรวม</button>
-  <button class="navbtn" data-page="exceptions">⚠ ศูนย์งานที่ต้องดำเนินการ <span id="exceptionNavCount" class="exception-nav-count">0</span></button>
+  <button class="navbtn" data-protected="true" data-page="exceptions">⚠ ศูนย์งานที่ต้องดำเนินการ <span id="exceptionNavCount" class="exception-nav-count">0</span></button>
   <button class="navbtn" data-page="serviceReport">▣ รายงานรายบริการ</button>
   <button class="navbtn" data-page="fund">▦ แดชบอร์ดรายกองทุน</button>
-  <button class="navbtn" data-page="fundAudit">▤ ตรวจสอบรายกองทุน</button>
+  <button class="navbtn" data-protected="true" data-page="fundAudit">▤ ตรวจสอบรายกองทุน</button>
   <button class="navbtn" data-page="month">◷ รายงานจำแนกเดือน</button>
-  <button class="navbtn" data-page="individual">⌕ ตรวจสอบรายบุคคล</button>
+  <button class="navbtn" data-protected="true" data-page="individual">⌕ ตรวจสอบรายบุคคล</button>
   <button class="navbtn" data-page="prices">฿ ตารางราคา PP</button>
   <button class="navbtn" data-page="innovationkpi">◎ KPI ระบบ PP Claim Intelligence</button>
-  <button class="navbtn" data-page="data">↻ แหล่งข้อมูล / ซิงก์</button>
+  <button class="navbtn" data-protected="true" data-page="data">↻ แหล่งข้อมูล / ซิงก์</button>
+  <button class="navbtn hidden" id="userManagementNav" data-page="users">♙ จัดการผู้ใช้งาน</button>
   <div class="sidefoot">จับคู่ตามลำดับความน่าเชื่อถือ: REP+CID/HN + PP(AI) → SEQ → PID+วันที่ → HN+วันที่<br><br>ประมวลผลในเครื่องผู้ใช้ ไม่ส่งไฟล์ผู้ป่วยไปยังเซิร์ฟเวอร์ของโปรแกรม</div>
 </aside>
 <main class="main">
-<header class="topbar"><div><div class="top-title">PP Medical Compensation Dashboard</div><div class="top-sub" id="datasetLabel"></div></div><div class="pill" id="engineStatus">● พร้อมใช้งาน</div></header>
+<header class="topbar"><div><div class="top-title">PP Medical Compensation Dashboard</div><div class="top-sub" id="datasetLabel"></div></div><div class="auth-account"><div id="authAccountArea"><button class="btn" onclick="openAuthModal('login')">เข้าสู่ระบบ</button></div><div class="pill" id="engineStatus">● พร้อมใช้งาน</div></div></header>
 <div class="content">
 <section id="overview" class="page active">
  <div class="page-head"><div><h2>ภาพรวมการตรวจสอบ PP</h2><p>เปรียบเทียบบริการที่จัดทำไว้กับผลตอบกลับการชดเชยจาก สปสช.</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
@@ -856,7 +894,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
      <span class="exception-mode">⚡ PRIORITIZED AUTOMATICALLY</span>
    </div>
    <div class="small muted" style="margin-top:6px">
-     Revenue at Risk นับเฉพาะยอดที่ยังไม่ได้รับ/ได้รับไม่ครบ ส่วน “มูลค่ารอตรวจสอบ” คือเงินที่พบใน Statement แล้วแต่ยังต้องจัดสรรหรือยืนยันหลักฐาน
+     Revenue at Risk นับเฉพาะยอดที่ยังไม่ได้รับ/ได้รับไม่ครบ ส่วน “มูลค่ารอตรวจสอบ” คือเงินที่พบใน Statement แล้วแต่ยังต้องจัดสรรหรือยืนยันหลักฐาน<br><b>กฎปีงบประมาณ:</b> รายการ Statement ที่มีวันที่ก่อน 01-10-2568 และมี PP(AI) จ่ายแล้ว จะแสดงเป็น “บริการในงบประมาณก่อนหน้านี้แล้ว” และไม่นับเป็น Statement ผูกบริการไม่ได้หรือวันค้าง
    </div>
    <div class="grid exception-kpis" id="exceptionKPIs"></div>
  </div>
@@ -1004,13 +1042,10 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </section>
 <section id="fundAudit" class="page">
  <div class="page-head"><div><h2>ตรวจสอบการชดเชยรายกองทุน</h2><p>ตรวจสอบผู้รับบริการเป็นรายคน โดยเลือกกองทุนย่อย/ชีตบริการและเดือน พร้อมค้นหาด้วย HN หรือ CID</p></div><div id="fundAuditLoginState"></div></div>
- <div id="fundAuditLoginPanel" class="card loginbox">
-   <h3>เข้าสู่ระบบก่อนตรวจสอบรายกองทุน</h3>
-   <label>Username</label><input id="fundAuditUser" class="form-control" value="admin" autocomplete="username">
-   <label>Password</label><input id="fundAuditPass" class="form-control" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginFundAudit()">
-   <button class="btn dark" onclick="loginFundAudit()">เข้าสู่ระบบ</button>
-   <div id="fundAuditLoginMsg" class="statusline"></div>
-   <div class="notice warning" style="margin-top:16px">เมนูนี้แสดง HN/CID และรายละเอียดผู้รับบริการ จึงกำหนดให้ต้องเข้าสู่ระบบก่อนใช้งาน การล็อกอินใน Local HTML เป็นการจำกัดการเข้าถึงระดับหน้าเว็บเท่านั้น</div>
+ <div id="fundAuditLoginPanel" class="card loginbox access-card">
+   <h3>เข้าสู่ระบบ PP Claim Intelligence</h3>
+   <div id="fundAuditLoginMsg" class="notice warning">เมนูนี้แสดง HN/CID และรายละเอียดผู้รับบริการ ต้องใช้บัญชีที่ยืนยันอีเมลและได้รับอนุมัติบทบาท Revenue Officer, Auditor หรือ Admin</div>
+   <div class="access-actions"><button class="btn dark" onclick="openAuthModal('login')">เข้าสู่ระบบ</button><button class="btn" onclick="openAuthModal('register')">สมัครใช้งาน</button></div>
  </div>
  <div id="fundAuditPanel" class="hidden">
    <div class="card">
@@ -1022,7 +1057,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
        <div class="filter-action"><button class="btn primary" onclick="renderFundAudit()">ค้นหา</button></div>
        <div class="filter-action"><button class="btn" onclick="clearFundAuditFilters()">ล้างตัวกรอง</button></div>
        <div class="filter-action"><button class="btn" onclick="exportFundAuditCSV()">ส่งออก CSV</button></div>
-       <div class="filter-action"><button class="btn danger" onclick="logoutFundAudit()">ออกจากระบบ</button></div>
+       <div class="filter-action"><button class="btn danger" onclick="logoutPPUser()">ออกจากระบบ</button></div>
      </div>
    </div>
    <div class="grid audit-kpis" id="fundAuditKPIs" style="margin-top:16px"></div>
@@ -1041,8 +1076,12 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </section>
 <section id="individual" class="page">
  <div class="page-head"><div><h2>ตรวจสอบรายบุคคล</h2><p>ค้นด้วย HN, เลขบัตรประชาชน หรือชื่อ-สกุล</p></div><div id="loginState"></div></div>
- <div id="loginPanel" class="card loginbox"><h3>เข้าสู่เมนูรายบุคคล</h3><label>Username</label><input id="loginUser" class="form-control" value="admin" autocomplete="username"><label>Password</label><input id="loginPass" class="form-control" type="password" autocomplete="current-password"><button class="btn dark" onclick="loginIndividual()">เข้าสู่ระบบ</button><div id="loginMsg" class="statusline"></div><div class="notice warning" style="margin-top:16px">การล็อกอินนี้เป็นการจำกัดการเข้าถึงภายในหน้า HTML เท่านั้น หากนำไฟล์ HTML ที่ฝังข้อมูลผู้ป่วยไปแจกจ่าย ผู้ที่มีไฟล์อาจตรวจดูข้อมูลจากซอร์สได้ การใช้งานจริงหลายผู้ใช้ควรย้ายข้อมูลและการยืนยันตัวตนไปฝั่งเซิร์ฟเวอร์</div></div>
- <div id="individualPanel" class="hidden"><div class="card"><div class="filters"><input id="personQuery" style="min-width:340px" placeholder="HN / PID / ชื่อ-สกุล" onkeydown="if(event.key==='Enter')searchPerson()"><button class="btn primary" onclick="searchPerson()">ค้นหา</button><button class="btn" onclick="logoutIndividual()">ออกจากระบบ</button></div><div id="personResults"></div></div></div>
+ <div id="loginPanel" class="card loginbox access-card">
+   <h3>เข้าสู่ระบบ PP Claim Intelligence</h3>
+   <div id="loginMsg" class="notice warning">เมนูรายบุคคลต้องใช้บัญชีที่ยืนยันอีเมลและได้รับอนุมัติบทบาท Revenue Officer, Auditor หรือ Admin</div>
+   <div class="access-actions"><button class="btn dark" onclick="openAuthModal('login')">เข้าสู่ระบบ</button><button class="btn" onclick="openAuthModal('register')">สมัครใช้งาน</button></div>
+ </div>
+ <div id="individualPanel" class="hidden"><div class="card"><div class="filters"><input id="personQuery" style="min-width:340px" placeholder="HN / PID / ชื่อ-สกุล" onkeydown="if(event.key==='Enter')searchPerson()"><button class="btn primary" onclick="searchPerson()">ค้นหา</button><button class="btn" onclick="logoutPPUser()">ออกจากระบบ</button></div><div id="personResults"></div></div></div>
 </section>
 <section id="prices" class="page">
  <div class="page-head"><div><h2>ตารางราคา PP</h2><p>ใช้แยกยอดที่ สปสช. จ่ายรวมหลายรายการกลับเป็นรายการบริการ</p></div><div class="toolbar"><button class="btn" onclick="addBlankPrice()">+ เพิ่มรายการ</button><button class="btn primary" onclick="savePriceEdits()">บันทึกราคา</button></div></div>
@@ -1120,6 +1159,50 @@ button,input,select,textarea{font-family:var(--font-ui)}
  </div>
 </section>
 
+
+<section id="users" class="page">
+ <div class="page-head">
+  <div><h2>จัดการผู้ใช้งาน</h2><p>Admin Console · อนุมัติบัญชี กำหนดบทบาท และระงับสิทธิ์การใช้งาน</p></div>
+  <div class="toolbar"><button class="btn" onclick="loadAdminUsers()">รีเฟรช</button></div>
+ </div>
+ <div id="adminOnlyGuard" class="notice warning">เมนูนี้สำหรับ Super Admin เท่านั้น</div>
+ <div id="roleMatrixPanel" class="card hidden" style="margin-bottom:14px">
+   <h3 class="section-title">Role Access Matrix</h3>
+   <div class="table-wrap">
+    <table class="table">
+     <thead><tr><th>บทบาท</th><th>เมนูที่อนุญาต</th></tr></thead>
+     <tbody>
+      <tr><td><b>Admin</b></td><td>ทุกเมนู + จัดการผู้ใช้งาน</td></tr>
+      <tr><td><b>Revenue Officer</b></td><td>ภาพรวม · แดชบอร์ดรายกองทุน · Exception Center · ตรวจรายกองทุน · ตรวจรายบุคคล · Sync</td></tr>
+      <tr><td><b>Auditor</b></td><td>ภาพรวม · แดชบอร์ดรายกองทุน · Exception Center · ตรวจรายกองทุน · ตรวจรายบุคคล</td></tr>
+      <tr><td><b>Executive</b></td><td>ภาพรวม · แดชบอร์ดรายกองทุน · ตรวจรายกองทุน</td></tr>
+      <tr><td><b>Viewer</b></td><td>ภาพรวม · แดชบอร์ดรายกองทุน</td></tr>
+     </tbody>
+    </table>
+   </div>
+ </div>
+ <div id="userAdminPanel" class="hidden">
+   <div class="grid user-admin-kpis" id="userAdminKPIs"></div>
+   <div class="card" style="margin-top:14px">
+     <div class="filters">
+       <input id="userAdminSearch" placeholder="ค้นหา email / ชื่อ / หน่วยงาน" oninput="renderAdminUsers()">
+       <select id="userAdminStatus" onchange="renderAdminUsers()">
+        <option value="">ทุกสถานะ</option><option value="pending">รออนุมัติ</option><option value="approved">อนุมัติแล้ว</option><option value="suspended">ระงับ</option><option value="rejected">ปฏิเสธ</option>
+       </select>
+       <select id="userAdminRole" onchange="renderAdminUsers()">
+        <option value="">ทุกบทบาท</option><option value="executive">Executive</option><option value="revenue_officer">Revenue Officer</option><option value="auditor">Auditor</option><option value="viewer">Viewer</option><option value="admin">Admin</option>
+       </select>
+     </div>
+     <div class="table-wrap" style="margin-top:12px">
+       <table class="table user-table">
+        <thead><tr><th>ผู้ใช้งาน</th><th>หน่วยงาน</th><th>บทบาทที่ขอ</th><th>บทบาทที่ได้รับ</th><th>สถานะ</th><th>ยืนยันอีเมล</th><th>สมัครเมื่อ</th><th>จัดการ</th></tr></thead>
+        <tbody id="userAdminBody"></tbody>
+       </table>
+     </div>
+   </div>
+ </div>
+</section>
+
 <section id="data" class="page">
  <div class="page-head">
   <div><h2>แหล่งข้อมูลและการซิงก์</h2><p>เชื่อม Google Sheets ผ่านบัญชี Google ที่ได้รับอนุญาตโดยตรงจาก GitHub Pages · Read-only</p></div>
@@ -1176,7 +1259,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.1.1 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
+<div class="footer">PP Claim Intelligence v6.1.5.1 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -1240,8 +1323,346 @@ const XLS_BIFF = (()=>{
 </script>
 <script>
 const EMBEDDED=JSON.parse(document.getElementById('prefill').textContent);
+
+const PP_ADMIN_EMAIL='saranyoo927@gmail.com';
+const PP_ROLES={
+ admin:'Admin',
+ revenue_officer:'Revenue Officer',
+ auditor:'Auditor',
+ executive:'Executive',
+ viewer:'Viewer',
+ pending:'Pending'
+};
+const PROTECTED_PAGE_ROLES={
+ // Exact access matrix defined for PP Claim Intelligence v6.1.5
+ overview:['admin','revenue_officer','auditor','executive','viewer'],
+ fund:['admin','revenue_officer','auditor','executive','viewer'],
+
+ exceptions:['admin','revenue_officer','auditor'],
+ fundAudit:['admin','revenue_officer','auditor','executive'],
+ individual:['admin','revenue_officer','auditor'],
+ data:['admin','revenue_officer'],
+
+ // Admin-only menus until explicitly delegated later
+ serviceReport:['admin'],
+ month:['admin'],
+ prices:['admin'],
+ innovationkpi:['admin'],
+ users:['admin']
+};
+let ppFirebaseApp=null,ppAuth=null,ppDB=null;
+let ppCurrentUser=null,ppUserProfile=null,ppAdminUsers=[];
+
+function firebaseConfigReady(){
+ let c=(window.PP_GITHUB_CONFIG&&window.PP_GITHUB_CONFIG.FIREBASE_CONFIG)||{};
+ return !!(c.apiKey&&c.authDomain&&c.projectId&&c.appId&&!/PUT_|YOUR_|xxxx/i.test(c.apiKey))
+}
+function initPPFirebase(){
+ if(ppAuth)return true;
+ if(!firebaseConfigReady()){
+   updateAuthAccountUI();
+   return false
+ }
+ try{
+   let cfg=window.PP_GITHUB_CONFIG.FIREBASE_CONFIG;
+   ppFirebaseApp=firebase.apps&&firebase.apps.length?firebase.app():firebase.initializeApp(cfg);
+   ppAuth=firebase.auth();ppDB=firebase.firestore();
+   ppAuth.languageCode='th';
+   ppAuth.onAuthStateChanged(handlePPAuthState);
+   return true
+ }catch(e){
+   console.error('Firebase init',e);updateAuthAccountUI('Firebase config error');
+   return false
+ }
+}
+function roleLabel(r){return PP_ROLES[r]||r||'-'}
+function isPPAdmin(){return !!(ppCurrentUser&&ppCurrentUser.email&&ppCurrentUser.email.toLowerCase()===PP_ADMIN_EMAIL&&ppCurrentUser.emailVerified)}
+function isProfileApproved(){return !!(ppUserProfile&&ppUserProfile.status==='approved')}
+function hasRoleForPage(page){
+ let allowed=PROTECTED_PAGE_ROLES[page];
+ if(!allowed)return true;
+ if(!ppCurrentUser||!ppCurrentUser.emailVerified||!isProfileApproved())return false;
+ return allowed.includes(ppUserProfile?.role)||isPPAdmin()
+}
+function authBlockReason(page){
+ if(!firebaseConfigReady())return 'ยังไม่ได้ตั้งค่า Firebase Authentication';
+ if(!ppCurrentUser)return 'กรุณาเข้าสู่ระบบก่อนใช้งานเมนูนี้';
+ if(!ppCurrentUser.emailVerified)return 'กรุณายืนยันอีเมลก่อนใช้งาน';
+ if(!ppUserProfile)return 'ไม่พบข้อมูลสิทธิ์ผู้ใช้งาน';
+ if(ppUserProfile.status==='pending')return 'บัญชีของคุณกำลังรอ Admin อนุมัติ';
+ if(ppUserProfile.status==='suspended')return 'บัญชีนี้ถูกระงับการใช้งาน';
+ if(ppUserProfile.status==='rejected')return 'คำขอใช้งานถูกปฏิเสธ';
+ let role=roleLabel(ppUserProfile?.role);
+ return `บทบาท ${role} ไม่มีสิทธิ์เข้าเมนูนี้`
+}
+async function handlePPAuthState(user){
+ ppCurrentUser=user||null;ppUserProfile=null;
+ if(user){
+   try{
+     if(user.emailVerified&&user.email?.toLowerCase()===PP_ADMIN_EMAIL){
+       await ensureAdminProfile(user)
+     }
+     let snap=await ppDB.collection('users').doc(user.uid).get();
+     if(snap.exists)ppUserProfile={uid:user.uid,...snap.data()};
+   }catch(e){console.error(e)}
+ }
+ syncLegacyAuthState();
+ updateAuthAccountUI();
+ updateUserManagementVisibility();
+ updateRoleMenuVisibility();
+ updateProtectedPanels();
+ if(isPPAdmin())loadAdminUsers();
+}
+async function ensureAdminProfile(user){
+ let ref=ppDB.collection('users').doc(user.uid),snap=await ref.get();
+ let payload={
+   email:user.email.toLowerCase(),displayName:user.displayName||'System Administrator',
+   department:'PP Claim Intelligence',requestedRole:'admin',role:'admin',status:'approved',
+   isAdmin:true,emailVerified:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+ };
+ if(!snap.exists){
+   payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+   await ref.set(payload)
+ }else{
+   await ref.update(payload)
+ }
+}
+function syncLegacyAuthState(){
+ let detailed=!!(ppCurrentUser&&ppCurrentUser.emailVerified&&isProfileApproved()&&['admin','revenue_officer','auditor'].includes(ppUserProfile?.role));
+ state.loggedIn=detailed;
+ state.fundAuditLoggedIn=detailed;
+ if(detailed){try{refreshFundAuditFunds();renderFundAudit()}catch(e){}}
+}
+function updateProtectedPanels(){
+ let detailed=state.loggedIn;
+ let fp=document.getElementById('fundAuditPanel'),fl=document.getElementById('fundAuditLoginPanel');
+ if(fp&&fl){fp.classList.toggle('hidden',!detailed);fl.classList.toggle('hidden',detailed)}
+ let ip=document.getElementById('individualPanel'),il=document.getElementById('loginPanel');
+ if(ip&&il){ip.classList.toggle('hidden',!detailed);il.classList.toggle('hidden',detailed)}
+ let badge=`${ppCurrentUser?.email||''}${ppUserProfile?.role?' · '+roleLabel(ppUserProfile.role):''}`;
+ let fstate=document.getElementById('fundAuditLoginState'),istate=document.getElementById('loginState');
+ if(fstate)fstate.innerHTML=detailed?`<span class="badge b-good">${esc(badge)}</span>`:'';
+ if(istate)istate.innerHTML=detailed?`<span class="badge b-good">${esc(badge)}</span>`:'';
+ let fm=document.getElementById('fundAuditLoginMsg'),im=document.getElementById('loginMsg');
+ if(fm&&!detailed)fm.innerHTML=esc(authBlockReason('fundAudit'));
+ if(im&&!detailed)im.innerHTML=esc(authBlockReason('individual'))
+}
+function updateAuthAccountUI(extra=''){
+ let box=document.getElementById('authAccountArea');if(!box)return;
+ if(!firebaseConfigReady()){
+   box.innerHTML='<button class="btn danger" onclick="openAuthModal(\'login\')">⚠ ตั้งค่า Firebase</button>';return
+ }
+ if(!ppCurrentUser){
+   box.innerHTML='<button class="btn" onclick="openAuthModal(\'login\')">เข้าสู่ระบบ</button><button class="btn dark" onclick="openAuthModal(\'register\')">สมัครใช้งาน</button>';return
+ }
+ let role=ppUserProfile?.role||'pending',status=ppUserProfile?.status||'pending';
+ box.innerHTML=`<div class="auth-chip"><div class="auth-avatar">${esc((ppCurrentUser.email||'?')[0].toUpperCase())}</div><div class="auth-meta"><b>${esc(ppCurrentUser.displayName||ppCurrentUser.email)}</b><span>${esc(roleLabel(role))} · ${esc(status)}</span></div></div><button class="btn" onclick="logoutPPUser()">ออกจากระบบ</button>`
+}
+function openAuthModal(mode='login',message=''){
+ let m=document.getElementById('authModal');if(m)m.classList.add('show');
+ switchAuthTab(mode);
+ setAuthMsg(message,message?'info':'')
+}
+function closeAuthModal(){document.getElementById('authModal')?.classList.remove('show')}
+function switchAuthTab(mode){
+ document.getElementById('authLoginForm')?.classList.toggle('hidden',mode!=='login');
+ document.getElementById('authRegisterForm')?.classList.toggle('hidden',mode!=='register');
+ document.getElementById('authTabLogin')?.classList.toggle('active',mode==='login');
+ document.getElementById('authTabRegister')?.classList.toggle('active',mode==='register');
+ setAuthMsg('','')
+}
+function setAuthMsg(msg,kind='info'){
+ let e=document.getElementById('authModalMsg');if(!e)return;e.className='auth-msg '+kind;e.textContent=msg||''
+}
+function friendlyFirebaseError(e){
+ let code=e?.code||'',map={
+  'auth/email-already-in-use':'Email นี้มีบัญชีอยู่แล้ว',
+  'auth/invalid-email':'รูปแบบ Email ไม่ถูกต้อง',
+  'auth/weak-password':'Password ไม่ผ่านเกณฑ์ความปลอดภัย',
+  'auth/invalid-credential':'Email หรือ Password ไม่ถูกต้อง',
+  'auth/user-disabled':'บัญชีถูกปิดใช้งาน',
+  'auth/too-many-requests':'มีการลองเข้าสู่ระบบหลายครั้ง กรุณารอสักครู่'
+ };return map[code]||e?.message||String(e)
+}
+async function registerPPUser(){
+ if(!initPPFirebase()){setAuthMsg('กรุณาตั้งค่า FIREBASE_CONFIG ใน config.js ก่อน','error');return}
+ let name=normText(document.getElementById('authRegName')?.value||''),
+     department=normText(document.getElementById('authRegDepartment')?.value||''),
+     email=normText(document.getElementById('authRegEmail')?.value||'').toLowerCase(),
+     pw=document.getElementById('authRegPassword')?.value||'',
+     pw2=document.getElementById('authRegPassword2')?.value||'',
+     requestedRole=document.getElementById('authRegRole')?.value||'viewer';
+ if(!name||!email){setAuthMsg('กรุณากรอกชื่อและ Email','error');return}
+ if(pw.length<8){setAuthMsg('Password ต้องมีอย่างน้อย 8 ตัวอักษร','error');return}
+ if(pw!==pw2){setAuthMsg('Password ทั้งสองช่องไม่ตรงกัน','error');return}
+ if(email===PP_ADMIN_EMAIL)requestedRole='admin';
+ try{
+   setAuthMsg('กำลังสร้างบัญชี…','info');
+   let cred=await ppAuth.createUserWithEmailAndPassword(email,pw),u=cred.user;
+   await u.updateProfile({displayName:name});
+   await ppDB.collection('users').doc(u.uid).set({
+    email,displayName:name,department,requestedRole,role:'pending',status:'pending',isAdmin:false,
+    emailVerified:false,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+   });
+   await u.sendEmailVerification();
+   setAuthMsg('สมัครสำเร็จ ระบบส่งอีเมลยืนยันแล้ว กรุณายืนยันอีเมล จากนั้นเข้าสู่ระบบใหม่ บัญชีจะรอ Admin อนุมัติ','good')
+ }catch(e){console.error(e);setAuthMsg(friendlyFirebaseError(e),'error')}
+}
+async function loginPPUser(){
+ if(!initPPFirebase()){setAuthMsg('กรุณาตั้งค่า FIREBASE_CONFIG ใน config.js ก่อน','error');return}
+ let email=normText(document.getElementById('authLoginEmail')?.value||'').toLowerCase(),
+     pw=document.getElementById('authLoginPassword')?.value||'';
+ if(!email||!pw){setAuthMsg('กรุณากรอก Email และ Password','error');return}
+ try{
+   setAuthMsg('กำลังเข้าสู่ระบบ…','info');
+   let cred=await ppAuth.signInWithEmailAndPassword(email,pw),u=cred.user;
+   await u.reload();u=ppAuth.currentUser;
+   if(!u.emailVerified){
+     setAuthMsg('Email ยังไม่ได้ยืนยัน กรุณาตรวจกล่องจดหมาย หรือกด “ส่งอีเมลยืนยันอีกครั้ง”','error');
+     return
+   }
+   if(u.email?.toLowerCase()===PP_ADMIN_EMAIL)await ensureAdminProfile(u);
+   let snap=await ppDB.collection('users').doc(u.uid).get();
+   ppUserProfile=snap.exists?{uid:u.uid,...snap.data()}:null;
+   if(!ppUserProfile&&u.email?.toLowerCase()!==PP_ADMIN_EMAIL){
+     setAuthMsg('ไม่พบคำขอใช้งาน กรุณาติดต่อ Admin','error');return
+   }
+   closeAuthModal();updateAuthAccountUI();updateUserManagementVisibility();updateRoleMenuVisibility();updateProtectedPanels();
+   if(ppUserProfile?.status==='pending')alert('เข้าสู่ระบบสำเร็จ แต่บัญชียังรอ Admin อนุมัติ')
+ }catch(e){console.error(e);setAuthMsg(friendlyFirebaseError(e),'error')}
+}
+async function resendVerificationPP(){
+ if(!ppAuth?.currentUser){setAuthMsg('กรุณาเข้าสู่ระบบก่อน','error');return}
+ try{await ppAuth.currentUser.sendEmailVerification();setAuthMsg('ส่งอีเมลยืนยันอีกครั้งแล้ว','good')}catch(e){setAuthMsg(friendlyFirebaseError(e),'error')}
+}
+async function sendPasswordResetPP(){
+ if(!initPPFirebase()){setAuthMsg('ยังไม่ได้ตั้งค่า Firebase','error');return}
+ let email=normText(document.getElementById('authLoginEmail')?.value||'').toLowerCase();
+ if(!email){setAuthMsg('กรอก Email ก่อนกดลืมรหัสผ่าน','error');return}
+ try{await ppAuth.sendPasswordResetEmail(email);setAuthMsg('ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยัง Email แล้ว','good')}catch(e){setAuthMsg(friendlyFirebaseError(e),'error')}
+}
+async function logoutPPUser(){
+ try{if(ppAuth)await ppAuth.signOut()}catch(e){}
+ try{if(typeof disconnectGoogle==='function')disconnectGoogle()}catch(e){}
+ ppCurrentUser=null;ppUserProfile=null;ppAdminUsers=[];syncLegacyAuthState();updateAuthAccountUI();updateUserManagementVisibility();updateRoleMenuVisibility();updateProtectedPanels();
+ showPageDirect('overview')
+}
+
+function roleCanAccessPage(page){
+ let allowed=PROTECTED_PAGE_ROLES[page];
+ if(!allowed)return false;
+ if(isPPAdmin())return true;
+ if(!ppCurrentUser||!ppCurrentUser.emailVerified||!isProfileApproved())return false;
+ return allowed.includes(ppUserProfile?.role)
+}
+
+function updateRoleMenuVisibility(){
+ document.querySelectorAll('.navbtn[data-page]').forEach(btn=>{
+   const page=btn.dataset.page;
+   if(page==='users'){
+     btn.classList.toggle('hidden',!isPPAdmin());
+     return
+   }
+   // Before login, hide all role-controlled pages.
+   // After approval, show only menus assigned to the user's role.
+   const visible=roleCanAccessPage(page);
+   btn.classList.toggle('hidden',!visible)
+ });
+
+ // If active page is no longer allowed, move to first page the role can access.
+ const active=document.querySelector('.page.active')?.id;
+ if(active && !roleCanAccessPage(active)){
+   const first=document.querySelector('.navbtn[data-page]:not(.hidden)');
+   if(first)showPageDirect(first.dataset.page)
+ }
+}
+
+function updateUserManagementVisibility(){
+ let nav=document.getElementById('userManagementNav');if(nav)nav.classList.toggle('hidden',!isPPAdmin());
+ let guard=document.getElementById('adminOnlyGuard'),panel=document.getElementById('userAdminPanel'),matrix=document.getElementById('roleMatrixPanel');
+ if(guard&&panel){
+   guard.classList.toggle('hidden',isPPAdmin());
+   panel.classList.toggle('hidden',!isPPAdmin());
+   if(matrix)matrix.classList.toggle('hidden',!isPPAdmin());
+   if(!isPPAdmin())guard.textContent='เมนูนี้สำหรับ Super Admin '+PP_ADMIN_EMAIL+' เท่านั้น'
+ }
+}
+function showPageDirect(page){
+ document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));
+ let b=document.querySelector(`.navbtn[data-page="${page}"]`);if(b)b.classList.add('active');
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+ document.getElementById(page)?.classList.add('active');
+ if(page==='users'&&isPPAdmin())loadAdminUsers()
+}
+function protectedNavigate(page){
+ if(!PROTECTED_PAGE_ROLES[page]){showPageDirect(page);return}
+ if(hasRoleForPage(page)){showPageDirect(page);return}
+ openAuthModal('login',authBlockReason(page))
+}
+async function loadAdminUsers(){
+ if(!isPPAdmin()||!ppDB)return;
+ try{
+  let qs=await ppDB.collection('users').get();
+  ppAdminUsers=qs.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>{
+   let av=a.createdAt?.seconds||0,bv=b.createdAt?.seconds||0;return bv-av
+  });
+  renderAdminUsers()
+ }catch(e){console.error(e);alert('โหลดรายชื่อผู้ใช้ไม่สำเร็จ: '+friendlyFirebaseError(e))}
+}
+function adminUserFiltered(){
+ let q=normText(document.getElementById('userAdminSearch')?.value||'').toLowerCase(),
+     st=document.getElementById('userAdminStatus')?.value||'',role=document.getElementById('userAdminRole')?.value||'';
+ return ppAdminUsers.filter(u=>{
+   if(st&&u.status!==st)return false;if(role&&u.role!==role)return false;
+   if(q&&!([u.email,u.displayName,u.department].join(' ').toLowerCase().includes(q)))return false;
+   return true
+ })
+}
+function renderAdminUsers(){
+ if(!isPPAdmin())return;
+ let total=ppAdminUsers.length,pending=ppAdminUsers.filter(x=>x.status==='pending').length,
+ approved=ppAdminUsers.filter(x=>x.status==='approved').length,suspended=ppAdminUsers.filter(x=>x.status==='suspended').length;
+ let kp=document.getElementById('userAdminKPIs');
+ if(kp)kp.innerHTML=[['ผู้ใช้ทั้งหมด',total,'บัญชี','blue'],['รออนุมัติ',pending,'บัญชี','warn'],['อนุมัติแล้ว',approved,'บัญชี','good'],['ระงับ',suspended,'บัญชี','bad']].map(x=>`<div class="card kpi ${x[3]}"><div class="label">${x[0]}</div><div class="value">${intFmt.format(x[1])}</div><div class="note">${x[2]}</div></div>`).join('');
+ let body=document.getElementById('userAdminBody'),rows=adminUserFiltered();
+ if(!body)return;
+ body.innerHTML=rows.length?rows.map(u=>{
+   let isAdminEmail=(u.email||'').toLowerCase()===PP_ADMIN_EMAIL;
+   let created=u.createdAt?.toDate?u.createdAt.toDate().toLocaleString('th-TH'):'-';
+   let statusCls='status-'+(u.status||'pending');
+   let roleSelect=isAdminEmail?'<b>Admin</b>':`<select id="role_${u.uid}"><option value="revenue_officer" ${u.role==='revenue_officer'?'selected':''}>Revenue Officer</option><option value="auditor" ${u.role==='auditor'?'selected':''}>Auditor</option><option value="executive" ${u.role==='executive'?'selected':''}>Executive</option><option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option></select>`;
+   let actions=isAdminEmail?'<span class="role-badge">Super Admin</span>':`<div class="user-actions">
+    ${u.status==='pending'?`<button class="btn primary" onclick="approvePPUser('${u.uid}')">อนุมัติ</button><button class="btn" onclick="rejectPPUser('${u.uid}')">ปฏิเสธ</button>`:''}
+    ${u.status==='approved'?`<button class="btn" onclick="changePPUserRole('${u.uid}')">เปลี่ยนบทบาท</button><button class="btn danger" onclick="suspendPPUser('${u.uid}')">ระงับ</button>`:''}
+    ${u.status==='suspended'||u.status==='rejected'?`<button class="btn primary" onclick="activatePPUser('${u.uid}')">เปิดใช้งาน</button>`:''}
+   </div>`;
+   return `<tr><td><div class="user-email">${esc(u.email||'-')}</div><div class="user-sub">${esc(u.displayName||'-')}</div></td><td>${esc(u.department||'-')}</td><td>${esc(roleLabel(u.requestedRole))}</td><td>${roleSelect}</td><td><span class="role-badge ${statusCls}">${esc(u.status||'pending')}</span></td><td>${u.emailVerified?'✓':'รอยืนยัน'}</td><td>${esc(created)}</td><td>${actions}</td></tr>`
+ }).join(''):'<tr><td colspan="8" class="muted">ไม่พบผู้ใช้งาน</td></tr>'
+}
+async function adminUpdateUser(uid,payload){
+ if(!isPPAdmin())throw new Error('ไม่มีสิทธิ์ Admin');
+ payload.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
+ payload.updatedBy=PP_ADMIN_EMAIL;
+ await ppDB.collection('users').doc(uid).update(payload);
+ await loadAdminUsers()
+}
+async function approvePPUser(uid){
+ let u=ppAdminUsers.find(x=>x.uid===uid);if(!u)return;
+ let sel=document.getElementById('role_'+uid),role=sel?.value||u.requestedRole||'viewer';
+ await adminUpdateUser(uid,{status:'approved',role,isAdmin:false,approvedAt:firebase.firestore.FieldValue.serverTimestamp(),approvedBy:PP_ADMIN_EMAIL})
+}
+async function rejectPPUser(uid){if(confirm('ปฏิเสธคำขอใช้งานนี้หรือไม่?'))await adminUpdateUser(uid,{status:'rejected',role:'pending'})}
+async function suspendPPUser(uid){if(confirm('ระงับสิทธิ์ผู้ใช้งานนี้หรือไม่?'))await adminUpdateUser(uid,{status:'suspended'})}
+async function activatePPUser(uid){
+ let u=ppAdminUsers.find(x=>x.uid===uid),sel=document.getElementById('role_'+uid),role=sel?.value||(u?.requestedRole)||'viewer';
+ await adminUpdateUser(uid,{status:'approved',role,isAdmin:false,approvedAt:firebase.firestore.FieldValue.serverTimestamp(),approvedBy:PP_ADMIN_EMAIL})
+}
+async function changePPUserRole(uid){
+ let role=document.getElementById('role_'+uid)?.value;if(!role)return;
+ await adminUpdateUser(uid,{role,status:'approved'})
+}
+
 const OFFICIAL_PPFS69=[{"category":"บริการ  1  บริการฝากครรภ์","name":"ฝากครรภ์","rate":360.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ1","rate":600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ2","rate":190.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"อัลตราซาวน์","rate":400.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"ตรวจและทำความสะอาดฟัน","rate":500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Alpha-thalassemia 1 (PCR)","rate":800.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Beta-thalassemia (Mutation analysis)","rate":3000.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"หัตถการเพื่อตรวจวินิจฉัยทารกในครรภ์","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"DNA Based Analysis","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์","rate":120.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบย้อนทาง Treponemal test (TT)ด้วยวิธี Chemiluminescent immunoassay (CIA/CLIA)หรือ Enzyme immunoassay (EIA) หรือ RapidDiagnostic Test (RDT)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบตั้งเดิม Nontreponemal test (NTT)ด้วยวิธี Rapid Plasma Reagin (RPR) หรือVenereal Disease Research Laboratory (VDRL)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจ Treponemal test (TT) ด้วยวิธี Treponema pallidum particle agglutination test (TPPA) หรือ Treponema pallidum hemagglutination test(TPHA)","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษาพร้อมจัดส่งเลือด","rate":200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Non-Invasive Prenatal Test : NIPT","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจNon-Invasive Prenatal Test : NIPT","rate":2600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Quadruple test","rate":1200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจQuadruple test","rate":1300.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Prenatal Diagnosis: PND","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"ตรวจโครโมโชม","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าตรวจTSHรวมค่าส่งสิ่งส่งตรวจ","rate":135.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าติดตามและค่าตรวจTSH","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  6  บริการตรวจคัดกรองผู้ป่วยโรคพันธุกรรมเมตาบอลิกด้วยเครื่อง Tandem mass spectrometry (TMS)","name":"ค่าตรวจด้วยเครื่อง TMS","rate":500.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ค่าบริการตรวจหลังคลอด","rate":150.0,"unit":"ไม่เกิน 2 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน","rate":135.0,"unit":"ไม่เกิน 3 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  8  บริการทดสอบการตั้งครรภ์","name":"ตรวจปัสสาวะทดสอบการตั้งครรภ์","rate":75.0,"unit":"ต่อครั้งไม่เกิน 4 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม","rate":40.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว","rate":80.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาฉีดคุมกำเนิด","rate":60.0,"unit":"ต่อครั้ง ไม่เกิน 5 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ใส่ห่วงอนามัย","rate":800.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ค่าบริการฝังยาคุมกำเนิด","rate":2150.0,"unit":"ต่อครั้ง ทุก 3 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถอดยาฝังคุมกำเนิด","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดฉุกเฉิน","rate":50.0,"unit":"ต่อแผง ไม่เกิน 2 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถุงยางอนามัย(เฉพาะหน่วยที่ไม่ได้เหมาจ่ายรายหัว)","rate":1.0,"unit":"ชิ้น ไม่เกิน 10 ชิ้นต่อคน ไม่เกิน 365 ชิ้นต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  10  บริการป้องกันการยุติการตั้งครรภ์ที่ไม่ปลอดภัย","name":"บริการยุติการตั้งครรภ์","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติทั่วไป (Stock lens)","rate":800.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติที่ต้องสั่งตัดพิเศษ (Lab Leกs)","rate":1000.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ค่าบริการเก็บตัวอย่าง","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิดสองสายพันธุ์","rate":280.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิด14สายพันธุ์","rate":370.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจทางเซลล์วิทยาด้วยวิธี Liquid based cytology","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจติดตามซ้ำด้วยวิธี Pap smear","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"Pap smear หรือวิธี VIA","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"วิธี Colposcopy รวมการตัดชิ้นเนื้อ (Biopsy หรือ LEEP)","rate":900.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  13  บริการคัดกรองรอยโรคเสี่ยงมะเร็งและมะเร็งช่องปาก (CA Oral Screening)","name":"ค่า biopsy และค่าตรวจทางพยาธิวิทยา","rate":600.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Chest-X-ray : CXR","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี สำหรับผู้ต้องขัง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"TB-LAMP","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR (Xpert MTB/RIF)","rate":500.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"วินิจฉัยวัณโรค/ตรวจหาเชื้อ MTB","rate":400.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา Rifarmpicin","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR MTB/MDR","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Line Probe Assay (LPA)","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจพบผลดื้อยา First – line drugs ให้บริการตรวจวินิจฉัยวัณโรคดื้อยา Second – line drugs","rate":700.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธี AFB","rate":20.0,"unit":"ต่อครั้ง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Solid media","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Liquid media","rate":300.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 35 – 59 ปี-Fasting Plasma Glucose: FPG","rate":40.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 45 – 70 ปี-ตรวจวัด Total Cholesterol และ HDL","rate":160.0,"unit":"ต่อครั้ง ทุก 5 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA2","name":"บริการประเมินความเสี่ยง+ให้คำปรึกษา+เก็บตัวอย่าง(เลือด)+จัดส่ง","rate":500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA3","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับผู้ป่วยมะเร็งเต้านมที่มีความเสี่ยงสูง","rate":10000.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA4","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับญาติสายตรง","rate":2500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  17  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการเจาะเลือดและตรวจนับเม็ดเลือด(CBC)","rate":65.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  18  บริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","name":"ค่าบริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","rate":80.0,"unit":"ต่อครั้ง คนละ 1 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  19  บริการเคลือบฟลูออไรด์","name":"ค่าบริการเคลือบฟลออไรด์ชนิดเข้มข้นสูง","rate":100.0,"unit":"ต่อครั้ง คนละไม่เกิน 2 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  20  บริการตรวจคัดกรองมะเร็งลำไส้ใหญ่และลำไส้ตรง (Fit test)","name":"FIT Test","rate":60.0,"unit":"ต่อครั้ง คนละ 1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  21  บริการคัดกรองไวรัสตับอักเสบบี","name":"ค่าบริการตรวจด้วย HBsAg","rate":50.0,"unit":"ผู้ที่เกิดก่อน พ.ศ. 2535 คนละ 1 ครั้ง ตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"บริการตรวจด้วย Anti-HCV","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV core antigen","rate":400.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV RNA (qualitative method wรือ quantitative method)","rate":1690.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  23  บริการตรวจคัดกรองพยาธิใบไม้ตับด้วยการตรวจปัสสาวะ  (เฉพาะหน่วยนวัตกรรม)","name":"Urine OV Rapid Diagnosis Test ; OV-RDT","rate":150.0,"unit":"ต่อครั้ง ต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  24  บริการตรวจคัดกรองมะเร็งเต้านมด้วยเครื่องแมมโมแกรมและอัลตราซาวด์","name":"ค่าบริการตรวจแมมโมแกรมและอัลตราชาวด์","rate":2400.0,"unit":"1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  25  บริการให้วัคซีนป้องกันโรค","name":"ค่าบริการให้วัคชีนป้องกันโรค","rate":20.0,"unit":"ต่อโดส","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าจัดส่ง","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  27  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"ค่าตรวจคัดกรอง","rate":30.0,"unit":"ต่อครั้งต่อช่วงอายุ","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  28  บริการยาน้ำเสริมธาตุเหล็กเพื่อป้องกันโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการให้ยาน้ำเสริมธาตุเหล็ก","rate":50.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"}];
-const EXPECTED_PASS_HASH='03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
 let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0};
 const moneyFmt=new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const intFmt=new Intl.NumberFormat('th-TH');
@@ -1365,7 +1786,57 @@ function servicePriceScore(s,p){
  let d1=serviceDomain(joined),d2=serviceDomain((p.category||'')+' '+(p.name||''));if(d1&&d1===d2)score+=18;
  return score
 }
+
+const OFFICIAL_SERVICE_ALIAS_RULES=[
+ {
+  id:'DENTAL_CLEANING_500',
+  fundPatterns:[/ขูดและขัดฟัน/i,/ตรวจสุขภาพช่องปากและขัดทำความสะอาดฟัน/i],
+  itemPatterns:[/ตรวจสุขภาพช่องปาก.*ขัด.*ทำความสะอาดฟัน/i,/ตรวจ.*ทำความสะอาดฟัน/i,/ขูดและขัดฟัน/i],
+  officialName:/^ตรวจและทำความสะอาดฟัน$/i,
+  rate:500,
+  canonicalFund:'ขูดและขัดฟัน',
+  canonicalService:'ตรวจและทำความสะอาดฟัน'
+ },
+ {
+  id:'FLUORIDE_100',
+  fundPatterns:[/เคลือบฟล[ูอ]ออไรด์/i],
+  itemPatterns:[/เคลือบฟล[ูอ]ออไรด์/i],
+  officialName:/เคลือบฟล[ูอ]ออไรด์/i,
+  rate:100,
+  canonicalFund:'เคลือบฟลูออไรด์',
+  canonicalService:'เคลือบฟลูออไรด์'
+ }
+];
+
+function deterministicOfficialPriceForService(s){
+ let fundText=normText([s.source_sheet,s.fund_sub,s.service_type].filter(Boolean).join(' | '));
+ let itemText=normText([s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean).join(' | '));
+ for(const rule of OFFICIAL_SERVICE_ALIAS_RULES){
+   let fundMatch=(rule.fundPatterns||[]).some(re=>re.test(fundText));
+   let itemMatch=(rule.itemPatterns||[]).some(re=>re.test(itemText));
+   if(!fundMatch&&!itemMatch)continue;
+
+   let candidates=(state.prices||[]).filter(p=>
+     p.source==='official'
+     && Math.abs(num(p.rate)-num(rule.rate))<0.001
+     && rule.officialName.test(normText(p.name))
+   );
+   let p=candidates[0]||{
+     category:rule.canonicalFund,
+     name:rule.canonicalService,
+     rate:rule.rate,
+     unit:'ต่อครั้ง',
+     source:'official',
+     evidence:'Deterministic PPFS69 alias rule'
+   };
+   return {...p,_matchScore:200,_deterministicRule:rule.id,_canonicalFund:rule.canonicalFund,_canonicalService:rule.canonicalService}
+ }
+ return null
+}
+
 function bestOfficialPriceForService(s){
+ let exact=deterministicOfficialPriceForService(s);
+ if(exact)return exact;
  let ranked=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).map(p=>({p,score:servicePriceScore(s,p)})).filter(x=>x.score>=70).sort((a,b)=>b.score-a.score);
  if(!ranked.length)return null;let top=ranked[0].score,topRows=ranked.filter(x=>x.score===top),rates=[...new Set(topRows.map(x=>Math.round(num(x.p.rate)*100)))];
  if(rates.length!==1)return null;return {...topRows[0].p,_matchScore:top}
@@ -1629,7 +2100,14 @@ function recomputeAll(){
  });
  state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
-   if(!b.pool.length){state.unmatchedSTM.push(x);state.claimAnalyses.push({...x,analysisStatus:'unmatched',analysisNote:'ไม่พบบริการจาก REP+ผู้รับบริการ, SEQ หรือผู้รับบริการ/วันที่เดียวกัน'});return}
+   if(!b.pool.length){
+     let priorFY=isPriorFiscalYearDate(x.date);
+     let annotated={...x,fiscalStatus:priorFY?'prior-fiscal-year':'current-fiscal-year',
+       analysisNote:priorFY?priorFiscalYearLabel():'ไม่พบบริการจาก REP+ผู้รับบริการ, SEQ หรือผู้รับบริการ/วันที่เดียวกัน'};
+     state.unmatchedSTM.push(annotated);
+     state.claimAnalyses.push({...annotated,analysisStatus:priorFY?'prior-fiscal-year':'unmatched'});
+     return
+   }
 
    // 0) REP-FIRST สำหรับทุกกองทุน · Fund Portfolio Dashboard: ถ้า REP+CID/HN ตรง ให้จัดสรรจากบริการใน REP นั้นก่อน
    // ป้องกัน false unpaid จาก candidate อื่นในวันเดียวกันที่ทำให้ชุดราคากำกวม
@@ -1698,9 +2176,17 @@ function recomputeAll(){
    }
  });
  state.services.forEach(s=>{if(num(s.paid)>0){let e=expectedForService(s);s.matchStatus=(e!=null&&num(s.paid)+0.009<e)?'partial':'paid'}});
- state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
+ state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceRule:ei.price?._deterministicRule||'',priceRuleCanonicalFund:ei.price?._canonicalFund||'',priceRuleCanonicalService:ei.price?._canonicalService||'',priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
  renderAll();
 }
+
+const CURRENT_FISCAL_YEAR_START='2025-10-01'; // 01-10-2568
+function isPriorFiscalYearDate(date){
+  return !!date && String(date) < CURRENT_FISCAL_YEAR_START;
+}
+function priorFiscalYearLabel(){return 'บริการในงบประมาณก่อนหน้านี้แล้ว'}
+function currentYearUnmatchedSTM(){return (state.unmatchedSTM||[]).filter(x=>!isPriorFiscalYearDate(x.date))}
+function priorYearUnmatchedSTM(){return (state.unmatchedSTM||[]).filter(x=>isPriorFiscalYearDate(x.date))}
 
 const EXCEPTION_META={
  'unpaid':{label:'ยังไม่พบ Statement',short:'ยังไม่พบชดเชย',css:'unpaid',base:85,desc:'มีบริการในทะเบียน แต่ยังไม่พบ Statement ที่ยืนยันการชดเชย',action:'ตรวจงวด Statement, REP/SEQ และสถานะการส่งเบิก หากพ้นรอบจ่ายให้ติดตาม Claim'},
@@ -1734,6 +2220,7 @@ function exceptionRepValue(r){
 }
 function exceptionDaysOpen(date){
  if(!date)return 0;
+ if(isPriorFiscalYearDate(date))return 0;
  let d=new Date(date+'T00:00:00');
  if(Number.isNaN(d.getTime()))return 0;
  return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000))
@@ -1790,13 +2277,17 @@ function buildExceptionItems(){
    if(dataProblems.length)addException(arr,'data-error',r,0,exp,dataProblems.join(' · '));
 
    if(r.priceMismatch||((r.priceMissing||[]).length>0)){
-     let reason=r.priceMismatch?'ยอดทะเบียนไม่สอดคล้องกับอัตรา PPFS69':'ยังไม่มีราคาทางการ: '+(r.priceMissing||[]).join(', ');
+     let reason=r.priceMismatch
+       ?`ยอดทะเบียน ${moneyFmt.format(num(r.registeredExpected||r.claim_expected))} บาท ไม่สอดคล้องกับอัตรา PPFS69 ${moneyFmt.format(num(r.officialPrice?.rate))} บาท`
+       :'ยังไม่มีราคาทางการ: '+(r.priceMissing||[]).join(', ');
      addException(arr,'price-mismatch',r,0,exp,reason)
    }
  }
 
  // STM with payment but no service match
+ // Historical paid services before 01-10-2568 are evidence only, not current-year exceptions.
  for(let x of state.unmatchedSTM||[]){
+   if(isPriorFiscalYearDate(x.date))continue;
    let pseudo={...x,_id:'stm-'+[x.rep,x.tran,x.hn,x.cid,x.date].join('-'),service_type:'Statement',source_sheet:x.sheet||'Statement',paid:0,expected:0,rep_ref:x.rep};
    addException(arr,'statement-unmatched',pseudo,0,num(x.pp_paid),x.analysisNote||'PP(AI) มีการจ่าย แต่ยังผูกกับทะเบียนบริการไม่ได้')
  }
@@ -2135,11 +2626,11 @@ function exportInnovationKPI(){
 
 function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderExceptionCenter();renderInnovationKPI();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();}
 function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length,partial=state.recon.filter(x=>x.matchStatus==='partial').length,amb=state.recon.filter(x=>x.matchStatus==='ambiguous').length,unpaid=total-paid-amb;let stmPP=state.stm.reduce((a,x)=>a+num(x.pp_paid),0),matchedPaid=state.recon.reduce((a,x)=>a+num(x.paid),0);let expRows=state.recon.filter(x=>x.expected!=null),expected=expRows.reduce((a,x)=>a+x.expected,0);let pct=total?paid/total*100:0;
- let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(state.unmatchedSTM.length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
+ let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(currentYearUnmatchedSTM().length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
  document.getElementById('matchDonut').style.setProperty('--angle',(pct*3.6)+'deg');document.getElementById('matchPct').innerHTML=`${pct.toFixed(1)}%<div class="small muted">จับคู่ได้</div>`;document.getElementById('statusLegend').innerHTML=`<div class="hbars"><div class="hrow"><span>ได้รับชดเชย</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><b class="right">${intFmt.format(paid)}</b></div><div class="hrow"><span>ยังไม่พบชดเชย</span><div class="track"><div class="fill" style="width:${total?unpaid/total*100:0}%;background:#dc2626"></div></div><b class="right">${intFmt.format(unpaid)}</b></div><div class="hrow"><span>จับคู่กำกวม</span><div class="track"><div class="fill" style="width:${total?amb/total*100:0}%;background:#d97706"></div></div><b class="right">${intFmt.format(amb)}</b></div></div>`;
  let mm={};state.stm.forEach(x=>{let k=monthKey(x.date);mm[k]=(mm[k]||0)+num(x.pp_paid)});document.getElementById('overviewMonthChart').innerHTML=barChart(Object.entries(mm).sort().map(([k,v])=>({label:thMonth(k),value:v})),true);
  let svc={};state.recon.forEach(r=>r.items.forEach(it=>{let key=it.replace(/^PPFS-[^_]*_?/,'').slice(0,80);svc[key]=(svc[key]||0)+1}));let top=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value}));document.getElementById('topServices').innerHTML=hBar(top);
- let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!x.seq).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',state.unmatchedSTM.length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/BQ ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
+ let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!x.seq).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',currentYearUnmatchedSTM().length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/BQ ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
  let official=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).length;document.getElementById('priceNotice').className='notice '+(official?'':'warning');document.getElementById('priceNotice').innerHTML=official?`มีราคาแบบนำเข้า/ยืนยันแล้ว <b>${intFmt.format(official)}</b> รายการ ระบบจะใช้ราคานี้ก่อนราคาอนุมานในการแยกยอด PP`:'ยังไม่ได้รับ/นำเข้าตารางราคาอย่างเป็นทางการในชุดไฟล์นี้ ระบบจึงใช้เฉพาะอัตราที่อนุมานจากรายการเดี่ยวที่มีความสอดคล้องสูง และจะแสดงแหล่งราคาเป็น “อนุมาน” จนกว่าจะนำเข้าตารางราคาจริง';
 }
 function barChart(data,money=false){if(!data.length)return '<div class="muted small">ไม่มีข้อมูล</div>';let max=Math.max(...data.map(x=>x.value),1);return `<div class="bars">${data.map(x=>`<div class="barcol"><div class="bar" style="height:${Math.max(2,x.value/max*170)}px"><div class="tip">${money?moneyFmt.format(x.value):intFmt.format(x.value)}</div></div><div class="barlabel">${esc(x.label)}</div></div>`).join('')}</div>`}
@@ -2280,15 +2771,8 @@ function syncFundAuditMonths(keep=true){
  el.innerHTML='<option value="">ทุกเดือน</option>'+vals.map(v=>`<option value="${v}">${esc(thMonth(v))}</option>`).join('');
  if(vals.includes(current))el.value=current;
 }
-async function loginFundAudit(){
- let u=document.getElementById('fundAuditUser').value.trim(),p=document.getElementById('fundAuditPass').value;
- if(u==='admin'&&await sha256(p)===EXPECTED_PASS_HASH){
-   state.fundAuditLoggedIn=true;document.getElementById('fundAuditLoginPanel').classList.add('hidden');document.getElementById('fundAuditPanel').classList.remove('hidden');document.getElementById('fundAuditLoginState').innerHTML='<span class="badge b-good">เข้าสู่ระบบแล้ว: admin</span>';document.getElementById('fundAuditLoginMsg').textContent='';refreshFundAuditFunds();renderFundAudit();
- }else document.getElementById('fundAuditLoginMsg').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-}
-function logoutFundAudit(){
- state.fundAuditLoggedIn=false;document.getElementById('fundAuditLoginPanel').classList.remove('hidden');document.getElementById('fundAuditPanel').classList.add('hidden');document.getElementById('fundAuditLoginState').innerHTML='';document.getElementById('fundAuditPass').value='';
-}
+function loginFundAudit(){openAuthModal('login')}
+function logoutFundAudit(){logoutPPUser()}
 function clearFundAuditFilters(){
  let f=document.getElementById('fundAuditFund'),m=document.getElementById('fundAuditMonth'),s=document.getElementById('fundAuditStatus'),q=document.getElementById('fundAuditQuery');if(f)f.value='';syncFundAuditMonths(false);if(m)m.value='';if(s)s.value='';if(q)q.value='';renderFundAudit();
 }
@@ -2363,46 +2847,7 @@ function exportFundAuditCSV(){
  let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),fund=(document.getElementById('fundAuditFund')?.value||'all').replace(/[\\/:*?"<>|]/g,'_'),month=document.getElementById('fundAuditMonth')?.value||'all';a.href=URL.createObjectURL(blob);a.download=`PP_Fund_Audit_${fund}_${month}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 function renderMonth(){let m=new Map();state.recon.forEach(r=>{let k=monthKey(r.date);if(!m.has(k))m.set(k,{key:k,count:0,matched:0,people:new Set(),paid:0,expected:0,expectedN:0});let o=m.get(k);o.count++;if(isMatchedStatus(r.matchStatus))o.matched++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);o.paid+=r.paid;if(r.expected!=null){o.expected+=r.expected;o.expectedN++}});let rows=[...m.values()].sort((a,b)=>a.key.localeCompare(b.key));document.getElementById('monthBars').innerHTML=barChart(rows.map(x=>({label:thMonth(x.key),value:x.paid})),true);document.getElementById('monthTableBody').innerHTML=rows.map(x=>`<tr><td>${thMonth(x.key)}</td><td class="num">${intFmt.format(x.count)}</td><td class="num">${intFmt.format(x.people.size)}</td><td class="num">${intFmt.format(x.matched)}</td><td class="num">${moneyFmt.format(x.paid)}</td><td class="num">${x.expectedN?moneyFmt.format(x.expected):'<span class="muted">ราคาไม่ครบ</span>'}</td><td class="num">${x.expectedN?moneyFmt.format(x.paid-x.expected):'-'}</td></tr>`).join('')}
-async function sha256(s){if(!globalThis.crypto?.subtle)return s==='1234'?EXPECTED_PASS_HASH:'';let b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function loginIndividual(){let u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPass').value;if(u==='admin'&&await sha256(p)===EXPECTED_PASS_HASH){state.loggedIn=true;document.getElementById('loginPanel').classList.add('hidden');document.getElementById('individualPanel').classList.remove('hidden');document.getElementById('loginState').innerHTML='<span class="badge b-good">เข้าสู่ระบบแล้ว: admin</span>';document.getElementById('loginMsg').textContent=''}else document.getElementById('loginMsg').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}
-function logoutIndividual(){state.loggedIn=false;document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('individualPanel').classList.add('hidden');document.getElementById('loginState').innerHTML=''}
-function maskCID(cid){let s=String(cid||'');return s.length>=13?s.slice(0,3)+'-xxxx-xxxxx-'+s.slice(-1):s}
-function searchPerson(){if(!state.loggedIn)return;let q=normText(document.getElementById('personQuery').value).toLowerCase();if(!q){document.getElementById('personResults').innerHTML='<div class="muted small">กรอก HN, PID หรือชื่อก่อนค้นหา</div>';return}let qd=digits(q);let rows=state.recon.filter(r=>(qd&&((r.hn||'').includes(qd)||(r.cid||'').includes(qd)))||(r.name||'').toLowerCase().includes(q)).slice(0,100);let orphan=state.unmatchedSTM.filter(r=>(qd&&((r.hn||'').includes(qd)||(r.cid||'').includes(qd)))||(r.name||'').toLowerCase().includes(q)).slice(0,50);document.getElementById('personResults').innerHTML=(rows.length?rows.map(personRowHTML).join(''):'<div class="muted small">ไม่พบบริการ PP ในไฟล์บริการ</div>')+(orphan.length?`<h3 class="section-title" style="margin-top:18px">STM ที่มียอด PP แต่ยังจับคู่ไม่ได้</h3>${orphan.map(x=>`<div class="person-card"><div class="person-name">${esc(x.name)} · HN ${esc(x.hn)}</div><div class="small muted">PID ${esc(maskCID(x.cid))} · ${esc(x.date)} · REP ${esc(x.rep)}</div><div><b>PP จ่าย ${moneyFmt.format(x.pp_paid)} บาท</b></div></div>`).join('')}`:'')}
-function personRowHTML(r){let price=priceForItems(r.items);let bd=r.breakdown;let breakdown='';let hints=(r.priceHints||[]).slice(0,3);if(r.paid>0&&bd.solutions.length===1){let paidSet=new Set(bd.solutions[0].map(x=>x.item));breakdown=`<div class="notice"><b>แยกยอดจากราคา:</b><ul class="ppitems">${r.items.map(it=>{let p=getPriceForItem(it);return `<li>${paidSet.has(it)?'✓':'–'} ${esc(it)} ${p&&num(p.rate)>0?`<b>${moneyFmt.format(num(p.rate))} บาท</b>`:'<span class="badge b-warn">ไม่มีราคา</span>'}</li>`}).join('')}</ul></div>`}else if(r.paid>0)breakdown=`<div class="notice warning">${esc(bd.note)}</div>`;return `<div class="person-card"><div class="person-head"><div><div class="person-name">${esc(r.name||'-')}</div><div class="small muted">HN ${esc(r.hn)} · PID ${esc(maskCID(r.cid))} · วันที่ ${esc(r.date)} · REP ${esc(r.rep_ref||'-')} · SEQ ${esc(r.seq||'-')}</div></div>${statusBadge(r)}</div><div class="split" style="margin-top:10px"><div><b>บริการ PP ที่บันทึก</b><ul class="ppitems">${r.items.length?r.items.map(it=>`<li>${esc(it)}</li>`).join(''):'<li class="muted">ไม่พบ PP Fee schedule แต่เข้าเกณฑ์ PP จากคอลัมน์ I</li>'}</ul></div><div><div><b>รายการบริการ:</b> ${esc(r.service_type||r.fund_sub||'-')}</div><div><b>ชีตต้นทาง:</b> ${esc(r.source_sheet||'-')}</div><div><b>กองทุนย่อย:</b> ${esc(r.fund_sub||'-')}</div><div><b>ยอดคาดเรียกเก็บ:</b> ${r.expected!=null?moneyFmt.format(r.expected)+' บาท':'-'}</div>${r.officialPrice?`<div><b>ราคามาตรฐาน PPFS69:</b> ${moneyFmt.format(num(r.officialPrice.rate))} บาท · ${esc(r.officialPrice.name||'')}</div>`:''}${r.priceMismatch?`<div><span class="badge b-warn">ยอดทะเบียนไม่ตรงราคามาตรฐาน</span></div>`:''}<div><b>ยอด PP จ่าย:</b> ${moneyFmt.format(r.paid)} บาท</div><div><b>วิธีวิเคราะห์:</b> ${esc(r.claims[0]?.matchMethod||'-')}</div>${r.claims[0]?.allocationFormula?`<div><b>แตกยอด STM:</b> ${esc(r.claims[0].allocationFormula)}</div>`:''}</div></div>${breakdown}${hints.length?`<div class="notice warning"><b>วิเคราะห์จากตารางราคา PPFS69:</b>${hints.map(h=>`<div style="margin-top:5px">${esc(h.note)}</div>`).join('')}</div>`:''}<button class="btn" onclick="showDetail('${encodeURIComponent(r._id)}')">ดูรายละเอียด STM</button></div>`}
-function showDetail(idenc){let id=decodeURIComponent(idenc),r=state.recon.find(x=>x._id===id);if(!r)return;document.getElementById('modalContent').innerHTML=`<h2 style="color:var(--navy)">รายละเอียดการตรวจสอบ</h2><p><b>${esc(r.name)}</b> · HN ${esc(r.hn)} · ${esc(r.date)}</p><h3>บริการ PP</h3><ol>${r.items.map(it=>{let p=getPriceForItem(it);return `<li>${esc(it)} ${p&&num(p.rate)>0?`— ${moneyFmt.format(num(p.rate))} บาท <span class="badge ${p.source==='official'?'b-good':'b-warn'}">${p.source==='official'?'ราคาแหล่งนำเข้า':'อนุมาน'}</span>`:''}</li>`}).join('')}</ol><h3>STM ที่จับคู่</h3>${r.claims.length?`<div class="table-wrap"><table class="table"><thead><tr><th>ไฟล์</th><th>REP</th><th>TRAN_ID</th><th>แหล่งข้อมูล</th><th>วิธีวิเคราะห์</th><th>การแตกยอด</th><th class="num">PP(AI) ใน STM</th><th class="num">จัดสรรให้บริการนี้</th></tr></thead><tbody>${r.claims.map(c=>`<tr><td>${esc(c.file)}</td><td>${esc(c.rep)}</td><td>${esc(c.tran)}</td><td>${esc(c.source)}</td><td>${esc(c.matchMethod)}</td><td>${esc(c.allocationFormula||'-')}</td><td class="num">${moneyFmt.format(c.stmPP??c.pp_paid)}</td><td class="num"><b>${moneyFmt.format(c.allocatedPP??c.pp_paid)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="notice danger-note">ยังไม่พบ STM ที่จับคู่</div>'}`;document.getElementById('detailModal').classList.remove('hidden')}
-function closeModal(){document.getElementById('detailModal').classList.add('hidden')}
-function renderPrices(){let q=normText(document.getElementById('priceSearch')?.value||'').toLowerCase(),sf=document.getElementById('priceSourceFilter')?.value||'';let arr=state.prices.map((p,i)=>({...p,_i:i})).filter(p=>!q||(p.code||'').toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q));if(sf==='official')arr=arr.filter(p=>p.source==='official');if(sf==='inferred')arr=arr.filter(p=>p.source==='inferred');if(sf==='missing')arr=arr.filter(p=>!num(p.rate));document.getElementById('priceList').innerHTML=arr.map(p=>`<div class="price-row"><input data-price-i="${p._i}" data-field="code" value="${esc(p.code||'')}"><div><input data-price-i="${p._i}" data-field="name" value="${esc(p.name||'')}"><div class="${p.source==='official'?'source-official':p.source==='inferred'?'source-inferred':'muted'}">${p.source==='official'?`ราคาจากไฟล์นำเข้า${p.category?' · '+esc(p.category):''}${p.unit?' · '+esc(p.unit):''}`:p.source==='inferred'?'ราคาอนุมานจาก STM รายการเดี่ยว'+(p.evidence?' · '+esc(p.evidence):''):'ยังไม่มีราคา'}</div></div><input data-price-i="${p._i}" data-field="rate" type="number" step="0.01" min="0" value="${esc(p.rate||'')}" placeholder="บาท"><button class="btn danger" onclick="deletePrice(${p._i})">ลบ</button></div>`).join('')||'<div class="muted small">ไม่พบรายการ</div>'}
-function savePriceEdits(){document.querySelectorAll('[data-price-i]').forEach(el=>{let i=+el.dataset.priceI,f=el.dataset.field;state.prices[i][f]=el.value;if(f==='rate'&&el.value!==''){state.prices[i].source='official';state.prices[i].evidence='แก้ไข/ยืนยันโดยผู้ใช้'}});recomputeAll()}
-function addBlankPrice(){state.prices.unshift({code:'',name:'',rate:'',source:'missing',evidence:''});renderPrices()}
-function deletePrice(i){state.prices.splice(i,1);recomputeAll()}
-function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean));document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div></div>`}
-function setProcessStatus(msg,type='ok'){let el=document.getElementById('processStatus');if(!el)return;el.className='notice'+(type==='error'?' warning':'');el.innerHTML='<b>สถานะ:</b> '+msg}
-function safeRecompute(context='ประมวลผล'){try{recomputeAll();let ppSTM=state.stm.filter(x=>num(x.pp_paid)!==0).length;setProcessStatus(`${esc(context)}สำเร็จ · บริการ PP ${intFmt.format(state.services.length)} รายการ · STM ${intFmt.format(state.stm.length)} รายการ · STM ที่มียอด PP ${intFmt.format(ppSTM)} รายการ · จับคู่บริการได้ ${intFmt.format(state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length)} รายการ`);return true}catch(err){console.error(err);setProcessStatus(`${esc(context)}ไม่สำเร็จ: ${esc(err.message||err)}`,'error');return false}}
-function manualReprocess(){safeRecompute('ประมวลผลใหม่')}
-function restoreEmbedded(){loadEmbedded();safeRecompute('ล้างข้อมูลและคืนค่าเริ่มต้น')}
-function loadEmbedded(){state.services=structuredClone(EMBEDDED.services);state.stm=structuredClone(EMBEDDED.stm);state.prices=structuredClone(OFFICIAL_PPFS69);let inferred=buildInferredPrices();for(const p of inferred){if(!state.prices.some(x=>normText(x.name)===normText(p.name)))state.prices.push(p)}state.label=EMBEDDED.sourceLabel;state.serviceMode='';state.autoAllocated=0;document.getElementById('serviceFileStatus').textContent='ยังไม่มีข้อมูลบริการ';document.getElementById('stmFileStatus').textContent='ยังไม่มี STM';document.getElementById('priceFileStatus').textContent=`มีตารางราคา PPFS69 ฝังในระบบ ${OFFICIAL_PPFS69.length} รายการ · สามารถนำเข้าไฟล์ราคาใหม่เพื่อเพิ่ม/แก้ไขได้`;let p=document.getElementById('processStatus');if(p)p.innerHTML='<b>สถานะ:</b> พร้อมใช้ตารางราคา PPFS69 ที่ฝังในระบบ · รอการนำเข้าข้อมูลบริการและ STM'}
-function isPPFundText(s){s=String(s||'');return /(^|,)\s*ANC(?:-|,|$)|ส่งเสริมป้องกัน|NHSO_BOARD|(^|,)\s*HPV(?:-|,|$)|(^|,)\s*PP(?:-|,|$)|หลังคลอด|เคลือบฟลูออไรด์/i.test(s)}
-function findHeaderRow(aoa,needles,max=25){for(let r=0;r<Math.min(max,aoa.length);r++){let raw=Array.isArray(aoa[r])?aoa[r]:[];let row=raw.map(x=>normText(x).toLowerCase());let score=needles.reduce((a,n)=>a+(row.some(x=>n.test(x))?1:0),0);if(score>=Math.min(2,needles.length))return r}return -1}
-function headerIndex(headers,tests,fallback=-1){for(let i=0;i<headers.length;i++){let h=normText(headers[i]);if(tests.some(t=>t.test(h)))return i}return fallback}
-let xlsxLoader=null;function ensureXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(xlsxLoader)return xlsxLoader;xlsxLoader=new Promise((resolve,reject)=>{let sc=document.createElement('script');sc.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';sc.onload=()=>window.XLSX?resolve(window.XLSX):reject(new Error('โหลดไลบรารี Excel ไม่สำเร็จ'));sc.onerror=()=>reject(new Error('ไม่สามารถโหลดไลบรารี Excel ได้ กรุณาเชื่อมต่ออินเทอร์เน็ตเฉพาะตอนนำเข้าไฟล์ .xls/.xlsx'));document.head.appendChild(sc)});return xlsxLoader}async function readNamedAoa(file){let fn=file.name.toLowerCase();if(fn.endsWith('.csv')){let txt=await file.text();return [{name:file.name.replace(/\.csv$/i,''),aoa:parseCSV(txt)}]}let ab=await file.arrayBuffer();if(fn.endsWith('.xls'))return XLS_BIFF.parseWorkbook(ab).map((s,i)=>({name:s.name||('Sheet'+(i+1)),aoa:s.aoa}));await ensureXLSX();let wb=XLSX.read(ab,{type:'array',cellDates:false});return wb.SheetNames.map(n=>({name:n,aoa:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''})}))}
-async function readAoa(file){return (await readNamedAoa(file)).map(s=>s.aoa)}
-function parseCSV(text){let rows=[],row=[],cell='',q=false;for(let i=0;i<text.length;i++){let c=text[i];if(q){if(c==='"'&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else{if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}}if(cell||row.length){row.push(cell);rows.push(row)}return rows}
-function standardServiceName(sheetName){let s=normText(sheetName);let map=[[/เคลือบฟลูออไรด์/i,'เคลือบฟลูออไรด์'],[/ทันตกรรม\s*ในเขต/i,'ทันตกรรมในเขต'],[/ทันตกรรม\s*นอกเขต/i,'ทันตกรรมนอกเขต'],[/ทดสอบการตั้งครรภ์/i,'ทดสอบการตั้งครรภ์'],[/CAปากมดลูก|มะเร็งปากมดลูก/i,'คัดกรองมะเร็งปากมดลูก'],[/วางแผนครอบครัว/i,'วางแผนครอบครัว'],[/ยาเม็ดเสริมธาตุเหล็ก/i,'ยาเม็ดเสริมธาตุเหล็ก'],[/HepC/i,'ไวรัสตับอักเสบซี'],[/ขูดและขัดฟัน/i,'ตรวจสุขภาพช่องปากและขัดทำความสะอาดฟัน'],[/Triferdine/i,'Triferdine / ยาเสริมหลังคลอด'],[/ย้ายหน่วย/i,'ย้ายหน่วยบริการ'],[/HDL/i,'Total Cholesterol & HDL'],[/ฝากครรภ์/i,'ฝากครรภ์'],[/หลังคลอด/i,'ตรวจหลังคลอด'],[/ยุติการตั้งครรภ์/i,'ยุติการตั้งครรภ์'],[/FPG/i,'FPG'],[/HepB/i,'ไวรัสตับอักเสบบี']];for(const [re,n] of map)if(re.test(s))return n;return s||'ไม่ระบุรายการ'}
-function serviceItemLabel(sheetName,detail){let base=standardServiceName(sheetName),d=normText(detail);return d?`${base} — ${d}`:base}
-async function parseServiceFile(file){
- let sheets=await readNamedAoa(file),out=[];
- // รูปแบบเดิม: ไฟล์บริการรวมที่มี PP Fee schedule
- for(const sh of sheets){let aoa=sh.aoa,hr=findHeaderRow(aoa,[/^hn$/i,/pp fee/i,/วันที่รับบริการ/i],30);if(hr<0)continue;let h=aoa[hr],iFund=headerIndex(h,[/กองทุนย่อย/],8),iDate=headerIndex(h,[/วันที่รับบริการ/],17),iHN=headerIndex(h,[/^HN$/i],21),iName=headerIndex(h,[/ชื่อ.*สกุล/],22),iCID=headerIndex(h,[/เลขบัตร|ประชาชน|pid/i],24),iPP=headerIndex(h,[/pp fee/i],59),iRight=headerIndex(h,[/สิทธิหลัก/],55),iRSub=headerIndex(h,[/สิทธิย่อย/],56),iSeqN=headerIndex(h,[/nhso seq/i],13),iSeq=headerIndex(h,[/seq รับบริการ/i],12);for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],pp=normText(row[iPP]),fund=normText(row[iFund]);if(!pp&&!isPPFundText(fund))continue;out.push({row:r+1,date:thaiDateToISO(row[iDate]),hn:normHN(row[iHN]),cid:normCID(row[iCID]),name:normText(row[iName]),fund_sub:fund,right_main:normText(row[iRight]),right_sub:normText(row[iRSub]),seq:normText(row[iSeqN]||row[iSeq]).replace(/\.0$/,''),ppfs:pp,items:splitItems(pp),service_type:fund||'PP Fee schedule',source_sheet:sh.name,claim_expected:null,claim_reference:''})}}
- if(out.length){state.serviceMode='PP-wide';return out}
- // รูปแบบใหม่: Google Sheet/Workbook แยกชีตตามรายการบริการ
- for(const sh of sheets){let aoa=sh.aoa||[],hr=findHeaderRow(aoa,[/^(vn|visit no\.)$/i,/^hn$/i,/วันที่ตรวจ|วันที่รับบริการ/i],12);if(hr<0)continue;let h=aoa[hr]||[];
-  let iVN=headerIndex(h,[/^VN$/i,/^Visit No\.?$/i],-1),iHN=headerIndex(h,[/^HN$/i],-1),iCID=headerIndex(h,[/^CID$/i,/เลขบัตร/i,/ปปช/i],-1),iName=headerIndex(h,[/ชื่อผู้ป่วย/i,/ชื่อ-สกุล/i,/ชื่อ.*สกุล/i],-1),iDate=headerIndex(h,[/วันที่ตรวจ/i,/วันที่รับบริการ/i],-1),iTime=headerIndex(h,[/^เวลา$/i,/เวลาตรวจ/i,/เวลา.*บริการ/i],-1),iRepRef=headerIndex(h,[/เลขที่หนังสือ/i,/เลขหนังสือ/i,/REP No/i,/^REP$/i],-1),iSeq=headerIndex(h,[/^SEQ(?: NO)?$/i,/NHSO SEQ/i,/SEQ รับบริการ/i],-1),iAmount=headerIndex(h,[/^เรียกเก็บ$/i,/ประมาณการชดเชย/i,/^ค่าใช้จ่าย$/i],-1),iDetail=headerIndex(h,[/ชื่อรายการ/i],-1);
-  if(iAmount<0)iAmount=headerIndex(h,[/เรียกเก็บ/i],-1);
-  if(iHN<0&&iCID<0)continue;
-  for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],hn=normHN(iHN>=0?row[iHN]:''),cid=normCID(iCID>=0?row[iCID]:'');if(!hn&&!cid)continue;let rawVN=iVN>=0?row[iVN]:'',date=correctServiceDateByVN(thaiDateToISO(iDate>=0?row[iDate]:''),rawVN);if(!date)continue;let detail=normText(iDetail>=0?row[iDetail]:''),svc=standardServiceName(sh.name),item=serviceItemLabel(sh.name,detail),amount=iAmount>=0?num(row[iAmount]):0,rep_ref=normREP(iRepRef>=0?row[iRepRef]:''),seq=normText(iSeq>=0?row[iSeq]:'').replace(/\.0$/,'');out.push({row:r+1,date,time:timeText(iTime>=0?row[iTime]:''),hn,cid,name:normText(iName>=0?row[iName]:''),fund_sub:svc,right_main:'',right_sub:'',rep_ref,seq,ppfs:item,items:[item],service_type:svc,source_sheet:sh.name,claim_expected:amount>0?amount:null,claim_reference:normText(rawVN),item_detail:detail})}
- }
- if(!out.length)throw new Error('ไม่พบชีต/หัวคอลัมน์บริการ PP ที่รองรับ');state.serviceMode='sheet-services';return out
-}
+
 function excelColumnName(n){let s='';while(n>0){n--;s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26)}return s}
 async function parseSTMFile(file){let sheets=await readAoa(file),out=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/^REP$/i,/TRAN_ID/i,/^HN$/i],30);if(hr<0)continue;let h1=Array.isArray(aoa[hr])?aoa[hr]:[],h2=Array.isArray(aoa[hr+1])?aoa[hr+1]:[];let iREP=headerIndex(h1,[/^REP$/i],0),iTran=headerIndex(h1,[/TRAN_ID/i],2),iHN=headerIndex(h1,[/^HN$/i],3),iCID=headerIndex(h1,[/^PID$/i,/ประชาชน/],5),iName=headerIndex(h1,[/ชื่อ.*สกุล/],6),iDate=headerIndex(h1,[/วันเข้ารักษา/],7),iRight=headerIndex(h1,[/MAININSCL/i],9),iTotal=headerIndex(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),iSource=headerIndex(h1,[/แหล่งข้อมูล/],40),iSeq=headerIndex(h1,[/SEQ NO/i],41);const AI_INDEX=34;let iPP=AI_INDEX,ppSource='AI';let maxCols=Math.max(h1.length,h2.length,...aoa.slice(hr+1,Math.min(aoa.length,hr+8)).map(r=>Array.isArray(r)?r.length:0));if(maxCols<=AI_INDEX){let ppCandidates=[];for(let i=0;i<Math.max(h1.length,h2.length);i++){if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))ppCandidates.push(i)}if(ppCandidates.length){iPP=ppCandidates[ppCandidates.length-1];ppSource='HEADER_PP'}}for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],hn=normHN(row[iHN]),cid=normCID(row[iCID]);if(!hn&&!cid)continue;out.push({file:file.name,sheet:'STM',type:'normal',rep:normREP(row[iREP]),tran:normText(row[iTran]).replace(/\.0$/,''),hn,cid,name:normText(row[iName]),date:thaiDateToISO(row[iDate]),maininscl:normText(row[iRight]),pp_paid:num(row[iPP]),pp_col_index:iPP,pp_col_excel:(iPP===34?'AI':excelColumnName(iPP+1)),pp_source:ppSource,total_paid:num(row[iTotal]),source:normText(row[iSource]),seq:normText(row[iSeq]).replace(/\.0$/,'')})}}if(!out.length)throw new Error('ไม่พบชีตรายละเอียด STM ที่รองรับ');return out}
 async function parsePriceFile(file){let sheets=await readAoa(file),all=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/ราคา|price|rate|อัตรา/i,/รายการย่อย|รายการ|บริการ|service/i],50);if(hr<0)continue;let h=aoa[hr]||[],iRate=headerIndex(h,[/อัตราจ่าย|อัตรา.*บาท|ราคา|price|rate/i]),iCode=headerIndex(h,[/^รหัส$/i,/code/i],-1),iItem=headerIndex(h,[/^รายการย่อย$/i,/รายการย่อย/i,/ชื่อรายการ/i,/รายละเอียดรายการ/i],-1),iCategory=headerIndex(h,[/^บริการ$/i,/หมวดบริการ/i,/กลุ่มบริการ/i],-1),iUnit=headerIndex(h,[/^หน่วย$/i,/unit/i],-1);if(iRate<0)continue;let rows=[];for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],rate=num(row[iRate]),category=iCategory>=0?normText(row[iCategory]):'',name=iItem>=0?normText(row[iItem]):category,code=iCode>=0?normText(row[iCode]):'',unit=iUnit>=0?normText(row[iUnit]):'';if(rate>0&&name)rows.push({code,name,category,unit,rate,source:'official',evidence:'นำเข้าจาก '+file.name})}all.push(...rows)}if(!all.length)throw new Error('ไม่พบคอลัมน์ “รายการย่อย/บริการ” และ “อัตราจ่าย(บาท)” ในไฟล์ราคา');let uniq=new Map();for(const p of all){let k=[p.code,normText(p.category),normText(p.name),Math.round(num(p.rate)*100)].join('|');if(!uniq.has(k))uniq.set(k,p)}return [...uniq.values()]}
@@ -2732,7 +3177,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.1-kpi-innovation',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.5-dental-rule-fix',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
@@ -2767,14 +3212,64 @@ function applyLiveGoogleData(payload){
 document.getElementById('serviceFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let el=document.getElementById('serviceFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่านไฟล์บริการ '+esc(f.name));let keepOfficial=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).map(p=>({...p}));state.services=await parseServiceFile(f);state.prices=buildInferredPrices();mergeOfficialPrices(keepOfficial);state.label='ข้อมูลบริการ: '+f.name+' · STM: '+(state.stm.length?'ชุดที่โหลดอยู่':'ยังไม่มี');el.textContent=`อ่านสำเร็จ ${intFmt.format(state.services.length)} บริการ · ${intFmt.format(new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)).size)} ประเภทรายการ · โหมด ${state.serviceMode}`;safeRecompute('นำเข้าไฟล์บริการ')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้าไฟล์บริการไม่สำเร็จ: '+esc(err.message||err),'error')}})
 document.getElementById('stmFiles').addEventListener('change',async e=>{let fs=[...e.target.files];if(!fs.length)return;let el=document.getElementById('stmFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่าน STM '+fs.length+' ไฟล์');let all=[];for(const f of fs){let part=await parseSTMFile(f);all.push(...part)}state.stm=all;state.label='ข้อมูลที่นำเข้าใหม่ · STM '+fs.length+' ไฟล์';let aiPaid=all.filter(x=>num(x.pp_paid)!==0).length,aiSum=all.reduce((s,x)=>s+num(x.pp_paid),0);el.textContent=`อ่านสำเร็จ ${intFmt.format(all.length)} รายการ จาก ${fs.length} ไฟล์ · ใช้ PP คอลัมน์ AI · จ่าย ${intFmt.format(aiPaid)} รายการ รวม ${moneyFmt.format(aiSum)} บาท`;safeRecompute('นำเข้า STM')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้า STM ไม่สำเร็จ: '+esc(err.message||err),'error')}})
 document.getElementById('priceFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let el=document.getElementById('priceFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่านตารางราคา '+esc(f.name));let rows=await parsePriceFile(f);mergeOfficialPrices(rows);el.textContent=`นำเข้าราคา ${intFmt.format(rows.length)} รายการ จาก ${f.name}`;safeRecompute('นำเข้าตารางราคา')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้าตารางราคาไม่สำเร็จ: '+esc(err.message||err),'error')}})
-function exportReconcileCSV(){let rows=[['วันที่','HN','PID','ชื่อ-สกุล','รายการบริการ','ชีตต้นทาง','กองทุนย่อย','สิทธิหลัก','REP/เลขที่หนังสือ','SEQ','PP Fee schedule','สถานะ','ยอด PP จ่าย','ยอดคาดเรียกเก็บ','แหล่งยอดคาด','รายการราคาที่ยังขาด','วิธีจับคู่']];state.recon.forEach(r=>rows.push([r.date,r.hn,r.cid,r.name,r.service_type||'',r.source_sheet||'',r.fund_sub,r.right_main,r.rep_ref||'',r.seq,r.ppfs,r.matchStatus,r.paid,r.expected??'',r.expectedSource||'',r.priceMissing.join(' | '),r.claims.map(c=>c.matchMethod).join('|')]));state.unmatchedSTM.forEach(x=>rows.push([x.date,x.hn,x.cid,x.name,'','',x.seq,'','STM_PP_UNMATCHED',x.pp_paid,'','','']));let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='PP_reconcile_result.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active')}));
+function exportReconcileCSV(){let rows=[['วันที่','HN','PID','ชื่อ-สกุล','รายการบริการ','ชีตต้นทาง','กองทุนย่อย','สิทธิหลัก','REP/เลขที่หนังสือ','SEQ','PP Fee schedule','สถานะ','ยอด PP จ่าย','ยอดคาดเรียกเก็บ','แหล่งยอดคาด','รายการราคาที่ยังขาด','วิธีจับคู่']];state.recon.forEach(r=>rows.push([r.date,r.hn,r.cid,r.name,r.service_type||'',r.source_sheet||'',r.fund_sub,r.right_main,r.rep_ref||'',r.seq,r.ppfs,r.matchStatus,r.paid,r.expected??'',r.expectedSource||'',r.priceMissing.join(' | '),r.claims.map(c=>c.matchMethod).join('|')]));state.unmatchedSTM.forEach(x=>rows.push([
+ x.date,x.hn,x.cid,x.name,'','',x.seq,'',
+ isPriorFiscalYearDate(x.date)?priorFiscalYearLabel():'STM_PP_UNMATCHED',
+ x.pp_paid,'','',''
+]));let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='PP_reconcile_result.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>protectedNavigate(b.dataset.page)));
 loadEmbedded();safeRecompute('เริ่มต้นระบบ');
+updateRoleMenuVisibility();
 setTimeout(()=>{
   initGoogleOAuth();
+  initPPFirebase();
   if(isOAuthConfigured()){
     setLiveSyncUI('error','รอเชื่อมบัญชี Google','กด “เชื่อมบัญชี Google” เพื่ออนุญาต read-only Google Sheets')
   }
 },500);
 </script>
+
+<div class="auth-modal-backdrop" id="authModal">
+ <div class="auth-modal">
+   <div class="auth-modal-head">
+     <div><h3>PP Claim Intelligence Account</h3><p>สมัครด้วย Email และ Password · ต้องยืนยันอีเมลและได้รับอนุมัติก่อนเข้าเมนูข้อมูลละเอียด</p></div>
+     <button class="btn" onclick="closeAuthModal()">✕</button>
+   </div>
+   <div class="auth-tabs">
+     <button id="authTabLogin" class="active" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+     <button id="authTabRegister" onclick="switchAuthTab('register')">สมัครใช้งาน</button>
+   </div>
+
+   <div id="authLoginForm">
+     <div class="auth-field"><label>Email</label><input id="authLoginEmail" type="email" autocomplete="username" placeholder="name@example.com"></div>
+     <div class="auth-field"><label>Password</label><input id="authLoginPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginPPUser()"></div>
+     <div class="access-actions"><button class="btn dark" onclick="loginPPUser()">เข้าสู่ระบบ</button><button class="btn" onclick="sendPasswordResetPP()">ลืมรหัสผ่าน</button></div>
+   </div>
+
+   <div id="authRegisterForm" class="hidden">
+     <div class="auth-form-grid">
+       <div class="auth-field"><label>ชื่อ-สกุล</label><input id="authRegName" placeholder="ชื่อผู้ใช้งาน"></div>
+       <div class="auth-field"><label>หน่วยงาน / กลุ่มงาน</label><input id="authRegDepartment" placeholder="เช่น งานประกันสุขภาพ"></div>
+     </div>
+     <div class="auth-field"><label>Email</label><input id="authRegEmail" type="email" autocomplete="email"></div>
+     <div class="auth-form-grid">
+       <div class="auth-field"><label>Password</label><input id="authRegPassword" type="password" autocomplete="new-password" placeholder="อย่างน้อย 8 ตัวอักษร"></div>
+       <div class="auth-field"><label>ยืนยัน Password</label><input id="authRegPassword2" type="password" autocomplete="new-password"></div>
+     </div>
+     <div class="auth-field"><label>บทบาทที่ต้องการใช้งาน</label>
+       <select id="authRegRole">
+        <option value="revenue_officer">Revenue Officer — ตรวจ Claim / รายบุคคล / Exception</option>
+        <option value="auditor">Auditor — ตรวจสอบหลักฐานและการชดเชย</option>
+        <option value="executive">Executive — Dashboard / KPI / ภาพรวม</option>
+        <option value="viewer">Viewer — ดูรายงานภาพรวม</option>
+       </select>
+     </div>
+     <div class="notice"><b>ขั้นตอนหลังสมัคร:</b> ระบบจะส่งอีเมลยืนยัน จากนั้นบัญชีจะอยู่สถานะ “รออนุมัติ” จนกว่า Admin จะกำหนดสิทธิ์</div>
+     <div class="access-actions"><button class="btn dark" onclick="registerPPUser()">สมัครใช้งาน</button></div>
+   </div>
+
+   <div id="authModalMsg" class="auth-msg"></div>
+ </div>
+</div>
+
 </body></html>
