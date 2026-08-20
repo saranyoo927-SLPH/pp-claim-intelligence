@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.0.1 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.0.2 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -676,6 +676,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </style>
 <script src="./config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23155eef%22/><text x=%2232%22 y=%2241%22 text-anchor=%22middle%22 font-size=%2230%22 fill=%22white%22>PP</text></svg>">
 </head>
 <body>
 <div class="app">
@@ -874,7 +875,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.0.1 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
+<div class="footer">PP Claim Intelligence v6.0.2 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -1754,17 +1755,48 @@ function ensureGoogleToken(){
    googleTokenClient.requestAccessToken({prompt:googleAccessToken?'':'consent'})
  })
 }
-async function googleApiFetch(url){
- let r=await fetch(url,{headers:{Authorization:'Bearer '+googleAccessToken}});
- if(r.status===401){
-   googleAccessToken='';googleTokenExpiresAt=0;
-   throw new Error('สิทธิ์ Google หมดอายุ กรุณาเชื่อมบัญชี Google ใหม่')
- }
- if(!r.ok){
+let lastGoogleRequestAt=0;
+const GOOGLE_REQUEST_GAP_MS=1150;
+
+function sleepMs(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function throttleGoogleRequest(){
+ const wait=Math.max(0,GOOGLE_REQUEST_GAP_MS-(Date.now()-lastGoogleRequestAt));
+ if(wait>0)await sleepMs(wait);
+ lastGoogleRequestAt=Date.now()
+}
+async function googleApiFetch(url,maxAttempts=6){
+ let lastError=null;
+ for(let attempt=0;attempt<maxAttempts;attempt++){
+   await throttleGoogleRequest();
+   let r;
+   try{
+     r=await fetch(url,{headers:{Authorization:'Bearer '+googleAccessToken}})
+   }catch(e){
+     lastError=e;
+     if(attempt===maxAttempts-1)throw e;
+     await sleepMs(Math.min(16000,1000*Math.pow(2,attempt))+Math.random()*350);
+     continue
+   }
+   if(r.status===401){
+     googleAccessToken='';googleTokenExpiresAt=0;
+     throw new Error('สิทธิ์ Google หมดอายุ กรุณาเชื่อมบัญชี Google ใหม่')
+   }
+   if(r.ok)return r.json();
+
    let body='';try{body=await r.text()}catch(e){}
-   throw new Error(`Google Sheets API ${r.status}: ${body.slice(0,500)}`)
+   lastError=new Error(`Google Sheets API ${r.status}: ${body.slice(0,500)}`);
+
+   // Retry transient / quota errors automatically.
+   if([429,500,502,503,504].includes(r.status) && attempt<maxAttempts-1){
+     let retryAfter=Number(r.headers.get('Retry-After')||0)*1000;
+     let backoff=retryAfter||Math.min(20000,1200*Math.pow(2,attempt));
+     setLiveSyncUI('loading','Google จำกัดคำขอชั่วคราว',`รอ ${Math.ceil(backoff/1000)} วินาที แล้วระบบจะลองใหม่อัตโนมัติ`);
+     await sleepMs(backoff+Math.random()*500);
+     continue
+   }
+   throw lastError
  }
- return r.json()
+ throw lastError||new Error('Google Sheets API ไม่ตอบสนอง')
 }
 function qSheetTitle(title){return "'"+String(title).replace(/'/g,"''")+"'"}
 async function getSpreadsheetMeta(id){
@@ -1776,6 +1808,17 @@ async function getSheetValues(id,title,rangeA1){
  let url=`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${encodeURIComponent(range)}?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`;
  let j=await googleApiFetch(url);
  return Array.isArray(j.values)?j.values:[]
+}
+async function getSheetRowsAdaptive(id,title,endCol,rowCount,chunkSize=20000,onProgress=null){
+ if(!rowCount||rowCount<1)return [];
+ let all=[];
+ for(let start=1;start<=rowCount;start+=chunkSize){
+   let end=Math.min(rowCount,start+chunkSize-1);
+   if(onProgress)onProgress(start,end,rowCount);
+   let part=await getSheetValues(id,title,`A${start}:${endCol}${end}`);
+   if(part.length)all.push(...part)
+ }
+ return all
 }
 async function mapLimit(items,limit,fn){
  let out=new Array(items.length),next=0;
@@ -1789,6 +1832,14 @@ async function mapLimit(items,limit,fn){
  return out
 }
 function rowVal(row,i){return i>=0&&i<row.length?row[i]:''}
+function extractTime(v){
+ let s=normText(v);
+ if(!s)return '';
+ let m=s.match(/(?:^|[ T])(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+ if(!m)return s;
+ return String(m[1]).padStart(2,'0')+':'+m[2]+':'+(m[3]||'00')
+}
+
 function headerIdx(headers,tests,fallback=-1){
  for(let i=0;i<headers.length;i++){let h=normText(headers[i]);if(tests.some(re=>re.test(h)))return i}
  return fallback
@@ -1827,11 +1878,18 @@ function serviceNameFromSheet(sheetName){
 async function loadServiceRegistryFromGoogle(){
  let id=LIVE_GOOGLE_SHEETS.serviceId,meta=await getSpreadsheetMeta(id);
  let sheets=(meta.sheets||[]).map(x=>x.properties).filter(Boolean),all=[],read=0,skipped=0,warnings=[];
- await mapLimit(sheets,4,async p=>{
-   let preview=await getSheetValues(id,p.title,'A1:AZ12');
+ for(let si=0;si<sheets.length;si++){
+   let p=sheets[si],rowCount=Number((p.gridProperties&&p.gridProperties.rowCount)||0);
+   setLiveSyncUI('loading',`กำลังอ่านฐานบริการ ${si+1}/${sheets.length}`,p.title);
+   if(rowCount<2){skipped++;continue}
+
+   // Service workbook is relatively small. Read a whole tab (adaptive if large)
+   // so each tab no longer needs a separate preview request.
+   let rows=await getSheetRowsAdaptive(id,p.title,'AZ',rowCount,20000);
+   let preview=rows.slice(0,12);
    let hr=headerRowLocal(preview,[/^(vn|visit no\.?)$/i,/^hn$/i,/วันที่ตรวจ|วันที่รับบริการ/i]);
-   if(hr<0){skipped++;return}
-   let h=(preview[hr]||[]).map(normText),m={
+   if(hr<0){skipped++;continue}
+   let h=(rows[hr]||[]).map(normText),m={
     vn:headerIdx(h,[/^VN$/i,/^Visit No\.?$/i]),
     hn:headerIdx(h,[/^HN$/i]),
     cid:headerIdx(h,[/^CID$/i,/เลขบัตร/i,/ปปช/i]),
@@ -1843,69 +1901,83 @@ async function loadServiceRegistryFromGoogle(){
     amount:headerIdx(h,[/^เรียกเก็บ$/i,/ประมาณการชดเชย/i,/^ค่าใช้จ่าย$/i,/เรียกเก็บ/i]),
     detail:headerIdx(h,[/ชื่อรายการ/i,/รายการย่อย/i,/รายละเอียดรายการ/i])
    };
-   if(m.hn<0&&m.cid<0){skipped++;return}
-   let svc=serviceNameFromSheet(p.title),rowCount=Number((p.gridProperties&&p.gridProperties.rowCount)||0),start=hr+2+1;
-   for(let r=start;r<=rowCount;r+=5000){
-     let e=Math.min(rowCount,r+4999),rows=await getSheetValues(id,p.title,`A${r}:AZ${e}`);
-     for(let j=0;j<rows.length;j++){
-       let row=rows[j]||[],hn=normHN(rowVal(row,m.hn)),cid=normCID(rowVal(row,m.cid));
-       if(!hn&&!cid)continue;
-       let rawVN=normText(rowVal(row,m.vn));
-       let date=correctServiceDateByVN(thaiDateToISO(rowVal(row,m.date)),rawVN);
-       if(!date)continue;
-       let detail=normText(rowVal(row,m.detail)),item=detail?`${svc} — ${detail}`:svc,amount=num(rowVal(row,m.amount));
-       all.push({
-        row:r+j,date,time:extractTime(rowVal(row,m.time)),hn,cid,
-        name:normText(rowVal(row,m.name)),fund_sub:svc,right_main:'',right_sub:'',
-        rep_ref:normREP(rowVal(row,m.rep)),seq:normText(rowVal(row,m.seq)).replace(/\.0$/,''),
-        ppfs:item,items:[item],service_type:svc,source_sheet:p.title,
-        claim_expected:amount>0?amount:null,claim_reference:rawVN,item_detail:detail
-       })
-     }
+   if(m.hn<0&&m.cid<0){skipped++;continue}
+
+   let svc=serviceNameFromSheet(p.title),start=hr+1;
+   for(let j=start;j<rows.length;j++){
+     let row=rows[j]||[],hn=normHN(rowVal(row,m.hn)),cid=normCID(rowVal(row,m.cid));
+     if(!hn&&!cid)continue;
+     let rawVN=normText(rowVal(row,m.vn));
+     let date=correctServiceDateByVN(thaiDateToISO(rowVal(row,m.date)),rawVN);
+     if(!date)continue;
+     let detail=normText(rowVal(row,m.detail)),item=detail?`${svc} — ${detail}`:svc,amount=num(rowVal(row,m.amount));
+     all.push({
+      row:j+1,date,time:extractTime(rowVal(row,m.time)),hn,cid,
+      name:normText(rowVal(row,m.name)),fund_sub:svc,right_main:'',right_sub:'',
+      rep_ref:normREP(rowVal(row,m.rep)),seq:normText(rowVal(row,m.seq)).replace(/\.0$/,''),
+      ppfs:item,items:[item],service_type:svc,source_sheet:p.title,
+      claim_expected:amount>0?amount:null,claim_reference:rawVN,item_detail:detail
+     })
    }
    read++
- });
+ }
  if(skipped)warnings.push(`ฐานบริการข้าม ${skipped} ชีตที่ไม่ใช่ทะเบียนบริการ`);
  return {rows:all,sheetsRead:read,sheetsSkipped:skipped,warnings,title:meta.properties&&meta.properties.title||'ข้อมูลบริการ'}
 }
 async function loadStatementFromGoogle(){
  let id=LIVE_GOOGLE_SHEETS.statementId,meta=await getSpreadsheetMeta(id);
  let sheets=(meta.sheets||[]).map(x=>x.properties).filter(Boolean),all=[],read=0,skipped=0,warnings=[],seen=new Set();
- await mapLimit(sheets,2,async p=>{
-   let preview=await getSheetValues(id,p.title,'A1:AP12');
+
+ for(let si=0;si<sheets.length;si++){
+   let p=sheets[si],rowCount=Number((p.gridProperties&&p.gridProperties.rowCount)||0);
+   let columnCount=Number((p.gridProperties&&p.gridProperties.columnCount)||0);
+   setLiveSyncUI('loading',`กำลังอ่าน Statement ${si+1}/${sheets.length}`,p.title);
+   if(rowCount<2||columnCount<6){skipped++;continue}
+
+   // Read A:AP sequentially. For very large tabs, split into 20k-row requests.
+   let rows=await getSheetRowsAdaptive(
+     id,p.title,'AP',rowCount,20000,
+     (s,e,total)=>setLiveSyncUI('loading',`กำลังอ่าน Statement ${si+1}/${sheets.length}`,`${p.title} · แถว ${s.toLocaleString()}–${e.toLocaleString()} / ${total.toLocaleString()}`)
+   );
+   let preview=rows.slice(0,12);
    let hr=headerRowLocal(preview,[/^REP$/i,/^HN$/i,/^PID$/i]);
-   if(hr<0){skipped++;return}
-   let h1=(preview[hr]||[]).map(normText),h2=(preview[hr+1]||[]).map(normText),m={
+   if(hr<0){skipped++;continue}
+
+   let h1=(rows[hr]||[]).map(normText),h2=(rows[hr+1]||[]).map(normText),m={
     rep:headerIdx(h1,[/^REP$/i],0),tran:headerIdx(h1,[/TRAN_ID/i],2),
     hn:headerIdx(h1,[/^HN$/i],3),cid:headerIdx(h1,[/^PID$/i,/ประชาชน/i],5),
     name:headerIdx(h1,[/ชื่อ.*สกุล/i],6),date:headerIdx(h1,[/วันเข้ารักษา/i],7),
     right:headerIdx(h1,[/MAININSCL/i],9),total:headerIdx(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),
     source:headerIdx(h1,[/แหล่งข้อมูล/i],40),seq:headerIdx(h1,[/SEQ NO/i],41)
    };
+
    let ppIndex=34,ppSource='AI';
-   if(Number((p.gridProperties&&p.gridProperties.columnCount)||0)<35){
-     let cand=[];for(let i=0;i<Math.max(h1.length,h2.length);i++)if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))cand.push(i);
-     if(!cand.length){skipped++;warnings.push(`ข้ามชีต ${p.title}: ไม่พบ AI/PP`);return}
+   if(columnCount<35){
+     let cand=[];
+     for(let i=0;i<Math.max(h1.length,h2.length);i++){
+       if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))cand.push(i)
+     }
+     if(!cand.length){skipped++;warnings.push(`ข้ามชีต ${p.title}: ไม่พบ AI/PP`);continue}
      ppIndex=cand[cand.length-1];ppSource=excelColumnName(ppIndex+1)+'(PP)'
    }
-   let rowCount=Number((p.gridProperties&&p.gridProperties.rowCount)||0),start=hr+2+1;
-   for(let r=start;r<=rowCount;r+=4000){
-     let e=Math.min(rowCount,r+3999),rows=await getSheetValues(id,p.title,`A${r}:AP${e}`);
-     for(const row of rows){
-       let hn=normHN(rowVal(row,m.hn)),cid=normCID(rowVal(row,m.cid));if(!hn&&!cid)continue;
-       let item={file:'statement OP-UC 69',sheet:p.title,type:'normal',
-        rep:normREP(rowVal(row,m.rep)),tran:normText(rowVal(row,m.tran)).replace(/\.0$/,''),
-        hn,cid,name:normText(rowVal(row,m.name)),date:thaiDateToISO(rowVal(row,m.date)),
-        maininscl:normText(rowVal(row,m.right)),pp_paid:num(rowVal(row,ppIndex)),
-        pp_col_index:ppIndex,pp_col_excel:ppIndex===34?'AI':excelColumnName(ppIndex+1),pp_source:ppSource,
-        total_paid:num(rowVal(row,m.total)),source:normText(rowVal(row,m.source)),
-        seq:normText(rowVal(row,m.seq)).replace(/\.0$/,'')};
-       let key=[item.rep,item.tran,item.hn,item.cid,item.date,Math.round(item.pp_paid*100),item.seq].join('|');
-       if(!seen.has(key)){seen.add(key);all.push(item)}
-     }
+
+   for(let j=hr+1;j<rows.length;j++){
+     let row=rows[j]||[],hn=normHN(rowVal(row,m.hn)),cid=normCID(rowVal(row,m.cid));
+     if(!hn&&!cid)continue;
+     let item={
+      file:'statement OP-UC 69',sheet:p.title,type:'normal',
+      rep:normREP(rowVal(row,m.rep)),tran:normText(rowVal(row,m.tran)).replace(/\.0$/,''),
+      hn,cid,name:normText(rowVal(row,m.name)),date:thaiDateToISO(rowVal(row,m.date)),
+      maininscl:normText(rowVal(row,m.right)),pp_paid:num(rowVal(row,ppIndex)),
+      pp_col_index:ppIndex,pp_col_excel:ppIndex===34?'AI':excelColumnName(ppIndex+1),pp_source:ppSource,
+      total_paid:num(rowVal(row,m.total)),source:normText(rowVal(row,m.source)),
+      seq:normText(rowVal(row,m.seq)).replace(/\.0$/,'')
+     };
+     let key=[item.rep,item.tran,item.hn,item.cid,item.date,Math.round(item.pp_paid*100),item.seq].join('|');
+     if(!seen.has(key)){seen.add(key);all.push(item)}
    }
    read++
- });
+ }
  if(skipped)warnings.push(`ฐาน Statement ข้าม ${skipped} ชีตที่ไม่ใช่รายละเอียด Statement`);
  let paidRows=all.filter(x=>num(x.pp_paid)!==0),paidTotal=paidRows.reduce((s,x)=>s+num(x.pp_paid),0);
  return {rows:all,sheetsRead:read,sheetsSkipped:skipped,warnings,title:meta.properties&&meta.properties.title||'Statement',paidRows:paidRows.length,paidTotal}
@@ -1924,9 +1996,10 @@ async function syncGoogleSheets(force=false){
    setLiveSyncUI('loading','กำลังซิงก์ Google Sheets…','อ่านฐานบริการและ Statement ผ่าน Google Sheets API');
    setProcessStatus('กำลังซิงก์ข้อมูลจาก Google Sheets…');
    let started=Date.now();
-   let [svc,stm]=await Promise.all([loadServiceRegistryFromGoogle(),loadStatementFromGoogle()]);
+   let svc=await loadServiceRegistryFromGoogle();
+   let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.0.1-github',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.0.2-stable-sync',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
