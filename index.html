@@ -1,0 +1,1974 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PP Claim Intelligence v6.0 GitHub | โรงพยาบาลเสลภูมิ</title>
+<meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
+<!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
+     If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kanit:wght@500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#eef2f7;
+  --bg2:#e4ebf3;
+  --surface:#ffffff;
+  --surface-2:#f8fafc;
+  --panel:#f4f7fb;
+  --text:#111827;
+  --ink:#0f172a;
+  --muted:#667085;
+  --line:#e5eaf1;
+  --line-strong:#d7e0ea;
+  --primary:#3563ff;
+  --primary-2:#5b7cff;
+  --navy:#0f3b68;
+  --navy2:#164e80;
+  --teal:#12b3a7;
+  --teal2:#22c7bb;
+  --good:#17b26a;
+  --warn:#f79009;
+  --bad:#f04438;
+  --violet:#7a5af8;
+  --sky:#ecf3ff;
+  --shadow:0 24px 80px rgba(15,23,42,.10);
+  --shadow-soft:0 12px 30px rgba(15,23,42,.06);
+  --radius:24px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:"Inter","Noto Sans Thai","Leelawadee UI",Tahoma,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(91,124,255,.16), transparent 24%),
+    radial-gradient(circle at top right, rgba(18,179,167,.10), transparent 18%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+}
+a{color:inherit}
+button,input,select{font:inherit}
+.hidden{display:none!important}
+.app{
+  min-height:calc(100vh - 32px);
+  margin:16px;
+  background:rgba(255,255,255,.58);
+  border:1px solid rgba(255,255,255,.7);
+  backdrop-filter: blur(10px);
+  border-radius:30px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+}
+.sidebar{
+  width:268px;
+  padding:20px 16px 16px;
+  background:linear-gradient(180deg,#ffffff 0%, #fbfcfe 100%);
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  height:calc(100vh - 32px);
+  overflow:auto;
+}
+.brand{
+  padding:10px 12px 22px;
+  margin-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+.brand h1{
+  font-size:28px;
+  letter-spacing:-.03em;
+  line-height:1.05;
+  margin:0 0 8px;
+  color:#101828;
+}
+.brand p{
+  margin:0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+.navbtn{
+  width:100%;
+  border:1px solid transparent;
+  background:transparent;
+  color:#344054;
+  padding:12px 14px;
+  border-radius:14px;
+  text-align:left;
+  cursor:pointer;
+  margin:4px 0;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  font-weight:700;
+  transition:all .2s ease;
+}
+.navbtn:hover{
+  background:#f6f9fc;
+  color:#101828;
+  border-color:#ebeff5;
+  transform:translateX(2px);
+}
+.navbtn.active{
+  background:linear-gradient(180deg,#eff4ff 0%, #edf7ff 100%);
+  color:var(--primary);
+  border-color:#dfe7ff;
+  box-shadow:inset 0 0 0 1px rgba(53,99,255,.02), 0 8px 18px rgba(53,99,255,.08);
+}
+.sidefoot{
+  margin-top:auto;
+  padding:14px;
+  border-radius:18px;
+  background:linear-gradient(180deg,#0f3b68,#184f84);
+  color:#dbeafe;
+  font-size:11px;
+  line-height:1.7;
+}
+.main{
+  flex:1;
+  min-width:0;
+  background:transparent;
+}
+.topbar{
+  min-height:84px;
+  background:rgba(255,255,255,.76);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:18px 28px;
+  position:sticky;
+  top:0;
+  z-index:15;
+  backdrop-filter: blur(18px);
+}
+.top-title{
+  font-size:20px;
+  font-weight:850;
+  letter-spacing:-.02em;
+  color:#101828;
+}
+.top-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border-radius:999px;
+  padding:10px 14px;
+  font-size:12px;
+  font-weight:800;
+  background:#ecfdf3;
+  color:#067647;
+  border:1px solid #b7ebc6;
+  box-shadow:0 4px 12px rgba(22,163,74,.08);
+  white-space:nowrap;
+}
+.content{padding:28px;max-width:none;margin:auto}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .22s ease}
+@keyframes fadeIn{from{opacity:.45;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-head{
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:flex-end;
+  margin-bottom:20px;
+}
+.page-head h2{margin:0;font-size:28px;letter-spacing:-.03em;color:#101828}
+.page-head p{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin-bottom:16px}
+.card{
+  background:linear-gradient(180deg,#ffffff 0%, #fcfdff 100%);
+  border:1px solid var(--line);
+  border-radius:22px;
+  box-shadow:var(--shadow-soft);
+  padding:18px;
+  position:relative;
+}
+.card:hover{box-shadow:0 18px 40px rgba(15,23,42,.08)}
+.kpi{
+  overflow:hidden;
+  min-height:132px;
+}
+.kpi::after{
+  content:"";
+  position:absolute;
+  right:-28px;
+  top:-30px;
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  opacity:.10;
+}
+.kpi.good{background:linear-gradient(180deg,#ffffff 0%, #f5fcf8 100%)}
+.kpi.warn{background:linear-gradient(180deg,#ffffff 0%, #fff9f2 100%)}
+.kpi.bad{background:linear-gradient(180deg,#ffffff 0%, #fff6f6 100%)}
+.kpi.info{background:linear-gradient(180deg,#ffffff 0%, #f5f9ff 100%)}
+.kpi.good::after{background:var(--good)}
+.kpi.warn::after{background:var(--warn)}
+.kpi.bad::after{background:var(--bad)}
+.kpi.info::after{background:var(--primary)}
+.kpi .label{
+  font-size:12px;
+  color:var(--muted);
+  min-height:38px;
+  line-height:1.5;
+  max-width:88%;
+}
+.kpi .value{
+  font-size:30px;
+  font-weight:900;
+  letter-spacing:-.04em;
+  color:#101828;
+  margin:8px 0 6px;
+  font-variant-numeric:tabular-nums;
+}
+.kpi .note{font-size:11px;color:#98a2b3;line-height:1.5}
+.two{grid-template-columns:1.15fr .85fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.section-title{font-weight:850;color:#101828;margin:0 0 14px;font-size:18px;letter-spacing:-.02em}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{
+  border:1px solid #d6dde6;
+  background:#fff;
+  color:#344054;
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:800;
+  transition:all .18s ease;
+  box-shadow:0 2px 8px rgba(15,23,42,.03);
+}
+.btn:hover{background:#f8fafc;border-color:#c8d2df;transform:translateY(-1px)}
+.btn.primary{
+  background:linear-gradient(180deg,var(--primary) 0%, var(--primary-2) 100%);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 10px 22px rgba(53,99,255,.22);
+}
+.btn.dark{
+  background:linear-gradient(180deg,var(--navy) 0%, var(--navy2) 100%);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 10px 22px rgba(15,59,104,.20);
+}
+.btn.danger{color:var(--bad);border-color:#fecdd3;background:#fff7f7}
+.filebox{
+  border:1.5px dashed #cfd9e6;
+  border-radius:18px;
+  padding:16px;
+  background:linear-gradient(180deg,#ffffff 0%, #fbfcfe 100%);
+  box-shadow:0 8px 20px rgba(15,23,42,.04);
+}
+.filebox label{font-weight:850;color:#101828;display:block;margin-bottom:8px}
+.filebox input{width:100%}
+.statusline{font-size:12px;margin-top:8px;color:var(--muted);line-height:1.6}
+.table-wrap{
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:16px;
+  max-height:520px;
+  background:#fff;
+}
+.table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;background:#fff}
+.table th{
+  position:sticky;
+  top:0;
+  background:#f8fafc;
+  color:#344054;
+  z-index:1;
+  text-align:left;
+  padding:12px 10px;
+  border-bottom:1px solid var(--line-strong);
+  white-space:nowrap;
+  font-weight:850;
+}
+.table td{
+  padding:10px;
+  border-bottom:1px solid #eef2f6;
+  vertical-align:top;
+  line-height:1.55;
+}
+.table tr:hover td{background:#fbfdff}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.badge{
+  display:inline-flex;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.b-good{background:#dcfae6;color:#067647}
+.b-partial{background:#fff3e0;color:#b54708}
+.b-warn{background:#fff3e0;color:#b54708}
+.b-bad{background:#fee4e2;color:#b42318}
+.b-info{background:#dbe8ff;color:#175cd3}
+.b-violet{background:#ede9fe;color:#6938ef}
+.b-gray{background:#eef2f6;color:#475467}
+.chart{min-height:290px}
+.bars{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  height:245px;
+  padding:20px 10px 32px;
+  border-bottom:1px solid var(--line);
+  overflow-x:auto;
+}
+.barcol{min-width:58px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+.bar{
+  width:36px;
+  border-radius:12px 12px 4px 4px;
+  background:linear-gradient(180deg,var(--primary-2),var(--primary));
+  min-height:2px;
+  position:relative;
+  box-shadow:0 10px 18px rgba(53,99,255,.16);
+}
+.bar .tip{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-6px);font-size:10px;color:#344054;white-space:nowrap}
+.barlabel{position:absolute;bottom:-25px;font-size:10px;color:var(--muted);white-space:nowrap}
+.hbars{display:grid;gap:12px}
+.hrow{display:grid;grid-template-columns:minmax(150px,1.3fr) 2fr 90px;gap:12px;align-items:center;font-size:12px}
+.track{height:12px;background:#edf2f7;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--primary));border-radius:999px}
+.donut{
+  width:168px;
+  height:168px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  margin:10px auto;
+  background:conic-gradient(var(--good) 0deg,var(--good) var(--angle,0deg),#e9eff5 var(--angle,0deg));
+  box-shadow:inset 0 0 0 12px rgba(255,255,255,.55), 0 14px 30px rgba(15,23,42,.06);
+}
+.donut:after{content:"";width:116px;height:116px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 1px #eef2f7}
+.donut-label{position:absolute;text-align:center;font-weight:900;color:#101828}
+.donut-wrap{position:relative;width:168px;margin:auto}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.filters input,.filters select,.form-control{
+  border:1px solid #d0d8e4;
+  border-radius:12px;
+  padding:10px 12px;
+  background:#fff;
+  min-width:160px;
+  color:#101828;
+  box-shadow:inset 0 1px 2px rgba(16,24,40,.02);
+}
+.filters input:focus,.filters select:focus,.form-control:focus{outline:none;border-color:#aebdfd;box-shadow:0 0 0 4px rgba(53,99,255,.10)}
+.notice{
+  border-left:4px solid var(--primary);
+  background:#f5f8ff;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:12px;
+  color:#23408e;
+  margin:10px 0;
+  line-height:1.7;
+}
+.warning{border-left-color:var(--warn);background:#fff8ef;color:#9a3412}
+.danger-note{border-left-color:var(--bad);background:#fff1f2;color:#9f1239}
+.loginbox{max-width:500px;margin:34px auto;padding:24px}
+.loginbox h3{margin-top:0;color:#101828;font-size:20px}
+.loginbox label{font-size:12px;font-weight:800;color:#475467}
+.loginbox .form-control{width:100%;margin:6px 0 14px}
+.person-card{
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  margin-bottom:10px;
+  background:linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+}
+.person-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.person-name{font-weight:900;color:#101828;font-size:16px;letter-spacing:-.02em}
+.ppitems{margin:8px 0 0;padding-left:18px}
+.ppitems li{margin:4px 0;line-height:1.55}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.price-row{
+  display:grid;
+  grid-template-columns:140px 1fr 120px 100px;
+  gap:10px;
+  align-items:center;
+  padding:10px;
+  border-bottom:1px solid #edf2f7;
+}
+.price-row input{width:100%;border:1px solid #d0d8e4;border-radius:10px;padding:9px 10px}
+.source-inferred{color:#b54708;font-size:11px;font-weight:700}
+.source-official{color:#067647;font-size:11px;font-weight:700}
+.footer{padding:26px;color:#98a2b3;font-size:11px;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(2,6,23,.50);z-index:100;display:grid;place-items:center;padding:20px;backdrop-filter:blur(4px)}
+.modalbox{background:#fff;border-radius:24px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.22)}
+.close{float:right;border:0;background:#f2f4f7;border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:700}
+.code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.privacy{font-size:11px;color:#667085}
+.right{text-align:right}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d5dde6;border-radius:999px}
+::-webkit-scrollbar-track{background:transparent}
+
+.audit-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+.fund-audit-toolbar{
+  display:grid;
+  grid-template-columns:minmax(180px,1.15fr) minmax(150px,.8fr) minmax(180px,1fr) minmax(260px,2fr) auto auto auto auto;
+  gap:10px;
+  align-items:end;
+}
+.filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.filter-field label{font-size:11px;color:#667085;font-weight:800}
+.filter-field select,.filter-field input{border:1px solid #d0d8e4;border-radius:12px;padding:10px 12px;background:#fff;color:#101828;min-height:42px;width:100%;min-width:0}
+.filter-field select:focus,.filter-field input:focus{outline:none;border-color:#aebdfd;box-shadow:0 0 0 4px rgba(53,99,255,.10)}
+.search-grow{min-width:0}.filter-action{padding-bottom:0;white-space:nowrap}
+.audit-headline{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:12px}
+.fund-audit-table{max-height:640px;overflow-y:auto;overflow-x:hidden;width:100%}
+.fund-audit-table .table{width:100%;min-width:0;table-layout:fixed;font-size:10.5px}
+.fund-audit-table .table th,.fund-audit-table .table td{padding:9px 7px;line-height:1.45;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.fund-audit-table .table th{font-size:10.5px;vertical-align:middle}
+.fund-audit-table .table td{vertical-align:top}
+.fund-audit-table .table th:nth-child(1),.fund-audit-table .table td:nth-child(1){width:7%}
+.fund-audit-table .table th:nth-child(2),.fund-audit-table .table td:nth-child(2){width:8%}
+.fund-audit-table .table th:nth-child(3),.fund-audit-table .table td:nth-child(3){width:6%}
+.fund-audit-table .table th:nth-child(4),.fund-audit-table .table td:nth-child(4){width:10%}
+.fund-audit-table .table th:nth-child(5),.fund-audit-table .table td:nth-child(5){width:7%}
+.fund-audit-table .table th:nth-child(6),.fund-audit-table .table td:nth-child(6){width:5%}
+.fund-audit-table .table th:nth-child(7),.fund-audit-table .table td:nth-child(7){width:7%}
+.fund-audit-table .table th:nth-child(8),.fund-audit-table .table td:nth-child(8){width:14%}
+.fund-audit-table .table th:nth-child(9),.fund-audit-table .table td:nth-child(9){width:6%}
+.fund-audit-table .table th:nth-child(10),.fund-audit-table .table td:nth-child(10){width:8%}
+.fund-audit-table .table th:nth-child(11),.fund-audit-table .table td:nth-child(11){width:6%}
+.fund-audit-table .table th:nth-child(12),.fund-audit-table .table td:nth-child(12){width:16%}
+.fund-audit-table .code{font-size:10px;letter-spacing:-.02em;word-break:break-all}
+.fund-audit-table .badge{font-size:9.5px;padding:4px 6px;white-space:normal;text-align:center;justify-content:center;line-height:1.25}
+.fund-audit-table .num{white-space:nowrap!important;font-variant-numeric:tabular-nums}
+.comp-detail{font-size:10px;line-height:1.45;color:#475467;max-width:none;overflow-wrap:anywhere}
+.comp-detail b{color:#101828}
+.row-paid td{background:rgba(23,178,106,.018)}
+.row-partial td{background:rgba(247,144,9,.025)}
+.row-unpaid td{background:rgba(240,68,56,.018)}
+.row-ambiguous td{background:rgba(122,90,248,.025)}
+@media(max-width:1500px){
+  .fund-audit-toolbar{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .filter-action .btn{width:100%}
+  .fund-audit-table .table{font-size:9.8px}
+  .fund-audit-table .table th{font-size:9.8px}
+  .fund-audit-table .table th,.fund-audit-table .table td{padding:8px 5px}
+}
+@media(max-width:1100px){
+  .audit-kpis{grid-template-columns:repeat(3,1fr)}
+  .fund-audit-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fund-audit-table{overflow-x:auto}
+  .fund-audit-table .table{min-width:1180px}
+}
+@media(max-width:760px){
+  .audit-kpis{grid-template-columns:1fr}
+  .fund-audit-toolbar{grid-template-columns:1fr}
+  .filter-field,.search-grow{width:100%;min-width:0}
+  .filter-action .btn{width:100%}
+  .audit-headline{display:block}
+  .fund-audit-table .table{min-width:1100px}
+}
+@media(max-width:1280px){.kpis{grid-template-columns:repeat(3,1fr)}.two,.three{grid-template-columns:1fr}}
+@media(max-width:980px){.app{display:block}.sidebar{position:relative;top:auto;width:100%;height:auto;border-right:0;border-bottom:1px solid var(--line)}.main{width:100%}.topbar{position:sticky}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){body{background:var(--bg)}.app{margin:0;min-height:100vh;border-radius:0}.content{padding:16px}.topbar{padding:16px 18px;position:static}.page-head{display:block}.split{grid-template-columns:1fr}.price-row{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}.sidebar{border-radius:0}.toolbar,.filters{gap:8px}}
+
+
+/* ===== Typography System v3.1 =====
+   Thai UI: Prompt | Headings: Kanit | Numeric/KPI: Inter
+   All declarations include local/system fallbacks for offline use.
+*/
+:root{
+  --font-ui:"Prompt","IBM Plex Sans Thai","Noto Sans Thai","Leelawadee UI",Tahoma,Arial,sans-serif;
+  --font-heading:"Kanit","Prompt","IBM Plex Sans Thai","Noto Sans Thai","Leelawadee UI",Tahoma,Arial,sans-serif;
+  --font-number:"Inter","Prompt","IBM Plex Sans Thai","Noto Sans Thai","Leelawadee UI",Arial,sans-serif;
+}
+body{
+  font-family:var(--font-ui);
+  font-weight:400;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  font-kerning:normal;
+}
+button,input,select,textarea{font-family:var(--font-ui)}
+.brand h1,.top-title,.page-head h2,.section-title,.loginbox h3,.person-name{
+  font-family:var(--font-heading);
+  font-weight:600;
+  letter-spacing:-.015em;
+}
+.brand h1{font-weight:600;letter-spacing:-.025em}
+.top-title{font-weight:600;font-size:20px}
+.page-head h2{font-weight:600;line-height:1.25}
+.section-title{font-weight:600;line-height:1.35}
+.navbtn{font-weight:500;letter-spacing:0}
+.btn{font-weight:600;letter-spacing:0}
+.filebox label,.loginbox label{font-weight:600}
+.table{font-family:var(--font-ui);font-size:12.5px;line-height:1.6}
+.table th{font-weight:600;letter-spacing:0}
+.table td{font-weight:400}
+.kpi .label{font-family:var(--font-ui);font-weight:400;letter-spacing:0}
+.kpi .value{
+  font-family:var(--font-number);
+  font-weight:700;
+  letter-spacing:-.035em;
+  font-feature-settings:"tnum" 1,"lnum" 1;
+  font-variant-numeric:tabular-nums lining-nums;
+}
+.num,.bar .tip,.badge,.pill,.code{
+  font-family:var(--font-number);
+  font-feature-settings:"tnum" 1,"lnum" 1;
+  font-variant-numeric:tabular-nums lining-nums;
+}
+.num{font-weight:500}
+.badge{font-weight:600}
+.pill{font-weight:600}
+.top-sub,.page-head p,.muted,.small,.statusline,.privacy,.footer,.kpi .note{
+  font-family:var(--font-ui);
+  letter-spacing:0;
+}
+.filters input,.filters select,.form-control,.price-row input{
+  font-family:var(--font-ui);
+  font-weight:400;
+}
+.notice,.person-card,.hrow,.price-row{font-family:var(--font-ui)}
+@media(max-width:760px){
+  .page-head h2{font-size:25px}
+  .kpi .value{font-size:29px}
+}
+
+
+/* ===== Fund Audit v4.9: unified aggregate status + anti-overlap table ===== */
+.fund-audit-table{max-height:680px;overflow-y:auto;overflow-x:hidden;width:100%;contain:layout paint}
+.fund-audit-table .table{width:100%;min-width:0;table-layout:fixed;font-size:10.5px}
+.fund-audit-table .table th,.fund-audit-table .table td{padding:11px 7px;line-height:1.52;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;overflow:hidden}
+.fund-audit-table .table td{vertical-align:top;height:auto}
+.fund-audit-table .table th:nth-child(1),.fund-audit-table .table td:nth-child(1){width:6%}
+.fund-audit-table .table th:nth-child(2),.fund-audit-table .table td:nth-child(2){width:7%}
+.fund-audit-table .table th:nth-child(3),.fund-audit-table .table td:nth-child(3){width:5%}
+.fund-audit-table .table th:nth-child(4),.fund-audit-table .table td:nth-child(4){width:9%}
+.fund-audit-table .table th:nth-child(5),.fund-audit-table .table td:nth-child(5){width:6%}
+.fund-audit-table .table th:nth-child(6),.fund-audit-table .table td:nth-child(6){width:4.5%}
+.fund-audit-table .table th:nth-child(7),.fund-audit-table .table td:nth-child(7){width:6.5%}
+.fund-audit-table .table th:nth-child(8),.fund-audit-table .table td:nth-child(8){width:13%}
+.fund-audit-table .table th:nth-child(9),.fund-audit-table .table td:nth-child(9){width:6%}
+.fund-audit-table .table th:nth-child(10),.fund-audit-table .table td:nth-child(10){width:7.5%}
+.fund-audit-table .table th:nth-child(11),.fund-audit-table .table td:nth-child(11){width:6%}
+.fund-audit-table .table th:nth-child(12),.fund-audit-table .table td:nth-child(12){width:23.5%}
+.fund-audit-table tbody tr+tr td{border-top:1px solid #edf1f5}
+.fund-audit-table .num{white-space:nowrap!important}
+.aggregate-badge{max-width:100%;white-space:normal!important;line-height:1.25;text-align:center;justify-content:center}
+.comp-detail{font-size:10px;line-height:1.48;color:#475467;max-width:100%;overflow:visible;word-break:normal}
+.claim-detail-list{display:grid;gap:4px;min-width:0}
+.claim-line{display:grid;grid-template-columns:84px minmax(0,1fr);gap:6px;align-items:start;padding-bottom:2px}
+.claim-line+.claim-line{border-top:1px dashed #eef2f6;padding-top:3px}
+.claim-key{font-weight:700;color:#344054;white-space:nowrap}
+.claim-formula span:last-child{font-weight:600;color:#1d2939}
+.audit-package-total{margin-top:3px;font-size:9px;line-height:1.3;color:#667085;white-space:normal}
+@media(max-width:1500px){
+ .fund-audit-table .table{font-size:9.7px}
+ .fund-audit-table .table th,.fund-audit-table .table td{padding:9px 5px}
+ .claim-line{grid-template-columns:72px minmax(0,1fr);gap:4px}
+}
+@media(max-width:1100px){
+ .fund-audit-table{overflow-x:auto;contain:none}
+ .fund-audit-table .table{min-width:1250px}
+}
+
+/* v5.5 Fund Portfolio Dashboard + Executive Alert */
+.fund-dashboard-filter{padding:14px 16px}
+.fund-dashboard-controls{margin:0;align-items:center}
+.fund-dashboard-controls select,.fund-dashboard-controls input{min-width:190px}
+.fund-dashboard-controls input{flex:1;min-width:240px}
+.fund-dashboard-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.fund-dashboard-kpis .kpi{min-height:126px}
+.fund-status-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:16px}
+.fund-status-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow-soft);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.fund-status-card .status-name{font-size:12px;color:var(--muted);font-weight:750;line-height:1.4}
+.fund-status-card .status-value{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.fund-status-card.good{border-left:4px solid var(--good)}
+.fund-status-card.partial{border-left:4px solid #f79009}
+.fund-status-card.info{border-left:4px solid var(--primary)}
+.fund-status-card.warn{border-left:4px solid var(--violet)}
+.fund-status-card.bad{border-left:4px solid var(--bad)}
+.fund-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.fund-recovery-list{display:grid;gap:12px}
+.fund-recovery-row{display:grid;grid-template-columns:minmax(150px,1.2fr) 2fr 72px;gap:10px;align-items:center;font-size:12px}
+.fund-recovery-row .track{height:12px}
+.fund-recovery-row .fill.good{background:linear-gradient(90deg,#12b76a,#32d583)}
+.fund-recovery-row .fill.watch{background:linear-gradient(90deg,#f79009,#fdb022)}
+.fund-recovery-row .fill.bad{background:linear-gradient(90deg,#f04438,#f97066)}
+.fund-portfolio-table{max-height:620px}
+.fund-portfolio-table table{min-width:1450px}
+.fund-portfolio-table th,.fund-portfolio-table td{white-space:normal}
+.fund-portfolio-table th:first-child,.fund-portfolio-table td:first-child{position:sticky;left:0;background:#fff;z-index:2;min-width:190px}
+.fund-portfolio-table thead th:first-child{background:#f8fafc;z-index:4}
+.fund-portfolio-table .num{font-variant-numeric:tabular-nums}
+.fund-health{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:850;white-space:nowrap}
+.fund-health.good{background:#dcfae6;color:#067647}.fund-health.watch{background:#fff3e0;color:#b54708}.fund-health.bad{background:#fee4e2;color:#b42318}
+.fund-health-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.fund-drill-btn{padding:7px 9px;border-radius:9px;font-size:11px}
+@media(max-width:1280px){.fund-dashboard-kpis{grid-template-columns:repeat(2,1fr)}.fund-status-strip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.fund-dashboard-kpis,.fund-status-strip{grid-template-columns:1fr}.fund-dashboard-controls>*{width:100%;min-width:0!important}.fund-portfolio-table table{min-width:1250px}}
+
+
+/* Executive Alert */
+.executive-alert{margin-top:16px;overflow:hidden;border:1px solid #dfe7f2;background:linear-gradient(135deg,#ffffff 0%,#f8fbff 62%,#f4f7ff 100%)}
+.executive-alert-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.executive-alert-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.executive-alert-title h3{margin:0;font-size:19px;letter-spacing:-.02em}
+.executive-alert-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#eef4ff;color:#3538cd;font-size:11px;font-weight:850;border:1px solid #d9e2ff}
+.executive-alert-rule{max-width:720px;color:var(--muted);font-size:11px;line-height:1.6;text-align:right}
+.executive-alert-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.executive-alert-metric{border:1px solid var(--line);border-radius:15px;padding:12px 14px;background:#fff;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.executive-alert-metric .m-label{font-size:11px;color:var(--muted);font-weight:750;line-height:1.4}
+.executive-alert-metric .m-value{font-size:21px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em;white-space:nowrap}
+.executive-alert-metric.critical{border-left:4px solid #d92d20}.executive-alert-metric.high{border-left:4px solid #f79009}.executive-alert-metric.rep{border-left:4px solid #3538cd}.executive-alert-metric.abnormal{border-left:4px solid #7a5af8}
+.executive-alert-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.exec-alert-item{border:1px solid var(--line);border-radius:16px;background:#fff;padding:13px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:flex-start;transition:.18s ease}
+.exec-alert-item:hover{box-shadow:0 10px 24px rgba(15,23,42,.07);transform:translateY(-1px)}
+.exec-alert-rank{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:900;background:#f2f4f7;color:#475467}
+.exec-alert-item.critical{border-left:5px solid #d92d20;background:linear-gradient(90deg,#fff8f7 0%,#fff 16%)}
+.exec-alert-item.high{border-left:5px solid #f79009;background:linear-gradient(90deg,#fffaf3 0%,#fff 16%)}
+.exec-alert-item.watch{border-left:5px solid #7a5af8;background:linear-gradient(90deg,#faf9ff 0%,#fff 16%)}
+.exec-alert-item.critical .exec-alert-rank{background:#fee4e2;color:#b42318}
+.exec-alert-item.high .exec-alert-rank{background:#fff3e0;color:#b54708}
+.exec-alert-item.watch .exec-alert-rank{background:#f0ecff;color:#5925dc}
+.exec-alert-main{min-width:0}
+.exec-alert-name{font-weight:900;color:#101828;font-size:13px;margin-bottom:4px}
+.exec-alert-reasons{display:flex;flex-wrap:wrap;gap:5px}
+.exec-alert-reason{font-size:10.5px;line-height:1.35;padding:4px 7px;border-radius:999px;background:#f2f4f7;color:#475467;border:1px solid #eaecf0}
+.exec-alert-score{display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:86px}
+.exec-alert-level{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10.5px;font-weight:900;white-space:nowrap}
+.exec-alert-level.critical{background:#fee4e2;color:#b42318}.exec-alert-level.high{background:#fff3e0;color:#b54708}.exec-alert-level.watch{background:#f0ecff;color:#5925dc}
+.exec-alert-score .score{font-size:10px;color:var(--muted);font-weight:750}
+.exec-alert-empty{padding:18px;border-radius:16px;background:#ecfdf3;color:#067647;border:1px solid #abefc6;font-size:12px;line-height:1.6}
+@media(max-width:1100px){.executive-alert-summary{grid-template-columns:repeat(2,1fr)}.executive-alert-list{grid-template-columns:1fr}.executive-alert-rule{text-align:left;max-width:none}.executive-alert-head{display:block}.executive-alert-rule{margin-top:8px}}
+@media(max-width:640px){.executive-alert-summary{grid-template-columns:1fr}.exec-alert-item{grid-template-columns:auto 1fr}.exec-alert-score{grid-column:2;align-items:flex-start;flex-direction:row}}
+
+
+.live-source-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.live-source{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#fff,#fbfdff);padding:18px;box-shadow:var(--shadow-soft)}
+.live-source-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.live-source-name{font-weight:900;font-size:16px;color:#101828}
+.live-source-id{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;color:#98a2b3;margin-top:5px;word-break:break-all}
+.live-source-meta{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.live-mini{background:#f7f9fc;border:1px solid #edf1f6;border-radius:12px;padding:10px}
+.live-mini b{display:block;font-size:15px;color:#101828}
+.live-mini span{font-size:10px;color:#667085}
+.sync-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border-radius:20px;background:linear-gradient(135deg,#eef4ff,#effcfb);border:1px solid #dce7f4;margin-bottom:16px}
+.sync-state{display:flex;gap:10px;align-items:center}
+.sync-dot{width:10px;height:10px;border-radius:50%;background:#17b26a;box-shadow:0 0 0 5px rgba(23,178,106,.10)}
+.sync-dot.loading{background:#f79009;animation:pulseSync 1s infinite}
+.sync-dot.error{background:#f04438}
+@keyframes pulseSync{50%{opacity:.35}}
+.live-warning{font-size:11px;color:#b54708;margin-top:8px}
+@media(max-width:900px){.live-source-grid{grid-template-columns:1fr}.live-source-meta{grid-template-columns:1fr 1fr}}
+
+</style>
+<script src="./config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><h1>PP Claim Intelligence</h1><p>Selaphum Hospital · Smart PP Verification Dashboard<br>ตรวจสอบการชดเชย สปสช. แบบออฟไลน์ในเครื่อง</p></div>
+  <button class="navbtn active" data-page="overview">◫ ภาพรวม</button>
+  <button class="navbtn" data-page="serviceReport">▣ รายงานรายบริการ</button>
+  <button class="navbtn" data-page="fund">▦ แดชบอร์ดรายกองทุน</button>
+  <button class="navbtn" data-page="fundAudit">▤ ตรวจสอบรายกองทุน</button>
+  <button class="navbtn" data-page="month">◷ รายงานจำแนกเดือน</button>
+  <button class="navbtn" data-page="individual">⌕ ตรวจสอบรายบุคคล</button>
+  <button class="navbtn" data-page="prices">฿ ตารางราคา PP</button>
+  <button class="navbtn" data-page="data">↻ แหล่งข้อมูล / ซิงก์</button>
+  <div class="sidefoot">จับคู่ตามลำดับความน่าเชื่อถือ: REP+CID/HN + PP(AI) → SEQ → PID+วันที่ → HN+วันที่<br><br>ประมวลผลในเครื่องผู้ใช้ ไม่ส่งไฟล์ผู้ป่วยไปยังเซิร์ฟเวอร์ของโปรแกรม</div>
+</aside>
+<main class="main">
+<header class="topbar"><div><div class="top-title">PP Medical Compensation Dashboard</div><div class="top-sub" id="datasetLabel"></div></div><div class="pill" id="engineStatus">● พร้อมใช้งาน</div></header>
+<div class="content">
+<section id="overview" class="page active">
+ <div class="page-head"><div><h2>ภาพรวมการตรวจสอบ PP</h2><p>เปรียบเทียบบริการที่จัดทำไว้กับผลตอบกลับการชดเชยจาก สปสช.</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
+ <div class="grid kpis" id="kpiGrid"></div>
+ <div class="grid two">
+  <div class="card"><h3 class="section-title">สถานะการจับคู่บริการกับ STM</h3><div class="split"><div><div class="donut-wrap"><div class="donut" id="matchDonut"></div><div class="donut-label" id="matchPct" style="inset:57px 0 auto 0"></div></div></div><div id="statusLegend"></div></div></div>
+  <div class="card"><h3 class="section-title">ยอดชดเชย PP ตามเดือนของ STM</h3><div id="overviewMonthChart" class="chart"></div></div>
+ </div>
+ <div class="grid two" style="margin-top:14px">
+  <div class="card"><h3 class="section-title">บริการ PP ที่พบมาก</h3><div id="topServices"></div></div>
+  <div class="card"><h3 class="section-title">ประเด็นที่ควรติดตาม</h3><div id="issues"></div></div>
+ </div>
+</section>
+<section id="serviceReport" class="page">
+ <div class="page-head"><div><h2>รายงานแยกรายการบริการ</h2><p>สรุปตามชีตบริการจากทะเบียน PP FS เช่น ฝากครรภ์, FPG, HDL, HepB, HepC, ทันตกรรม และบริการอื่น</p></div><div class="toolbar"><button class="btn" onclick="exportServiceSummaryCSV()">ส่งออกสรุปรายบริการ CSV</button></div></div>
+ <div class="grid kpis" id="serviceKpis"></div>
+ <div class="grid two">
+  <div class="card"><h3 class="section-title">มูลค่าที่คาดเรียกเก็บตามรายการบริการ</h3><div id="serviceExpectedBars"></div></div>
+  <div class="card"><h3 class="section-title">อัตราการจับคู่กับ STM</h3><div id="serviceMatchBars"></div></div>
+ </div>
+ <div class="card" style="margin-top:16px">
+  <div class="filters"><input id="serviceSearch" placeholder="ค้นหารายการบริการ/ชื่อชีต" oninput="renderServiceReport()"><select id="serviceMatchFilter" onchange="renderServiceReport()"><option value="">ทุกสถานะ</option><option value="good">จับคู่ ≥ 80%</option><option value="watch">จับคู่ < 80%</option></select></div>
+  <div class="table-wrap"><table class="table"><thead><tr><th>รายการบริการ</th><th class="num">บริการ</th><th class="num">ผู้รับบริการ</th><th class="num">มูลค่าที่คาดเรียกเก็บ</th><th class="num">จับคู่ STM</th><th class="num">PP ที่จ่าย</th><th class="num">ส่วนต่าง</th><th class="num">อัตราจับคู่</th></tr></thead><tbody id="serviceTableBody"></tbody></table></div>
+ </div>
+</section>
+<section id="fund" class="page">
+ <div class="page-head">
+   <div><h2>แดชบอร์ดรายกองทุน</h2><p>ตรวจสอบภาพรวมการเบิกจ่าย PP ทุกกองทุนในหน้าเดียว · ใช้ PP จากคอลัมน์ AI ของ Statement และยอดที่จัดสรรกลับเข้าบริการ</p></div>
+   <div class="toolbar"><button class="btn" onclick="exportFundDashboardCSV()">ส่งออกสรุปทุกกองทุน CSV</button><button class="btn primary" onclick="openFundAuditFromDashboard('')">ตรวจสอบรายคน</button></div>
+ </div>
+ <div class="card fund-dashboard-filter">
+   <div class="filters fund-dashboard-controls">
+     <select id="fundDashMonth" onchange="renderFund()"><option value="">ทุกเดือนบริการ</option></select>
+     <select id="fundDashIssue" onchange="renderFund()">
+       <option value="">ทุกกองทุน</option>
+       <option value="unpaid">มีรายการยังไม่พบชดเชย</option>
+       <option value="rep">พบ PP(AI) ตาม REP แต่รอจัดสรร</option>
+       <option value="ambiguous">มียอดรวมกำกวม/รอตรวจสอบ</option>
+       <option value="partial">มีชดเชยบางส่วน</option>
+       <option value="low80">อัตราชดเชยต่ำกว่า 80%</option>
+       <option value="complete">ชดเชยครบ ≥ 99.5%</option>
+     </select>
+     <select id="fundDashSort" onchange="renderFund()">
+       <option value="outstanding">เรียง: ยอดคงค้างสูงสุด</option>
+       <option value="expected">เรียง: มูลค่าตามสิทธิสูงสุด</option>
+       <option value="paid">เรียง: PP(AI) จ่ายสูงสุด</option>
+       <option value="recovery">เรียง: อัตราชดเชยต่ำสุด</option>
+       <option value="services">เรียง: จำนวนบริการสูงสุด</option>
+       <option value="name">เรียง: ชื่อกองทุน</option>
+     </select>
+     <input id="fundDashSearch" placeholder="ค้นหาชื่อกองทุน / โปรแกรม" oninput="renderFund()">
+     <button class="btn" onclick="clearFundDashboardFilters()">ล้างตัวกรอง</button>
+   </div>
+ </div>
+ <div class="grid fund-dashboard-kpis" id="fundDashKPIs" style="margin-top:16px"></div>
+ <div class="fund-status-strip" id="fundDashStatusStrip"></div>
+ <div class="card executive-alert" id="executiveAlertPanel">
+   <div class="executive-alert-head">
+     <div>
+       <div class="executive-alert-title"><h3>Executive Alert</h3><span class="executive-alert-badge">⚡ จัดลำดับอัตโนมัติ</span></div>
+       <div class="small muted" style="margin-top:5px">ชี้กองทุนที่ควรติดตามก่อนจากยอดคงค้าง อัตราชดเชย REP ที่ยังจัดสรรไม่ได้ และรายการผิดปกติ</div>
+     </div>
+     <div class="executive-alert-rule" id="executiveAlertRule"></div>
+   </div>
+   <div class="executive-alert-summary" id="executiveAlertSummary"></div>
+   <div class="executive-alert-list" id="executiveAlertList"></div>
+ </div>
+ <div class="grid two fund-dashboard-charts" style="margin-top:16px">
+   <div class="card"><div class="fund-card-head"><div><h3 class="section-title">กองทุนที่มียอดคงค้างสูง</h3><div class="small muted">มูลค่าตามสิทธิ PPFS69 − PP(AI) ที่จัดสรรแล้ว</div></div></div><div id="fundOutstandingBars"></div></div>
+   <div class="card"><div class="fund-card-head"><div><h3 class="section-title">อัตราชดเชยรายกองทุน</h3><div class="small muted">PP(AI) ที่จัดสรรแล้ว ÷ มูลค่าตามสิทธิ</div></div></div><div id="fundRecoveryBars"></div></div>
+ </div>
+ <div class="card" style="margin-top:16px">
+   <div class="audit-headline"><div><h3 class="section-title" style="margin-bottom:4px">ภาพรวมการเบิกจ่ายทุกกองทุน</h3><div class="small muted" id="fundDashCaption">ทุกกองทุน</div></div><div class="small muted" id="fundDashCount"></div></div>
+   <div class="table-wrap fund-portfolio-table"><table class="table"><thead><tr>
+     <th>กองทุน / โปรแกรม</th><th class="num">บริการ</th><th class="num">ผู้รับบริการ</th><th class="num optional-col">เรียกเก็บทะเบียน</th><th class="num">มูลค่าตามสิทธิ</th><th class="num">PP(AI) จัดสรรแล้ว</th><th class="num">คงค้าง</th><th class="num">พบ Statement</th><th class="num">REP รอจัดสรร</th><th class="num">ยอดกำกวม</th><th class="num">ยังไม่พบ</th><th class="num">อัตราชดเชย</th><th>สถานะ</th><th>เจาะลึก</th>
+   </tr></thead><tbody id="fundPortfolioBody"></tbody></table></div>
+ </div>
+</section>
+<section id="fundAudit" class="page">
+ <div class="page-head"><div><h2>ตรวจสอบการชดเชยรายกองทุน</h2><p>ตรวจสอบผู้รับบริการเป็นรายคน โดยเลือกกองทุนย่อย/ชีตบริการและเดือน พร้อมค้นหาด้วย HN หรือ CID</p></div><div id="fundAuditLoginState"></div></div>
+ <div id="fundAuditLoginPanel" class="card loginbox">
+   <h3>เข้าสู่ระบบก่อนตรวจสอบรายกองทุน</h3>
+   <label>Username</label><input id="fundAuditUser" class="form-control" value="admin" autocomplete="username">
+   <label>Password</label><input id="fundAuditPass" class="form-control" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginFundAudit()">
+   <button class="btn dark" onclick="loginFundAudit()">เข้าสู่ระบบ</button>
+   <div id="fundAuditLoginMsg" class="statusline"></div>
+   <div class="notice warning" style="margin-top:16px">เมนูนี้แสดง HN/CID และรายละเอียดผู้รับบริการ จึงกำหนดให้ต้องเข้าสู่ระบบก่อนใช้งาน การล็อกอินใน Local HTML เป็นการจำกัดการเข้าถึงระดับหน้าเว็บเท่านั้น</div>
+ </div>
+ <div id="fundAuditPanel" class="hidden">
+   <div class="card">
+     <div class="fund-audit-toolbar">
+       <div class="filter-field"><label>กองทุนย่อย / ชีตบริการ</label><select id="fundAuditFund" onchange="syncFundAuditMonths();renderFundAudit()"><option value="">ทุกกองทุน</option></select></div>
+       <div class="filter-field"><label>เดือนบริการ</label><select id="fundAuditMonth" onchange="renderFundAudit()"><option value="">ทุกเดือน</option></select></div>
+       <div class="filter-field"><label>สถานะการชดเชย</label><select id="fundAuditStatus" onchange="renderFundAudit()"><option value="">ทุกสถานะ</option><option value="paid">ได้รับชดเชยแล้ว</option><option value="partial">ชดเชยบางส่วน</option><option value="rep-confirmed">พบชดเชยตาม REP · รอจัดสรร</option><option value="ambiguous">รอตรวจสอบยอดรวม</option><option value="unpaid">ยังไม่พบชดเชย</option></select></div>
+       <div class="filter-field search-grow"><label>ค้นหา HN / CID</label><input id="fundAuditQuery" placeholder="เช่น 000236114 หรือเลขบัตรประชาชน" oninput="if(!this.value)renderFundAudit()" onkeydown="if(event.key==='Enter')renderFundAudit()"></div>
+       <div class="filter-action"><button class="btn primary" onclick="renderFundAudit()">ค้นหา</button></div>
+       <div class="filter-action"><button class="btn" onclick="clearFundAuditFilters()">ล้างตัวกรอง</button></div>
+       <div class="filter-action"><button class="btn" onclick="exportFundAuditCSV()">ส่งออก CSV</button></div>
+       <div class="filter-action"><button class="btn danger" onclick="logoutFundAudit()">ออกจากระบบ</button></div>
+     </div>
+   </div>
+   <div class="grid audit-kpis" id="fundAuditKPIs" style="margin-top:16px"></div>
+   <div class="card" style="margin-top:16px">
+     <div class="audit-headline"><div><h3 class="section-title" style="margin-bottom:4px">รายละเอียดผู้รับบริการและการชดเชย</h3><div class="small muted" id="fundAuditCaption"></div></div><div class="small muted" id="fundAuditCount"></div></div>
+     <div class="table-wrap fund-audit-table"><table class="table"><thead><tr>
+       <th>VN</th><th>CID</th><th>HN</th><th>ชื่อผู้ป่วย</th><th>วันที่ตรวจ</th><th>เวลา</th><th>เลขที่หนังสือ</th><th>รายการบริการ</th><th class="num">เรียกเก็บ</th><th>สถานะการชดเชย</th><th class="num">รับชดเชย</th><th>REP / วิเคราะห์ยอด</th>
+     </tr></thead><tbody id="fundAuditBody"></tbody></table></div>
+   </div>
+ </div>
+</section>
+<section id="month" class="page">
+ <div class="page-head"><div><h2>รายงานจำแนกเดือน</h2><p>สรุปจำนวนบริการ ผู้รับบริการ ยอดจ่าย และส่วนต่างเทียบราคาที่มีในระบบ</p></div></div>
+ <div class="card"><div id="monthBars"></div></div>
+ <div class="card" style="margin-top:14px"><div class="table-wrap"><table class="table"><thead><tr><th>เดือนบริการ</th><th class="num">บริการ PP</th><th class="num">ผู้รับบริการ</th><th class="num">จับคู่ STM</th><th class="num">ยอด PP จ่าย</th><th class="num">ยอดตามราคาที่คำนวณได้</th><th class="num">ส่วนต่าง</th></tr></thead><tbody id="monthTableBody"></tbody></table></div></div>
+</section>
+<section id="individual" class="page">
+ <div class="page-head"><div><h2>ตรวจสอบรายบุคคล</h2><p>ค้นด้วย HN, เลขบัตรประชาชน หรือชื่อ-สกุล</p></div><div id="loginState"></div></div>
+ <div id="loginPanel" class="card loginbox"><h3>เข้าสู่เมนูรายบุคคล</h3><label>Username</label><input id="loginUser" class="form-control" value="admin" autocomplete="username"><label>Password</label><input id="loginPass" class="form-control" type="password" autocomplete="current-password"><button class="btn dark" onclick="loginIndividual()">เข้าสู่ระบบ</button><div id="loginMsg" class="statusline"></div><div class="notice warning" style="margin-top:16px">การล็อกอินนี้เป็นการจำกัดการเข้าถึงภายในหน้า HTML เท่านั้น หากนำไฟล์ HTML ที่ฝังข้อมูลผู้ป่วยไปแจกจ่าย ผู้ที่มีไฟล์อาจตรวจดูข้อมูลจากซอร์สได้ การใช้งานจริงหลายผู้ใช้ควรย้ายข้อมูลและการยืนยันตัวตนไปฝั่งเซิร์ฟเวอร์</div></div>
+ <div id="individualPanel" class="hidden"><div class="card"><div class="filters"><input id="personQuery" style="min-width:340px" placeholder="HN / PID / ชื่อ-สกุล" onkeydown="if(event.key==='Enter')searchPerson()"><button class="btn primary" onclick="searchPerson()">ค้นหา</button><button class="btn" onclick="logoutIndividual()">ออกจากระบบ</button></div><div id="personResults"></div></div></div>
+</section>
+<section id="prices" class="page">
+ <div class="page-head"><div><h2>ตารางราคา PP</h2><p>ใช้แยกยอดที่ สปสช. จ่ายรวมหลายรายการกลับเป็นรายการบริการ</p></div><div class="toolbar"><button class="btn" onclick="addBlankPrice()">+ เพิ่มรายการ</button><button class="btn primary" onclick="savePriceEdits()">บันทึกราคา</button></div></div>
+ <div id="priceNotice" class="notice warning"></div>
+ <div class="card"><div class="filters"><input id="priceSearch" placeholder="ค้นหารหัส/รายการ" oninput="renderPrices()"><select id="priceSourceFilter" onchange="renderPrices()"><option value="">ทุกแหล่งราคา</option><option value="official">ทางการ/นำเข้า</option><option value="inferred">อนุมาน</option><option value="missing">ยังไม่มีราคา</option></select></div><div id="priceList"></div></div>
+</section>
+<section id="data" class="page">
+ <div class="page-head">
+  <div><h2>แหล่งข้อมูลและการซิงก์</h2><p>เชื่อม Google Sheets ผ่านบัญชี Google ที่ได้รับอนุญาตโดยตรงจาก GitHub Pages · Read-only</p></div>
+  <div class="toolbar"><button class="btn" id="googleAuthBtn" onclick="connectGoogle()">G เชื่อมบัญชี Google</button><button class="btn primary" id="liveSyncBtn" onclick="syncGoogleSheets(true)">↻ ซิงก์ข้อมูลล่าสุด</button></div>
+ </div>
+
+ <div class="sync-strip">
+  <div class="sync-state"><span class="sync-dot" id="liveSyncDot"></span><div><b id="liveSyncTitle">พร้อมเชื่อม Google Sheets</b><div class="small muted" id="liveSyncSub">เชื่อมบัญชี Google ก่อน จากนั้นกดซิงก์ข้อมูลล่าสุด</div></div></div>
+  <div class="right"><div class="small muted">Last Sync</div><b id="liveSyncTime">—</b></div>
+ </div>
+
+ <div class="live-source-grid">
+  <div class="live-source">
+   <div class="live-source-head"><div><div class="live-source-name">ฐานข้อมูลบริการ</div><div class="muted small">ข้อมูลส่งเบิก PP FS 69</div></div><span class="badge b-good" id="serviceLiveBadge">CONNECTED</span></div>
+   <div class="live-source-id">1NdQ_f-oTWEeYgf0ijSEdEizrML_pqIMFXmN8HIa_7pQ</div>
+   <div class="live-source-meta">
+    <div class="live-mini"><b id="liveServiceRows">—</b><span>บริการ</span></div>
+    <div class="live-mini"><b id="liveServiceSheets">—</b><span>ชีตที่อ่าน</span></div>
+    <div class="live-mini"><b id="liveServiceFunds">—</b><span>กองทุน/บริการ</span></div>
+   </div>
+  </div>
+  <div class="live-source">
+   <div class="live-source-head"><div><div class="live-source-name">ฐานข้อมูล Statement</div><div class="muted small">statement OP-UC 69</div></div><span class="badge b-good" id="stmLiveBadge">CONNECTED</span></div>
+   <div class="live-source-id">1Psmp2tKYDDMIjIZy01kn89u7FN0sn-SRHGcQxjCjKRY</div>
+   <div class="live-source-meta">
+    <div class="live-mini"><b id="liveSTMRows">—</b><span>Statement rows</span></div>
+    <div class="live-mini"><b id="liveSTMPaid">—</b><span>PP(AI) จ่ายแล้ว</span></div>
+    <div class="live-mini"><b id="liveSTMSum">—</b><span>ยอด PP(AI)</span></div>
+   </div>
+   <div class="live-warning">Source of Truth: คอลัมน์ AI = PP</div>
+  </div>
+ </div>
+
+ <div id="liveWarnings"></div>
+ <div id="processStatus" class="notice"><b>สถานะ:</b> รอการซิงก์ Google Sheets</div>
+
+ <div class="card" style="margin-top:14px">
+  <h3 class="section-title">Reconciliation Pipeline</h3>
+  <div class="split">
+   <div><div class="notice"><b>1. Identity Matching</b><br>REP + CID/HN → SEQ → CID/HN + วันที่</div></div>
+   <div><div class="notice"><b>2. Payment Intelligence</b><br>AI(PP) → PPFS69 → แตกยอดรวม → จัดสรรกลับแต่ละบริการ/กองทุน</div></div>
+  </div>
+ </div>
+
+ <div class="card" style="margin-top:14px"><h3 class="section-title">สรุปข้อมูลที่โหลดอยู่</h3><div id="dataSummary"></div></div>
+ 
+<details style="margin-top:16px">
+ <summary style="cursor:pointer;font-weight:850;color:#475467">โหมดสำรอง: นำเข้าไฟล์จากเครื่อง</summary>
+ <div class="grid three" style="margin-top:14px">
+  <div class="filebox"><label>1) ไฟล์ข้อมูลบริการ / ทะเบียนบริการรายรายการ</label><input id="serviceFile" type="file" accept=".xls,.xlsx,.csv"><div class="statusline" id="serviceFileStatus">ยังไม่ได้เลือกไฟล์ใหม่</div></div>
+  <div class="filebox"><label>2) ไฟล์ตอบกลับ STM</label><input id="stmFiles" type="file" multiple accept=".xls,.xlsx,.csv"><div class="statusline" id="stmFileStatus">ยังไม่ได้เลือกไฟล์ใหม่</div></div>
+  <div class="filebox"><label>3) ตารางราคา PP <span class="badge b-good">PPFS69 ฝังในระบบแล้ว</span></label><input id="priceFile" type="file" accept=".xls,.xlsx,.csv"><div class="statusline" id="priceFileStatus">มีตารางราคา PPFS69 ฝังในระบบ</div></div>
+ </div>
+</details>
+
+</section>
+<div class="footer">PP Claim Intelligence v6.0 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
+</div></main></div>
+<div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
+<script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
+<script>
+/* Minimal offline BIFF8/XLS reader for this dashboard. Reads cell values only. */
+const XLS_BIFF = (()=>{
+  const FREE=0xFFFFFFFF, ENDOFCHAIN=0xFFFFFFFE;
+  const td16=new TextDecoder('utf-16le'), td8=new TextDecoder('windows-1252');
+  const u16=(v,o)=>v.getUint16(o,true), u32=(v,o)=>v.getUint32(o,true);
+  function sliceU8(u8,a,b){return u8.subarray(a,b)}
+  class CFB{
+    constructor(ab){
+      this.u8=new Uint8Array(ab); this.dv=new DataView(ab);
+      if(this.dv.getUint32(0,false)!==0xD0CF11E0 || this.dv.getUint32(4,false)!==0xA1B11AE1) throw new Error('ไฟล์ไม่ใช่ Excel .xls (OLE/BIFF) ที่รองรับ');
+      this.sectorSize=1<<u16(this.dv,30); this.miniSize=1<<u16(this.dv,32);
+      this.numFat=u32(this.dv,44); this.dirStart=u32(this.dv,48); this.miniCutoff=u32(this.dv,56);
+      this.minifatStart=u32(this.dv,60); this.numMinifat=u32(this.dv,64); this.difatStart=u32(this.dv,68); this.numDifat=u32(this.dv,72);
+      let difat=[]; for(let i=0;i<109;i++){let x=u32(this.dv,76+i*4); if(x!==FREE&&x!==ENDOFCHAIN)difat.push(x)}
+      let sec=this.difatStart;
+      for(let d=0;d<this.numDifat && sec!==FREE && sec!==ENDOFCHAIN;d++){
+        let b=this.sector(sec), v=new DataView(b.buffer,b.byteOffset,b.byteLength), n=this.sectorSize/4-1;
+        for(let i=0;i<n;i++){let x=u32(v,i*4);if(x!==FREE)difat.push(x)} sec=u32(v,this.sectorSize-4);
+      }
+      difat=difat.slice(0,this.numFat); this.fat=[];
+      for(const s of difat){let b=this.sector(s),v=new DataView(b.buffer,b.byteOffset,b.byteLength);for(let i=0;i<this.sectorSize/4;i++)this.fat.push(u32(v,i*4))}
+      let db=this.readChain(this.dirStart,this.fat); this.entries=[];
+      for(let off=0;off+128<=db.length;off+=128){let ev=new DataView(db.buffer,db.byteOffset+off,128),nlen=u16(ev,64),name='';if(nlen>=2)name=td16.decode(db.subarray(off,off+nlen-2));let type=db[off+66],start=u32(ev,116),lo=u32(ev,120),hi=u32(ev,124),size=lo+hi*4294967296;this.entries.push({name,type,start,size})}
+      let root=this.entries.find(e=>e.type===5); this.rootStream=root&&root.size?this.readChain(root.start,this.fat).subarray(0,root.size):new Uint8Array();
+      this.minifat=[]; if(this.numMinifat && this.minifatStart!==FREE && this.minifatStart!==ENDOFCHAIN){let mb=this.readChain(this.minifatStart,this.fat,this.numMinifat),mv=new DataView(mb.buffer,mb.byteOffset,mb.byteLength);for(let i=0;i+4<=mb.length;i+=4)this.minifat.push(u32(mv,i))}
+    }
+    sector(s){let off=(s+1)*this.sectorSize; return this.u8.subarray(off,off+this.sectorSize)}
+    readChain(start,fat,limit){let chunks=[],total=0,s=start,seen=new Set(),n=0;while(s!==FREE&&s!==ENDOFCHAIN&&s<fat.length&&!seen.has(s)){seen.add(s);let b=this.sector(s);chunks.push(b);total+=b.length;n++;if(limit&&n>=limit)break;s=fat[s]}let out=new Uint8Array(total),p=0;for(const b of chunks){out.set(b,p);p+=b.length}return out}
+    readMiniChain(start,size){let out=new Uint8Array(size),p=0,s=start,seen=new Set();while(s!==FREE&&s!==ENDOFCHAIN&&s<this.minifat.length&&!seen.has(s)&&p<size){seen.add(s);let off=s*this.miniSize,n=Math.min(this.miniSize,size-p);out.set(this.rootStream.subarray(off,off+n),p);p+=n;s=this.minifat[s]}return out.subarray(0,p)}
+    stream(name){let e=this.entries.find(x=>x.type===2&&x.name===name);if(!e)throw new Error('ไม่พบ Workbook stream ใน .xls');return e.size<this.miniCutoff?this.readMiniChain(e.start,e.size):this.readChain(e.start,this.fat).subarray(0,e.size)}
+  }
+  function recs(buf,start=0,end=buf.length){let out=[];for(let p=start;p+4<=end;){let v=new DataView(buf.buffer,buf.byteOffset+p,4),rt=u16(v,0),ln=u16(v,2),q=p+4+ln;if(q>end)break;out.push({pos:p,rt,p:buf.subarray(p+4,q)});p=q}return out}
+  class SegReader{
+    constructor(segs){this.segs=segs;this.si=0;this.off=0}
+    read(n){let out=new Uint8Array(n),p=0;while(p<n){if(this.si>=this.segs.length)throw new Error('SST สิ้นสุดก่อนข้อมูลครบ');let s=this.segs[this.si];if(this.off>=s.length){this.si++;this.off=0;continue}let t=Math.min(n-p,s.length-this.off);out.set(s.subarray(this.off,this.off+t),p);this.off+=t;p+=t}return out}
+    readChars(cch,high){let parts=[],remain=cch;while(remain>0){if(this.si>=this.segs.length)throw new Error('SST string ไม่ครบ');let s=this.segs[this.si];if(this.off>=s.length){this.si++;this.off=0;if(this.si>=this.segs.length)throw new Error('SST continuation ไม่ครบ');let fl=this.segs[this.si][0];this.off=1;high=!!(fl&1);continue}let bpc=high?2:1,can=Math.floor((s.length-this.off)/bpc);if(can<=0){this.si++;this.off=0;if(this.si>=this.segs.length)throw new Error('SST continuation ไม่ครบ');let fl=this.segs[this.si][0];this.off=1;high=!!(fl&1);continue}let n=Math.min(remain,can),raw=s.subarray(this.off,this.off+n*bpc);this.off+=n*bpc;remain-=n;parts.push((high?td16:td8).decode(raw))}return parts.join('')}
+  }
+  function parseSST(segs){let r=new SegReader(segs),h=new DataView(r.read(8).buffer);let unique=h.getUint32(4,true),out=[];for(let idx=0;idx<unique;idx++){let b=r.read(3),v=new DataView(b.buffer,b.byteOffset,b.byteLength),cch=u16(v,0),flags=b[2],rich=!!(flags&8),ext=!!(flags&4),high=!!(flags&1),crun=0,cbext=0;if(rich){let q=r.read(2);crun=new DataView(q.buffer,q.byteOffset,2).getUint16(0,true)}if(ext){let q=r.read(4);cbext=new DataView(q.buffer,q.byteOffset,4).getUint32(0,true)}out.push(r.readChars(cch,high));if(crun)r.read(crun*4);if(cbext)r.read(cbext)}return out}
+  function rkValue(rk){let mult100=rk&1,isint=(rk>>>1)&1,v;if(isint){v=(rk>>2)}else{let ab=new ArrayBuffer(8),dv=new DataView(ab);dv.setUint32(0,0,true);dv.setUint32(4,rk&0xFFFFFFFC,true);v=dv.getFloat64(0,true)}return mult100?v/100:v}
+  function parseWorkbook(ab){let c=new CFB(ab),name=c.entries.some(x=>x.name==='Workbook')?'Workbook':'Book',wb=c.stream(name),rs=recs(wb),bounds=[],sst=[];
+    for(let i=0;i<rs.length;i++){let {rt,p}=rs[i];if(rt===0x0085){let v=new DataView(p.buffer,p.byteOffset,p.byteLength),off=u32(v,0),n=p[6],flags=p[7],raw=p.subarray(8),nm=(flags&1)?td16.decode(raw.subarray(0,n*2)):td8.decode(raw.subarray(0,n));bounds.push({name:nm,off})}else if(rt===0x00FC){let segs=[p],j=i+1;while(j<rs.length&&rs[j].rt===0x003C){segs.push(rs[j].p);j++}sst=parseSST(segs);i=j-1}}
+    function parseSheet(off){let rows=[],pending=null;for(const {pos,rt,p} of recs(wb,off)){if(pos>off&&rt===0x0809&&rows.length)break;if(rt===0x000A)break;let v=new DataView(p.buffer,p.byteOffset,p.byteLength);function set(r,c,val){if(!rows[r])rows[r]=[];rows[r][c]=val}
+      try{if(rt===0x00FD){let r=u16(v,0),c=u16(v,2),idx=u32(v,6);set(r,c,sst[idx]??'')}
+      else if(rt===0x0203){set(u16(v,0),u16(v,2),v.getFloat64(6,true))}
+      else if(rt===0x027E){set(u16(v,0),u16(v,2),rkValue(u32(v,6)))}
+      else if(rt===0x00BD){let r=u16(v,0),c0=u16(v,2),cl=u16(v,p.length-2),o=4;for(let c=c0;c<=cl;c++,o+=6)set(r,c,rkValue(u32(v,o+2)))}
+      else if(rt===0x0205){let r=u16(v,0),c=u16(v,2),val=p[6],iserr=p[7];set(r,c,iserr?'#ERR'+val:!!val)}
+      else if(rt===0x0006){let r=u16(v,0),c=u16(v,2),res=p.subarray(6,14);if(res[6]===0xff&&res[7]===0xff){let typ=res[0];if(typ===0)pending=[r,c];else if(typ===1)set(r,c,!!res[2]);else set(r,c,'')}else set(r,c,v.getFloat64(6,true))}
+      else if(rt===0x0207&&pending){let cch=u16(v,0),fl=p[2],raw=p.subarray(3),str=(fl&1)?td16.decode(raw.subarray(0,cch*2)):td8.decode(raw.subarray(0,cch));set(pending[0],pending[1],str);pending=null}
+      else if(rt===0x0204){let r=u16(v,0),c=u16(v,2),cch=u16(v,6),fl=p[8],raw=p.subarray(9),str=(fl&1)?td16.decode(raw.subarray(0,cch*2)):td8.decode(raw.subarray(0,cch));set(r,c,str)}}catch(e){}
+    }return rows}
+    return bounds.map(b=>({name:b.name,aoa:parseSheet(b.off)}));
+  }
+  return {parseWorkbook};
+})();
+
+</script>
+<script>
+const EMBEDDED=JSON.parse(document.getElementById('prefill').textContent);
+const OFFICIAL_PPFS69=[{"category":"บริการ  1  บริการฝากครรภ์","name":"ฝากครรภ์","rate":360.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ1","rate":600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ2","rate":190.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"อัลตราซาวน์","rate":400.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"ตรวจและทำความสะอาดฟัน","rate":500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Alpha-thalassemia 1 (PCR)","rate":800.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Beta-thalassemia (Mutation analysis)","rate":3000.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"หัตถการเพื่อตรวจวินิจฉัยทารกในครรภ์","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"DNA Based Analysis","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์","rate":120.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบย้อนทาง Treponemal test (TT)ด้วยวิธี Chemiluminescent immunoassay (CIA/CLIA)หรือ Enzyme immunoassay (EIA) หรือ RapidDiagnostic Test (RDT)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบตั้งเดิม Nontreponemal test (NTT)ด้วยวิธี Rapid Plasma Reagin (RPR) หรือVenereal Disease Research Laboratory (VDRL)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจ Treponemal test (TT) ด้วยวิธี Treponema pallidum particle agglutination test (TPPA) หรือ Treponema pallidum hemagglutination test(TPHA)","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษาพร้อมจัดส่งเลือด","rate":200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Non-Invasive Prenatal Test : NIPT","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจNon-Invasive Prenatal Test : NIPT","rate":2600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Quadruple test","rate":1200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจQuadruple test","rate":1300.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Prenatal Diagnosis: PND","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"ตรวจโครโมโชม","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าตรวจTSHรวมค่าส่งสิ่งส่งตรวจ","rate":135.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าติดตามและค่าตรวจTSH","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  6  บริการตรวจคัดกรองผู้ป่วยโรคพันธุกรรมเมตาบอลิกด้วยเครื่อง Tandem mass spectrometry (TMS)","name":"ค่าตรวจด้วยเครื่อง TMS","rate":500.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ค่าบริการตรวจหลังคลอด","rate":150.0,"unit":"ไม่เกิน 2 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน","rate":135.0,"unit":"ไม่เกิน 3 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  8  บริการทดสอบการตั้งครรภ์","name":"ตรวจปัสสาวะทดสอบการตั้งครรภ์","rate":75.0,"unit":"ต่อครั้งไม่เกิน 4 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม","rate":40.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว","rate":80.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาฉีดคุมกำเนิด","rate":60.0,"unit":"ต่อครั้ง ไม่เกิน 5 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ใส่ห่วงอนามัย","rate":800.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ค่าบริการฝังยาคุมกำเนิด","rate":2150.0,"unit":"ต่อครั้ง ทุก 3 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถอดยาฝังคุมกำเนิด","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดฉุกเฉิน","rate":50.0,"unit":"ต่อแผง ไม่เกิน 2 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถุงยางอนามัย(เฉพาะหน่วยที่ไม่ได้เหมาจ่ายรายหัว)","rate":1.0,"unit":"ชิ้น ไม่เกิน 10 ชิ้นต่อคน ไม่เกิน 365 ชิ้นต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  10  บริการป้องกันการยุติการตั้งครรภ์ที่ไม่ปลอดภัย","name":"บริการยุติการตั้งครรภ์","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติทั่วไป (Stock lens)","rate":800.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติที่ต้องสั่งตัดพิเศษ (Lab Leกs)","rate":1000.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ค่าบริการเก็บตัวอย่าง","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิดสองสายพันธุ์","rate":280.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิด14สายพันธุ์","rate":370.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจทางเซลล์วิทยาด้วยวิธี Liquid based cytology","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจติดตามซ้ำด้วยวิธี Pap smear","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"Pap smear หรือวิธี VIA","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"วิธี Colposcopy รวมการตัดชิ้นเนื้อ (Biopsy หรือ LEEP)","rate":900.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  13  บริการคัดกรองรอยโรคเสี่ยงมะเร็งและมะเร็งช่องปาก (CA Oral Screening)","name":"ค่า biopsy และค่าตรวจทางพยาธิวิทยา","rate":600.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Chest-X-ray : CXR","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี สำหรับผู้ต้องขัง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"TB-LAMP","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR (Xpert MTB/RIF)","rate":500.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"วินิจฉัยวัณโรค/ตรวจหาเชื้อ MTB","rate":400.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา Rifarmpicin","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR MTB/MDR","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Line Probe Assay (LPA)","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจพบผลดื้อยา First – line drugs ให้บริการตรวจวินิจฉัยวัณโรคดื้อยา Second – line drugs","rate":700.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธี AFB","rate":20.0,"unit":"ต่อครั้ง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Solid media","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Liquid media","rate":300.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 35 – 59 ปี-Fasting Plasma Glucose: FPG","rate":40.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 45 – 70 ปี-ตรวจวัด Total Cholesterol และ HDL","rate":160.0,"unit":"ต่อครั้ง ทุก 5 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA2","name":"บริการประเมินความเสี่ยง+ให้คำปรึกษา+เก็บตัวอย่าง(เลือด)+จัดส่ง","rate":500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA3","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับผู้ป่วยมะเร็งเต้านมที่มีความเสี่ยงสูง","rate":10000.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA4","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับญาติสายตรง","rate":2500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  17  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการเจาะเลือดและตรวจนับเม็ดเลือด(CBC)","rate":65.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  18  บริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","name":"ค่าบริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","rate":80.0,"unit":"ต่อครั้ง คนละ 1 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  19  บริการเคลือบฟลูออไรด์","name":"ค่าบริการเคลือบฟลออไรด์ชนิดเข้มข้นสูง","rate":100.0,"unit":"ต่อครั้ง คนละไม่เกิน 2 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  20  บริการตรวจคัดกรองมะเร็งลำไส้ใหญ่และลำไส้ตรง (Fit test)","name":"FIT Test","rate":60.0,"unit":"ต่อครั้ง คนละ 1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  21  บริการคัดกรองไวรัสตับอักเสบบี","name":"ค่าบริการตรวจด้วย HBsAg","rate":50.0,"unit":"ผู้ที่เกิดก่อน พ.ศ. 2535 คนละ 1 ครั้ง ตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"บริการตรวจด้วย Anti-HCV","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV core antigen","rate":400.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV RNA (qualitative method wรือ quantitative method)","rate":1690.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  23  บริการตรวจคัดกรองพยาธิใบไม้ตับด้วยการตรวจปัสสาวะ  (เฉพาะหน่วยนวัตกรรม)","name":"Urine OV Rapid Diagnosis Test ; OV-RDT","rate":150.0,"unit":"ต่อครั้ง ต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  24  บริการตรวจคัดกรองมะเร็งเต้านมด้วยเครื่องแมมโมแกรมและอัลตราซาวด์","name":"ค่าบริการตรวจแมมโมแกรมและอัลตราชาวด์","rate":2400.0,"unit":"1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  25  บริการให้วัคซีนป้องกันโรค","name":"ค่าบริการให้วัคชีนป้องกันโรค","rate":20.0,"unit":"ต่อโดส","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าจัดส่ง","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  27  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"ค่าตรวจคัดกรอง","rate":30.0,"unit":"ต่อครั้งต่อช่วงอายุ","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  28  บริการยาน้ำเสริมธาตุเหล็กเพื่อป้องกันโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการให้ยาน้ำเสริมธาตุเหล็ก","rate":50.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"}];
+const EXPECTED_PASS_HASH='03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
+let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0};
+const moneyFmt=new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const intFmt=new Intl.NumberFormat('th-TH');
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function num(v){let n=parseFloat(String(v??'').replace(/,/g,'').trim());return Number.isFinite(n)?n:0}
+function normText(s){return String(s??'').trim().replace(/\s+/g,' ')}
+function normREP(v){
+ if(v===null||v===undefined||v==='')return '';
+ let s=String(v).trim();
+ if(!s)return '';
+ // รองรับ REP ที่ Excel เก็บเป็นตัวเลขหรือ scientific notation เช่น 6.90200147E8
+ let n=Number(s.replace(/,/g,''));
+ if(Number.isFinite(n)&&n>0)return String(Math.round(n));
+ let d=s.replace(/\D/g,'');return d?d:'';
+}
+function digits(s){return String(s??'').replace(/\D/g,'')}
+function normHN(s){let x=digits(s);return x?x.padStart(9,'0'):''}
+function normCID(s){let x=digits(s);return x?x.padStart(13,'0'):''}
+function timeText(v){
+ if(v===null||v===undefined||v==='')return '';
+ const pad=n=>String(n).padStart(2,'0');
+ if(v instanceof Date&&!isNaN(v.getTime()))return `${pad(v.getHours())}:${pad(v.getMinutes())}:${pad(v.getSeconds())}`;
+ if(typeof v==='number'&&Number.isFinite(v)){
+   let frac=((v%1)+1)%1,sec=Math.round(frac*86400)%86400,h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+   return `${pad(h)}:${pad(m)}:${pad(s)}`;
+ }
+ let s=String(v).trim();let m=s.match(/(?:^|[ T])(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(m)return `${pad(m[1])}:${m[2]}:${m[3]||'00'}`;
+ return s;
+}
+function thaiDateToISO(v){
+ if(v===null||v===undefined||v==='')return '';
+ const pad=n=>String(n).padStart(2,'0');
+ const make=(y,m,d)=>{
+   y=Number(y);m=Number(m);d=Number(d);
+   // ปี พ.ศ. ต้องถูกแปลงก่อนสร้าง/จัดรูปแบบวันที่เสมอ
+   if(y>=2400&&y<=3000)y-=543;
+   if(!Number.isFinite(y)||!Number.isFinite(m)||!Number.isFinite(d)||y<1900||y>2200||m<1||m>12||d<1||d>31)return '';
+   return `${String(y).padStart(4,'0')}-${pad(m)}-${pad(d)}`;
+ };
+ const fromSerial=n=>{
+   if(!Number.isFinite(n)||n<1)return '';
+   const whole=Math.floor(n),ms=(whole-25569)*86400000,dt=new Date(ms);
+   let y=dt.getUTCFullYear();
+   // บางชีตเก็บ Excel date เป็นปี 2568/2569 จริง
+   if(y>=2400&&y<=3000)y-=543;
+   return make(y,dt.getUTCMonth()+1,dt.getUTCDate());
+ };
+ if(v instanceof Date&&!isNaN(v.getTime()))return make(v.getFullYear(),v.getMonth()+1,v.getDate());
+ if(typeof v==='number')return fromSerial(v);
+ let s=String(v).trim().replace(/\u00a0/g,' ');
+ if(!s)return '';
+ // Excel serial อาจมีค่ามากกว่า 90,000 หากปีในเซลล์ถูกบันทึกเป็น พ.ศ.
+ if(/^\d+(?:\.\d+)?$/.test(s)){
+   let n=Number(s);
+   if(n>20000&&n<400000)return fromSerial(n);
+ }
+ let m=s.match(/^(\d{4})(\d{2})(\d{2})(?:\D|$)/);if(m)return make(m[1],m[2],m[3]);
+ m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})(?:[ T]|$)/);if(m)return make(m[1],m[2],m[3]);
+ m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:[ T]|$)/);if(m)return make(m[3],m[2],m[1]);
+ let parsed=new Date(s);if(!isNaN(parsed.getTime()))return make(parsed.getFullYear(),parsed.getMonth()+1,parsed.getDate());
+ return '';
+}
+function correctServiceDateByVN(date,vn){
+ // fallback: หากข้อมูลเคยถูก format จาก 2568 เป็น 1968 ให้ใช้ปีจาก VN ช่วยแก้
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return date||'';
+ const yy=String(vn??'').replace(/\D/g,'').slice(0,2);
+ if(!/^\d{2}$/.test(yy))return date;
+ const [y,m,d]=date.split('-');
+ const inferredCE=(2500+Number(yy))-543; // 68 -> 2025, 69 -> 2026
+ if(Number(y)===1900+Number(yy)&&inferredCE>=2000&&inferredCE<=2100)return `${inferredCE}-${m}-${d}`;
+ return date;
+}
+function monthKey(d){return /^\d{4}-\d{2}/.test(d||'')?d.slice(0,7):'ไม่ทราบเดือน'}
+function thMonth(k){if(!/^\d{4}-\d{2}$/.test(k))return k;let [y,m]=k.split('-').map(Number);let names=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return `${names[m-1]} ${y+543}`}
+function extractCode(item){let m=String(item).match(/\(([^)]*)\)/);if(!m)return '';let t=m[1].split(',')[0].trim();return t.replace(/\s+/g,'')}
+function splitItems(pp){let s=String(pp??'').trim();if(!s)return [];return s.split(/\s*,\s*(?=PPFS-)/).map(x=>x.trim()).filter(Boolean)}
+function serviceId(s,i){return [s.rep_ref||'',s.seq||'',s.cid||'',s.hn||'',s.date||'',i].join('|')}
+function isMatchedStatus(v){return v==='paid'||v==='partial'||v==='rep-confirmed'}
+function statusBadge(s){if(s.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชย</span>';if(s.matchStatus==='partial')return '<span class="badge b-partial">ชดเชยบางส่วน</span>';if(s.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบชดเชยตาม REP · รอจัดสรร</span>';if(s.matchStatus==='ambiguous')return '<span class="badge b-warn">จับคู่หลายรายการ</span>';return '<span class="badge b-bad">ยังไม่พบชดเชย</span>'}
+function priceMap(){
+ let byCode=new Map(),byName=new Map(),byCategory=new Map();
+ function add(m,k,p){k=normText(k);if(!k)return;let a=m.get(k)||[];a.push(p);m.set(k,a)}
+ state.prices.forEach(p=>{if(p.code)add(byCode,p.code,p);if(p.name)add(byName,p.name,p);if(p.category)add(byCategory,p.category,p)});
+ return {byCode,byName,byCategory}
+}
+function uniqueRatePrice(arr){arr=(arr||[]).filter(p=>num(p.rate)>0);if(!arr.length)return null;let rates=[...new Set(arr.map(p=>Math.round(num(p.rate)*100)))];return rates.length===1?arr[0]:null}
+function getPriceForItem(item){let maps=priceMap(),code=extractCode(item);return uniqueRatePrice(maps.byCode.get(code))||uniqueRatePrice(maps.byName.get(normText(item)))||null}
+function normalizePriceText(s){return normText(s).toLowerCase().replace(/ฟลูออไรด์/g,'ฟลออไรด์').replace(/fluoride/g,'ฟลออไรด์').replace(/[\s\-–—_:;,.()\/\\]+/g,'').replace(/ค่าบริการ|บริการ|ค่า/g,'')}
+function serviceDomain(s){
+ let t=normText(s).toLowerCase();
+ if(/ฟัน|ช่องปาก|ฟล[ูอ]ออไรด์|ทันต|oral/.test(t))return 'dental';
+ if(/ยุติการตั้งครรภ์|termination/.test(t))return 'pregnancy';
+ if(/คุมกำเนิด|วางแผนครอบครัว|ถุงยาง|ห่วงอนามัย|ยาฝัง|ยาฉีดคุม/.test(t))return 'family';
+ if(/ตั้งครรภ์|ฝากครรภ์|หลังคลอด|ครรภ์|quadruple|nipt|thalassemia|ธาลัสซีเมีย/.test(t))return 'pregnancy';
+ if(/วัณโรค|\btb\b|mtb|afb|lpa|cxr|igras|latent/.test(t))return 'tb';
+ if(/ตับอักเสบ|hbsag|hcv|hepb|hepc/.test(t))return 'hepatitis';
+ if(/ปากมดลูก|hpv|pap smear|via|colpos/.test(t))return 'cervix';
+ if(/มะเร็งเต้านม|brca|mammogram|แมมโมแกรม/.test(t))return 'breast';
+ if(/ลำไส้|fit test|fit\b/.test(t))return 'colorectal';
+ if(/พยาธิใบไม้|ov-rdt|ov rapid/.test(t))return 'liverfluke';
+ if(/ธาตุเหล็ก|โลหิตจาง|cbc|hb\/hct/.test(t))return 'anemia';
+ if(/เบาหวาน|fpg|fbs|cholesterol|hdl/.test(t))return 'metabolic';
+ if(/วัคซีน|vaccine|epi|คอตีบ|บาดทะยัก|ไข้หวัดใหญ่|ไอกรน/.test(t))return 'vaccine';
+ if(/ไทรอยด์|tsh|metabolic|tandem mass/.test(t))return 'childscreen';
+ return ''
+}
+function servicePriceScore(s,p){
+ let sf=[s.service_type,s.source_sheet,s.fund_sub,s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean),pn=normalizePriceText(p.name),pc=normalizePriceText(p.category),score=0;
+ for(const f0 of sf){let f=normalizePriceText(f0);if(!f)continue;if(f===pn)score=Math.max(score,120);else if((f.includes(pn)||pn.includes(f))&&Math.min(f.length,pn.length)>=5)score=Math.max(score,95);if(pc&&(f.includes(pc)||pc.includes(f))&&Math.min(f.length,pc.length)>=5)score=Math.max(score,score+20)}
+ let joined=normText(sf.join(' | ')).toLowerCase(),name=normText(p.name).toLowerCase();
+ if(/เคลือบ.*ฟล[ูอ]ออไรด์|ฟล[ูอ]ออไรด์/.test(joined)&&/ฟล[ูอ]ออไรด์/.test(name))score=Math.max(score,118);
+ if(/ขูด|ขัด.*ฟัน|ทำความสะอาดฟัน|สุขภาพช่องปาก/.test(joined)&&/ทำความสะอาดฟัน/.test(name))score=Math.max(score,116);
+ if(/ทดสอบ.*ตั้งครรภ์|ตรวจครรภ์/.test(joined)&&/ทดสอบ.*ตั้งครรภ์/.test(name))score=Math.max(score,118);
+ if(/\bfpg\b|fasting plasma glucose/i.test(joined)&&/fpg|fasting plasma glucose/i.test(name))score=Math.max(score,118);
+ if(/total.*hdl|hdl.*cholesterol/i.test(joined)&&/total.*hdl|hdl/i.test(name))score=Math.max(score,118);
+ if(/fit test|มะเร็งลำไส้/i.test(joined)&&/fit/i.test(name))score=Math.max(score,116);
+ if(/ยาเม็ดเสริมธาตุเหล็ก/i.test(joined)&&/ยาเม็ดเสริมธาตุเหล็ก|ธาตุเหล็ก.*กรดโฟลิค/i.test(name))score=Math.max(score,116);
+ if(/ยุติการตั้งครรภ์|termination/i.test(joined)&&/ยุติการตั้งครรภ์|termination/i.test(name))score=Math.max(score,122);
+ if(/ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant|fp002/i.test(joined)&&/ฝังยาคุม|ยาฝังคุม|คุมกำเนิด.*ฝัง/i.test(name))score=Math.max(score,122);
+ if(/ฝากครรภ์|\banc\b|30011/i.test(joined)&&/ฝากครรภ์|ดูแลการฝากครรภ์/i.test(name))score=Math.max(score,122);
+ let d1=serviceDomain(joined),d2=serviceDomain((p.category||'')+' '+(p.name||''));if(d1&&d1===d2)score+=18;
+ return score
+}
+function bestOfficialPriceForService(s){
+ let ranked=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).map(p=>({p,score:servicePriceScore(s,p)})).filter(x=>x.score>=70).sort((a,b)=>b.score-a.score);
+ if(!ranked.length)return null;let top=ranked[0].score,topRows=ranked.filter(x=>x.score===top),rates=[...new Set(topRows.map(x=>Math.round(num(x.p.rate)*100)))];
+ if(rates.length!==1)return null;return {...topRows[0].p,_matchScore:top}
+}
+function expectedInfoForService(s){
+ let reg=num(s.claim_expected)>0?num(s.claim_expected):null,p=bestOfficialPriceForService(s);
+ if(p){let rate=num(p.rate);if(reg!=null){let q=reg/rate,rq=Math.round(q);if(rate>0&&rq>=1&&rq<=50&&Math.abs(q-rq)<.001)return {amount:reg,source:'ทะเบียนบริการ × ราคาทางการ',price:p,qty:rq,unitRate:rate};return {amount:rate,source:'ตารางราคา PPFS69',price:p,registered:reg,mismatch:true}}return {amount:rate,source:'ตารางราคา PPFS69',price:p,qty:1,unitRate:rate}}
+ if(reg!=null)return {amount:reg,source:'ทะเบียนบริการ',price:null};let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items);return pc.complete?{amount:pc.total,source:'ตารางราคา',price:null}:{amount:null,source:'ไม่ทราบราคา',price:null}
+}
+function priceForItems(items){let parts=[],missing=[];let total=0;for(const item of items){let p=getPriceForItem(item);if(p&&num(p.rate)>0){parts.push({item,rate:num(p.rate),source:p.source,code:p.code});total+=num(p.rate)}else missing.push(item)}return {total,parts,missing,complete:missing.length===0}}
+function subsetBreakdown(items,paid){let priced=items.map((item,i)=>{let p=getPriceForItem(item);return p&&num(p.rate)>0?{i,item,rate:num(p.rate),source:p.source}:null}).filter(Boolean);if(!priced.length||paid<=0)return {solutions:[],note:'ไม่มีราคาเพียงพอ'};let target=Math.round(paid*100),solutions=[];function rec(pos,sum,pick){if(solutions.length>12)return;if(sum===target){solutions.push([...pick]);return}if(sum>target||pos>=priced.length)return;rec(pos+1,sum,pick);pick.push(priced[pos]);rec(pos+1,sum+Math.round(priced[pos].rate*100),pick);pick.pop()}rec(0,0,[]);let uniq=[];let seen=new Set();for(const sol of solutions){let k=sol.map(x=>x.i).join(',');if(!seen.has(k)){seen.add(k);uniq.push(sol)}}return {solutions:uniq,note:uniq.length===1?'แยกยอดได้ 1 รูปแบบ':uniq.length>1?'พบหลายรูปแบบที่รวมยอดได้เท่ากัน':'ไม่พบชุดราคาที่รวมได้เท่ายอดจ่าย'}}
+function buildInferredPrices(){let allItems=new Map();state.services.forEach(s=>splitItems(s.ppfs).forEach(it=>allItems.set(normText(it),{name:it,code:extractCode(it)})));let inferred=EMBEDDED.inferredRates||{};let arr=[];for(const [name,meta] of allItems){let r=inferred[name];if(r&&r.n>=3&&r.mode_n/r.n>=.9&&r.mode>0)arr.push({code:meta.code,name,rate:r.mode,source:'inferred',evidence:`${r.mode_n}/${r.n} รายการตรงกับอัตรานี้`});else arr.push({code:meta.code,name,rate:'',source:'missing',evidence:''})}return arr}
+function expectedForService(s){return expectedInfoForService(s).amount}
+function remainingExpectedForService(s){let e=expectedForService(s);if(e==null||e<=0)return null;return Math.max(0,Math.round((e-num(s.paid))*100)/100)}
+function uniqServices(arr){let m=new Map();(arr||[]).forEach(s=>{if(s&&s._id&&!m.has(s._id))m.set(s._id,s)});return [...m.values()]}
+function candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN){
+ let rep=[];
+ if(x.rep&&x.cid&&idxRepCID.has(String(x.rep)+'|'+x.cid))rep.push(...idxRepCID.get(String(x.rep)+'|'+x.cid));
+ if(x.rep&&x.hn&&idxRepHN.has(String(x.rep)+'|'+x.hn))rep.push(...idxRepHN.get(String(x.rep)+'|'+x.hn));
+ let seq=(x.seq&&idxSeq.has(String(x.seq)))?idxSeq.get(String(x.seq)):[];
+ let pd=[];
+ // วันที่จาก Statement
+ if(x.cid&&x.date&&idxCD.has(x.cid+'|'+x.date))pd.push(...idxCD.get(x.cid+'|'+x.date));
+ if(x.hn&&x.date&&idxHD.has(x.hn+'|'+x.date))pd.push(...idxHD.get(x.hn+'|'+x.date));
+ rep=uniqServices(rep);seq=uniqServices(seq);pd=uniqServices(pd);
+ // ถ้า REP+ผู้รับบริการตรง แต่วันที่ใน Statement ไม่ใช่วันบริการ ให้ใช้วันที่จากทะเบียน REP
+ // แล้วขยายไปดึงบริการอื่นของผู้ป่วยในวันเดียวกันจากทุกชีต เช่น ฝากครรภ์ + ฝังยาคุม + ยุติการตั้งครรภ์
+ let repDatePool=[];
+ let repDates=[...new Set(rep.map(s=>s.date).filter(Boolean))];
+ for(const d of repDates){
+   if(x.cid&&idxCD.has(x.cid+'|'+d))repDatePool.push(...idxCD.get(x.cid+'|'+d));
+   if(x.hn&&idxHD.has(x.hn+'|'+d))repDatePool.push(...idxHD.get(x.hn+'|'+d));
+ }
+ repDatePool=uniqServices(repDatePool);
+ // REP + ผู้รับบริการ เป็นหลักฐานที่ตรงกับทะเบียนรายกองทุนมากที่สุด
+ // แต่ไม่ใช้ REP เพียงอย่างเดียว เพราะ REP หนึ่งเลขอาจมีผู้ป่วยหลายราย
+ let preferred=uniqServices([...rep,...seq]);
+ let pool=uniqServices([...rep,...seq,...repDatePool,...pd]);
+ let methods=[];
+ if(rep.length)methods.push('REP+CID/HN');
+ if(repDatePool.length>rep.length)methods.push('ขยายบริการทุกชีตตามวันบริการของ REP');
+ if(seq.length)methods.push('SEQ');
+ if(pd.length)methods.push('PID/HN+วันที่ Statement');
+ return {rep,seq,pd,repDatePool,preferred,pool,method:methods.join(' + ')};
+}
+function solveClaimAllocation(candidates,target,preferredServices=[]){
+ let targetC=Math.round(num(target)*100);if(targetC<=0)return {allocations:null,reason:'ยอดชดเชยเป็น 0',solutions:0};
+ let preferred=new Set((preferredServices||[]).map(s=>s._id));
+ let priced=uniqServices(candidates).map(s=>({service:s,amount:remainingExpectedForService(s)})).filter(x=>x.amount!=null&&x.amount>0);
+ if(!priced.length)return {allocations:null,reason:'ไม่มีรายการเรียกเก็บ/ราคาเพียงพอสำหรับวิเคราะห์',solutions:0};
+ // ป้องกัน exponential explosion; เคสจริงต่อคน/วันมักมีจำนวนน้อย
+ if(priced.length>24)priced=priced.sort((a,b)=>(preferred.has(b.service._id)?1:0)-(preferred.has(a.service._id)?1:0)||b.amount-a.amount).slice(0,24);
+ let cents=priced.map(x=>Math.round(x.amount*100)),solutions=[];
+ // เรียงรายการที่เป็น SEQ ก่อน เพื่อช่วย prune และเพิ่มความน่าเชื่อถือ
+ let order=priced.map((x,i)=>i).sort((a,b)=>(preferred.has(priced[b].service._id)?1:0)-(preferred.has(priced[a].service._id)?1:0)||cents[b]-cents[a]);
+ function rec(pos,sum,pick){
+   if(solutions.length>=80)return;
+   if(sum===targetC){solutions.push([...pick]);return}
+   if(sum>targetC||pos>=order.length)return;
+   let i=order[pos];
+   rec(pos+1,sum,pick);
+   pick.push(i);rec(pos+1,sum+cents[i],pick);pick.pop();
+ }
+ rec(0,0,[]);
+ if(!solutions.length)return {allocations:null,reason:'ไม่พบชุดยอดเรียกเก็บที่รวมเท่ากับยอด BQ',solutions:0,priced};
+ // ให้ความสำคัญกับ solution ที่มีรายการจาก SEQ ก่อน แล้วจึงเลือกจำนวนรายการน้อยกว่า
+ let scored=solutions.map(sol=>({sol,preferredCount:sol.filter(i=>preferred.has(priced[i].service._id)).length,count:sol.length}));
+ let maxPref=Math.max(...scored.map(x=>x.preferredCount));
+ if(preferred.size&&maxPref>0)scored=scored.filter(x=>x.preferredCount===maxPref);
+ let minCount=Math.min(...scored.map(x=>x.count));scored=scored.filter(x=>x.count===minCount);
+ // ถ้ายังมีหลายชุดที่คะแนนเท่ากัน ถือว่าไม่ควรเดา
+ let sigs=new Map();scored.forEach(x=>{let sig=x.sol.map(i=>priced[i].service._id).sort().join('||');sigs.set(sig,x)});
+ if(sigs.size!==1)return {allocations:null,reason:`พบ ${sigs.size} ชุดบริการที่รวมยอดได้เท่ากัน จึงไม่เดา`,solutions:sigs.size,priced};
+ let chosen=[...sigs.values()][0].sol;
+ return {allocations:chosen.map(i=>({service:priced[i].service,amount:priced[i].amount})),reason:'แยกยอดได้',solutions:solutions.length,priced};
+}
+function allocationFormula(allocs){return (allocs||[]).map(a=>`${a.service.service_type||a.service.source_sheet||a.service.fund_sub||'บริการ'} ${moneyFmt.format(a.amount)}`).join(' + ')}
+
+
+// Global Aggregate Claim Allocation (ทุกกองทุน)
+// หลักการ: ใช้บริการจริงใน REP/ผู้ป่วยเดียวกันก่อน แล้วจึงเติม residual จาก PPFS69
+// เฉพาะราคาในบริบทของบริการที่พบจริง เพื่อหลีกเลี่ยงการจับคู่ข้ามกองทุนแบบไร้หลักฐาน
+function contextualOfficialPrices(candidates,target){
+ let pool=uniqServices(candidates),domains=new Set(pool.map(s=>serviceDomain(compositeServiceText(s))).filter(Boolean));
+ let rows=officialPriceRows().map(p=>{
+   let maxScore=0;for(const s of pool)maxScore=Math.max(maxScore,servicePriceScore(s,p));
+   let d=serviceDomain((p.category||'')+' '+(p.name||''));
+   let domainHit=!!(d&&domains.has(d));
+   return {p,maxScore,domainHit,score:maxScore+(domainHit?30:0)};
+ }).filter(x=>num(x.p.rate)>0&&num(x.p.rate)<=num(target)+.001&&(x.maxScore>=65||x.domainHit));
+ // ลดรายการซ้ำชื่อ+ราคา เพื่อไม่ให้สร้าง solution ซ้ำจากแถวราคาซ้ำ
+ let m=new Map();rows.sort((a,b)=>b.score-a.score).forEach(x=>{let k=normalizePriceText(x.p.name)+'|'+Math.round(num(x.p.rate)*100);if(!m.has(k))m.set(k,x)});
+ return [...m.values()].slice(0,40);
+}
+function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
+ let t=num(target),targetC=Math.round(t*100);if(targetC<=0)return null;
+ let pool=uniqServices(candidates),preferred=new Set((preferredServices||[]).map(s=>s._id));
+ // Actual components use official unit rate where confidently mapped. This prevents a package total
+ // such as 5,510 being treated as one indivisible service before trying its components.
+ let actual=pool.map(s=>{let p=bestOfficialPriceForService(s),amt=p?num(p.rate):0;return p&&amt>0&&amt<=t+.001?{service:s,p,amount:amt,score:120+(p._matchScore||70)+(preferred.has(s._id)?80:0)}:null}).filter(Boolean);
+ if(!actual.length)return null;
+ if(actual.length>18)actual=actual.sort((a,b)=>b.score-a.score).slice(0,18);
+ let ctx=contextualOfficialPrices(pool,t),solutions=[];
+ // enumerate actual subsets; virtual residual limited to 0-2 PPFS items for safety/performance
+ function evaluate(picks){
+   if(!picks.length)return;
+   let sum=picks.reduce((a,i)=>a+actual[i].amount,0),res=Math.round((t-sum)*100)/100;if(res<-.001)return;
+   let baseScore=picks.reduce((a,i)=>a+actual[i].score,0)+picks.length*250;
+   let actualNames=new Set(picks.map(i=>normalizePriceText(actual[i].p.name)+'|'+Math.round(actual[i].amount*100)));
+   const add=(virt)=>{
+     let total=sum+virt.reduce((a,x)=>a+num(x.p.rate),0);if(Math.round(total*100)!==targetC)return;
+     let vscore=virt.reduce((a,x)=>a+x.score,0)-virt.length*90;
+     let keyA=picks.map(i=>actual[i].service._id).sort().join('|');
+     let keyV=virt.map(x=>normalizePriceText(x.p.name)+'@'+Math.round(num(x.p.rate)*100)).sort().join('|');
+     solutions.push({picks:[...picks],virt:[...virt],score:baseScore+vscore,key:keyA+'//'+keyV});
+   };
+   if(Math.abs(res)<.001){add([]);return}
+   for(let i=0;i<ctx.length;i++){
+     let a=ctx[i],ak=normalizePriceText(a.p.name)+'|'+Math.round(num(a.p.rate)*100);if(actualNames.has(ak))continue;
+     if(Math.abs(num(a.p.rate)-res)<.001)add([a]);
+   }
+   // two virtual prices; allow same rate only when different service names
+   for(let i=0;i<ctx.length;i++){
+     let a=ctx[i],ak=normalizePriceText(a.p.name)+'|'+Math.round(num(a.p.rate)*100);if(actualNames.has(ak))continue;
+     let need=Math.round((res-num(a.p.rate))*100)/100;if(need<=0)continue;
+     for(let j=i;j<ctx.length;j++){
+       let b=ctx[j],bk=normalizePriceText(b.p.name)+'|'+Math.round(num(b.p.rate)*100);if(actualNames.has(bk))continue;
+       if(i===j&&normalizePriceText(a.p.name)===normalizePriceText(b.p.name))continue;
+       if(Math.abs(num(b.p.rate)-need)<.001)add([a,b]);
+     }
+   }
+ }
+ let n=actual.length,limit=1<<Math.min(n,18);
+ for(let mask=1;mask<limit;mask++){
+   let picks=[],sum=0;for(let i=0;i<n;i++)if(mask&(1<<i)){sum+=actual[i].amount;if(sum>t+.001)break;picks.push(i)}
+   if(sum<=t+.001)evaluate(picks);
+   if(solutions.length>250)break;
+ }
+ if(!solutions.length)return null;
+ let uniq=new Map();solutions.sort((a,b)=>b.score-a.score).forEach(s=>{if(!uniq.has(s.key))uniq.set(s.key,s)});let arr=[...uniq.values()].sort((a,b)=>b.score-a.score);
+ let best=arr[0],second=arr[1];
+ // auto-allocate only when the best solution is materially stronger than alternatives.
+ // Exact all-registered solutions are trusted even if another lower-quality virtual solution exists.
+ let allRegistered=best.virt.length===0;
+ if(!allRegistered&&second&&second.score>=best.score-20)return {ambiguous:true,reason:`พบหลายชุดราคาที่มีความเป็นไปได้ใกล้เคียงกัน (${arr.length} ชุด)`,alternatives:arr.slice(0,5)};
+ let allocations=best.picks.map(i=>({service:actual[i].service,amount:actual[i].amount,label:actual[i].service.service_type||actual[i].service.source_sheet}));
+ let virtual=best.virt.map(x=>({label:x.p.name,amount:num(x.p.rate),source:'ตารางราคา PPFS69',category:x.p.category||''}));
+ let full=[...allocations.map(a=>({label:a.label,amount:a.amount,registered:true,serviceId:a.service._id})),...virtual.map(v=>({label:v.label,amount:v.amount,registered:false,source:v.source}))];
+ let formula=full.map(x=>`${x.label} ${moneyFmt.format(x.amount)}`).join(' + ');
+ return {allocations,virtual,full,formula,total:t,score:best.score,alternatives:arr.length,evidence:virtual.length?'ทะเบียนบริการจริง + เติมส่วนที่ขาดจากตารางราคา PPFS69':'ทะเบียนบริการจริงครบองค์ประกอบ'};
+}
+function exactRegisteredPackage(candidates,target,preferredServices=[]){
+ let t=num(target),pref=new Set((preferredServices||[]).map(s=>s._id));
+ let hits=uniqServices(candidates).filter(s=>num(s.claim_expected)>0&&Math.abs(num(s.claim_expected)-t)<.001);
+ if(!hits.length)return null;
+ hits.sort((a,b)=>(pref.has(b._id)?1:0)-(pref.has(a._id)?1:0));
+ // ถ้ามีหลายแถว package เท่ากันและไม่มีหลักฐาน preferred ชัดเจน ไม่เดา
+ if(hits.length>1&&!pref.has(hits[0]._id))return null;
+ return hits[0];
+}
+// Composite Claim Rules: ยอด PP(AI) หนึ่งก้อนอาจประกอบด้วยหลายบริการ
+// กฎนี้ใช้เมื่อมีหลักฐานจากทะเบียนบริการ + ตารางราคา PPFS69 และยอดรวมตรงกันพอดี
+const COMPOSITE_CLAIM_RULES=[
+ {id:'TOP_5510',label:'แพ็กเกจยุติการตั้งครรภ์ 5,510 บาท',total:5510,
+  anchor:/ยุติการตั้งครรภ์|termination/i,
+  components:[
+   {label:'ยุติการตั้งครรภ์',rate:3000,match:/ยุติการตั้งครรภ์|termination/i,required:true},
+   {label:'ฝากครรภ์',rate:360,match:/ฝากครรภ์|\banc\b|30011/i,allowVirtual:true},
+   {label:'ค่าบริการฝังยาคุมกำเนิด',rate:2150,match:/ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant|fp002/i,allowVirtual:true}
+  ]}
+];
+function compositeServiceText(s){return normText([s.service_type,s.source_sheet,s.fund_sub,s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean).join(' | ')).toLowerCase()}
+function compositePriceExists(comp){
+ let rows=officialPriceRows().filter(p=>Math.abs(num(p.rate)-num(comp.rate))<.001&&comp.match.test(normText((p.category||'')+' '+(p.name||'')).toLowerCase()));
+ return rows.length>0;
+}
+function solveKnownCompositeClaim(candidates,target){
+ let t=Math.round(num(target)*100)/100,pool=uniqServices(candidates);
+ for(const rule of COMPOSITE_CLAIM_RULES){
+  if(Math.abs(t-rule.total)>.001)continue;
+  let anchor=pool.find(s=>rule.anchor.test(compositeServiceText(s)));if(!anchor)continue;
+  let used=new Set(),allocations=[],virtual=[],ok=true;
+  for(const comp of rule.components){
+   let svc=pool.find(s=>!used.has(s._id)&&comp.match.test(compositeServiceText(s)));
+   if(svc){used.add(svc._id);allocations.push({service:svc,amount:comp.rate,label:comp.label});continue}
+   if(comp.allowVirtual&&compositePriceExists(comp)){virtual.push({label:comp.label,amount:comp.rate,source:'ตารางราคา PPFS69'});continue}
+   if(comp.required){ok=false;break}
+   ok=false;break;
+  }
+  let sum=allocations.reduce((a,x)=>a+num(x.amount),0)+virtual.reduce((a,x)=>a+num(x.amount),0);
+  if(ok&&Math.abs(sum-t)<.001){
+   let full=[...allocations.map(a=>({label:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount,registered:true,serviceId:a.service._id})),...virtual.map(v=>({label:v.label,amount:v.amount,registered:false,source:v.source}))];
+   let formula=full.map(x=>`${x.label} ${moneyFmt.format(x.amount)}`).join(' + ');
+   return {rule,allocations,virtual,full,formula,total:t};
+  }
+ }
+ return null;
+}
+function hasCompositeClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>c.allocationStatus==='bundle-split'||c.allocationStatus==='global-bundle')}
+function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate'].includes(c.allocationStatus))}
+function aggregateEvidenceType(r){
+ let claims=Array.isArray(r.claims)?r.claims:[];
+ if(claims.some(c=>c.allocationStatus==='rep-aggregate'))return 'REP+CID/HN ตรง Statement และบริการใน REP รวมราคาทางการตรง PP(AI)';
+ if(claims.some(c=>c.allocationStatus==='global-bundle'))return 'ทะเบียนบริการจริง + วิเคราะห์ยอดรวมด้วยตารางราคา PPFS69';
+ if(claims.some(c=>c.allocationStatus==='bundle-split'))return 'ทะเบียนบริการ + ตารางราคา PPFS69';
+ if(claims.some(c=>c.allocationStatus==='aggregate-split'))return 'ทะเบียนบริการจริงครบองค์ประกอบ';
+ if(claims.some(c=>c.allocationStatus==='package-paid'))return 'BQ ตรงยอดเรียกเก็บแพ็กเกจ แต่ยังไม่สามารถแยกองค์ประกอบได้อย่างมั่นใจ';
+ return '';
+}
+function fundAuditExpectedAmount(r){
+ let claims=Array.isArray(r.claims)?r.claims:[];
+ if(claims.some(c=>c.allocationStatus==='package-paid'))return num(r.claim_expected||r.registeredExpected||r.expected);
+ let v=hasAggregateClaim(r)&&num(r.expected)>0?num(r.expected):num(r.claim_expected||r.registeredExpected||r.expected);
+ return v
+}
+function officialPriceRows(){return state.prices.filter(p=>p.source==='official'&&num(p.rate)>0)}
+function suggestClaimByOfficialPrice(candidates,target){
+ let targetC=Math.round(num(target)*100),pool=uniqServices(candidates),known=pool.map(s=>({s,p:bestOfficialPriceForService(s)})).filter(x=>x.p&&num(x.p.rate)>0),ctx=contextualOfficialPrices(pool,target);if(targetC<=0||!ctx.length||!known.length)return null;
+ let suggestions=[];
+ function add(parts,missing){let sum=parts.reduce((a,x)=>a+num(x.rate),0);if(Math.round(sum*100)!==targetC)return;let score=parts.filter(x=>x.registered).length*160+parts.reduce((a,x)=>a+(x.contextScore||0),0)-missing.length*50-parts.length*3;let key=parts.map(x=>(x.p?.category||'')+'|'+(x.p?.name||x.label)+'|'+x.rate).sort().join('||');suggestions.push({parts,missing,score,key})}
+ for(const k of known){let a=num(k.p.rate),rem=Math.round((num(target)-a)*100)/100;if(rem<=0)continue;for(const x of ctx){let p=x.p;if(Math.abs(num(p.rate)-rem)<.001)add([{registered:true,service:k.s,p:k.p,label:k.s.service_type||k.s.source_sheet,rate:a,contextScore:k.p._matchScore||70},{registered:false,p,label:p.name,rate:num(p.rate),contextScore:x.score}],[p])}}
+ for(const k of known){let a=num(k.p.rate),rem=Math.round((num(target)-a)*100)/100;if(rem<=0)continue;for(let i=0;i<ctx.length;i++){let x1=ctx[i],p1=x1.p,r2=rem-num(p1.rate);if(r2<=0)continue;for(let j=i;j<ctx.length;j++){let x2=ctx[j],p2=x2.p;if(Math.abs(num(p2.rate)-r2)<.001)add([{registered:true,service:k.s,p:k.p,label:k.s.service_type||k.s.source_sheet,rate:a,contextScore:k.p._matchScore||70},{registered:false,p:p1,label:p1.name,rate:num(p1.rate),contextScore:x1.score},{registered:false,p:p2,label:p2.name,rate:num(p2.rate),contextScore:x2.score}],[p1,p2])}}}
+ let uniq=new Map();suggestions.sort((a,b)=>b.score-a.score).forEach(s=>{if(!uniq.has(s.key))uniq.set(s.key,s)});let arr=[...uniq.values()].sort((a,b)=>b.score-a.score).slice(0,5);if(!arr.length)return null;
+ let best=arr[0],formula=best.parts.map(x=>`${x.registered?'✓ ':'? '}${x.label||x.p?.name||'บริการ'} ${moneyFmt.format(x.rate)}`).join(' + '),missingNames=best.missing.map(p=>p.name);
+ return {formula,missingNames,alternatives:arr.length,score:best.score,note:`BQ ${moneyFmt.format(target)} บาท มีชุดราคาที่เป็นไปได้ในบริบทกองทุนนี้: ${formula}${arr.length>1?' · มีทางเลือกมากกว่า 1 ชุด จึงยังไม่จัดสรรอัตโนมัติ':''}`}
+}
+function applyAllocations(x,allocs,method,status='allocated',meta={}){
+ let formula=meta.formula||allocationFormula(allocs),target=num(x.pp_paid),extra={...meta};delete extra.formula;
+ (allocs||[]).forEach(({service,amount})=>{
+   service.claims.push({...x,...extra,matchMethod:method,allocatedPP:amount,stmPP:target,allocationFormula:formula,allocationStatus:status});
+   service.paid=Math.round((num(service.paid)+num(amount))*100)/100;
+ });
+ return formula;
+}
+function strictRepAllocation(repServices,target){
+ let pool=uniqServices(repServices),active=pool.map(s=>({service:s,amount:remainingExpectedForService(s)})).filter(x=>x.amount!=null&&x.amount>0);
+ if(!active.length)return {allocations:null,reason:'REP ตรง แต่ยังไม่มีราคามาตรฐานสำหรับบริการ'};
+ let total=Math.round(active.reduce((a,x)=>a+num(x.amount),0)*100)/100;
+ // หลักฐานแรงที่สุด: ทุกบริการภายใต้ REP+ผู้ป่วย รวมราคาทางการได้เท่ากับ AI พอดี
+ if(Math.abs(total-num(target))<.001){
+   return {allocations:active.map(x=>({service:x.service,amount:x.amount})),reason:'บริการทั้งหมดภายใต้ REP รวมตรง PP(AI)',allRep:true};
+ }
+ // ถ้ายอดทั้ง REP ไม่ตรง ให้หา exact subset เฉพาะบริการใน REP ก่อน ไม่ปนบริการจากวัน/กองทุนอื่น
+ let sol=solveClaimAllocation(pool,target,pool);
+ if(sol.allocations)return {...sol,reason:'exact subset เฉพาะ REP+ผู้ป่วย'};
+ return {allocations:null,reason:sol.reason||'REP ตรง แต่ยังแยกยอดไม่ได้',repTotal:total};
+}
+function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
+ let rows=[];
+ if(s.rep_ref&&s.cid&&stmRepCID.has(String(s.rep_ref)+'|'+s.cid))rows.push(...stmRepCID.get(String(s.rep_ref)+'|'+s.cid));
+ if(s.rep_ref&&s.hn&&stmRepHN.has(String(s.rep_ref)+'|'+s.hn))rows.push(...stmRepHN.get(String(s.rep_ref)+'|'+s.hn));
+ let seen=new Set();return rows.filter(x=>{let k=[x.file||'',x.rep||'',x.tran||'',x.cid||'',x.hn||'',x.pp_paid||0].join('|');if(seen.has(k))return false;seen.add(k);return true});
+}
+function recomputeAll(){
+ let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;
+ state.services.forEach((s,i)=>{s._id=serviceId(s,i);s.claims=[];s.matchStatus='unpaid';s.paid=0;if(s.rep_ref&&s.cid){let k=String(s.rep_ref)+'|'+s.cid,a=idxRepCID.get(k)||[];a.push(s);idxRepCID.set(k,a)}if(s.rep_ref&&s.hn){let k=String(s.rep_ref)+'|'+s.hn,a=idxRepHN.get(k)||[];a.push(s);idxRepHN.set(k,a)}if(s.seq){let a=idxSeq.get(String(s.seq))||[];a.push(s);idxSeq.set(String(s.seq),a)}if(s.cid&&s.date){let k=s.cid+'|'+s.date,a=idxCD.get(k)||[];a.push(s);idxCD.set(k,a)}if(s.hn&&s.date){let k=s.hn+'|'+s.date,a=idxHD.get(k)||[];a.push(s);idxHD.set(k,a)}});
+ state.unmatchedSTM=[];state.ambiguousSTM=[];state.residualSTM=[];state.claimAnalyses=[];state.priceSuggestions=[];state.services.forEach(s=>{s.priceHints=[];s.repPaymentEvidence=[]});
+ state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
+   if(x.rep&&x.cid){let k=String(x.rep)+'|'+x.cid,a=stmRepCID.get(k)||[];a.push(x);stmRepCID.set(k,a)}
+   if(x.rep&&x.hn){let k=String(x.rep)+'|'+x.hn,a=stmRepHN.get(k)||[];a.push(x);stmRepHN.set(k,a)}
+ });
+ state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
+   let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
+   if(!b.pool.length){state.unmatchedSTM.push(x);state.claimAnalyses.push({...x,analysisStatus:'unmatched',analysisNote:'ไม่พบบริการจาก REP+ผู้รับบริการ, SEQ หรือผู้รับบริการ/วันที่เดียวกัน'});return}
+
+   // 0) REP-FIRST สำหรับทุกกองทุน · Fund Portfolio Dashboard: ถ้า REP+CID/HN ตรง ให้จัดสรรจากบริการใน REP นั้นก่อน
+   // ป้องกัน false unpaid จาก candidate อื่นในวันเดียวกันที่ทำให้ชุดราคากำกวม
+   if(b.rep.length){
+     let repSol=strictRepAllocation(b.rep,target);
+     if(repSol.allocations?.length){
+       let isMulti=repSol.allocations.length>1;if(isMulti)state.autoAllocated++;
+       let method='REP+CID/HN + PP(AI) คอลัมน์ AI'+(isMulti?' + REP-first Aggregate':' + REP-first Exact');
+       let formula=applyAllocations(x,repSol.allocations,method,isMulti?'rep-aggregate':'rep-exact',{repFirst:true});
+       state.claimAnalyses.push({...x,analysisStatus:isMulti?'rep-aggregate':'rep-exact',allocations:repSol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`REP ${x.rep} + ผู้ป่วยตรง · PP(AI) ${moneyFmt.format(target)} = ${formula}`});return;
+     }
+   }
+
+   // 1) บริการจริงล้วน: exact subset ของอัตรารายบริการ
+   let sol=solveClaimAllocation(b.pool,target,b.preferred);
+   if(sol.allocations){
+     let isMulti=sol.allocations.length>1;if(isMulti)state.autoAllocated++;
+     let method=(b.method||'ผู้ป่วย+วันที่')+(isMulti?' + Global Aggregate: บริการจริงรวมกันตรง PP(AI)':' + ยอดบริการตรง PP(AI)');
+     let formula=applyAllocations(x,sol.allocations,method,isMulti?'aggregate-split':'exact');
+     state.claimAnalyses.push({...x,analysisStatus:isMulti?'split':'exact',allocations:sol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`BQ ${moneyFmt.format(target)} = ${formula}`});return;
+   }
+
+   // 2) Global Aggregate ทุกกองทุน: ใช้บริการจริงก่อน แล้วเติม residual ด้วยราคา PPFS69 เฉพาะบริบท
+   let globalBundle=solveGlobalAggregateClaim(b.pool,target,b.preferred);
+   if(globalBundle&&!globalBundle.ambiguous&&globalBundle.allocations?.length){
+     state.autoAllocated++;
+     let virtualNames=globalBundle.virtual.map(v=>v.label);
+     applyAllocations(x,globalBundle.allocations,(b.method||'ผู้ป่วย+วันที่')+' + Global Aggregate Claim Allocation','global-bundle',{formula:globalBundle.formula,bundleTotal:target,virtualComponents:globalBundle.virtual,bundleComponents:globalBundle.full,evidence:globalBundle.evidence});
+     state.claimAnalyses.push({...x,analysisStatus:'global-bundle',analysisFormula:globalBundle.formula,bundleComponents:globalBundle.full,virtualComponents:globalBundle.virtual,allocations:globalBundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`BQ ${moneyFmt.format(target)} = ${globalBundle.formula}${virtualNames.length?' · เติมจากตารางราคา: '+virtualNames.join(', '):''}`});return;
+   }
+
+   // 3) กฎ Composite ที่ยืนยันไว้ (fallback สำหรับกรณีองค์ประกอบบางรายการไม่มีทะเบียนแยก)
+   let bundle=solveKnownCompositeClaim(b.pool,target);
+   if(bundle){
+     state.autoAllocated++;let virtualNames=bundle.virtual.map(v=>v.label);
+     applyAllocations(x,bundle.allocations,(b.method||'ผู้ป่วย+วันที่')+' + Composite Claim จากตารางราคา','bundle-split',{formula:bundle.formula,bundleTotal:target,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,virtualComponents:bundle.virtual,bundleComponents:bundle.full});
+     state.claimAnalyses.push({...x,analysisStatus:'bundle-split',analysisFormula:bundle.formula,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,bundleComponents:bundle.full,virtualComponents:bundle.virtual,allocations:bundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`BQ ${moneyFmt.format(target)} = ${bundle.formula}${virtualNames.length?' · องค์ประกอบจากตารางราคาที่ไม่มีทะเบียนแยก: '+virtualNames.join(', '):''}`});return;
+   }
+
+   // 4) หาก BQ ตรงยอดเรียกเก็บรวมของแถวทะเบียนพอดี ให้ยืนยันว่า "จ่ายแล้ว" แม้ยังแยก component ไม่ได้
+   // ดีกว่ารายงานเป็นยังไม่พบชดเชย ทั้งที่ Statement จ่ายยอด package ตรงกัน
+   let packageSvc=exactRegisteredPackage(b.pool,target,b.preferred);
+   if(packageSvc){
+     let method=(b.method||'ผู้ป่วย+วันที่')+' + BQ ตรงยอดเรียกเก็บแพ็กเกจ';
+     let formula=`${packageSvc.service_type||packageSvc.source_sheet||packageSvc.fund_sub||'ยอดแพ็กเกจ'} ${moneyFmt.format(target)}`;
+     applyAllocations(x,[{service:packageSvc,amount:target}],method,'package-paid',{formula,bundleTotal:target,packageUnsplit:true});
+     state.claimAnalyses.push({...x,analysisStatus:'package-paid',allocations:[{serviceId:packageSvc._id,service:packageSvc.service_type||packageSvc.source_sheet,amount:target}],analysisFormula:formula,analysisNote:`BQ ${moneyFmt.format(target)} ตรงกับยอดเรียกเก็บรวมของทะเบียน แต่ยังไม่พบชุดองค์ประกอบ PPFS69 ที่มีความมั่นใจเพียงพอ จึงยืนยันการจ่ายโดยไม่เดารายการย่อย`});return;
+   }
+
+   // 5) Partial: มี preferred ชัดเจน จัดสรรเฉพาะส่วนที่พิสูจน์ได้
+   if(b.preferred.length===1){
+     let s=b.preferred[0],e=remainingExpectedForService(s);
+     if(e!=null&&e>0){let alloc=Math.min(e,target);applyAllocations(x,[{service:s,amount:alloc}],(b.method||'REP/SEQ')+' + จัดสรรเฉพาะยอดที่ยืนยันได้','partial-explained');let residual=Math.round((target-alloc)*100)/100;if(residual>0){state.residualSTM.push({...x,residual,explained:alloc,analysisNote:sol.reason});state.claimAnalyses.push({...x,analysisStatus:'residual',allocations:[{serviceId:s._id,service:s.service_type||s.source_sheet,amount:alloc}],residual,analysisNote:`ยืนยันได้ ${moneyFmt.format(alloc)} บาท เหลือ ${moneyFmt.format(residual)} บาทที่ยังระบุบริการไม่ได้`})}else state.claimAnalyses.push({...x,analysisStatus:'partial',allocations:[{serviceId:s._id,service:s.service_type||s.source_sheet,amount:alloc}],analysisNote:'ชดเชยต่ำกว่ายอดเรียกเก็บของบริการ'});return}
+   }
+
+   // 6) แสดงข้อเสนอเฉพาะราคาในบริบทกองทุน — ไม่ใช้ราคาข้ามกองทุนแบบไร้หลักฐาน
+   let hint=suggestClaimByOfficialPrice(b.pool,target);
+   if(hint){let h={...x,...hint,candidateCount:b.pool.length,matchMethod:b.method};state.priceSuggestions.push(h);b.pool.forEach(s=>{s.priceHints.push(h);if(!isMatchedStatus(s.matchStatus))s.matchStatus='ambiguous'});state.claimAnalyses.push({...x,analysisStatus:'price-suggestion',analysisNote:hint.note,candidateCount:b.pool.length,priceFormula:hint.formula});}
+   else {let reason=globalBundle?.ambiguous?globalBundle.reason:sol.reason;state.ambiguousSTM.push({...x,candidateCount:b.pool.length,matchMethod:b.method,analysisNote:reason});b.pool.forEach(s=>{if(!isMatchedStatus(s.matchStatus))s.matchStatus='ambiguous'});state.claimAnalyses.push({...x,analysisStatus:'ambiguous',analysisNote:reason,candidateCount:b.pool.length});}
+ });
+ // Safety net ทุกกองทุน: ถ้า REP+CID/HN มี PP(AI)>0 จริง แต่ solver ยังจัดสรรไม่ได้ ห้ามรายงานว่า 'ยังไม่พบชดเชย'
+ state.services.forEach(s=>{
+   let ev=repEvidenceRowsForService(s,stmRepCID,stmRepHN);s.repPaymentEvidence=ev;
+   if(num(s.paid)<=0&&ev.length){
+     s.matchStatus='rep-confirmed';
+   }
+ });
+ state.services.forEach(s=>{if(num(s.paid)>0){let e=expectedForService(s);s.matchStatus=(e!=null&&num(s.paid)+0.009<e)?'partial':'paid'}});
+ state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
+ renderAll();
+}
+function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();}
+function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length,partial=state.recon.filter(x=>x.matchStatus==='partial').length,amb=state.recon.filter(x=>x.matchStatus==='ambiguous').length,unpaid=total-paid-amb;let stmPP=state.stm.reduce((a,x)=>a+num(x.pp_paid),0),matchedPaid=state.recon.reduce((a,x)=>a+num(x.paid),0);let expRows=state.recon.filter(x=>x.expected!=null),expected=expRows.reduce((a,x)=>a+x.expected,0);let pct=total?paid/total*100:0;
+ let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(state.unmatchedSTM.length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
+ document.getElementById('matchDonut').style.setProperty('--angle',(pct*3.6)+'deg');document.getElementById('matchPct').innerHTML=`${pct.toFixed(1)}%<div class="small muted">จับคู่ได้</div>`;document.getElementById('statusLegend').innerHTML=`<div class="hbars"><div class="hrow"><span>ได้รับชดเชย</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><b class="right">${intFmt.format(paid)}</b></div><div class="hrow"><span>ยังไม่พบชดเชย</span><div class="track"><div class="fill" style="width:${total?unpaid/total*100:0}%;background:#dc2626"></div></div><b class="right">${intFmt.format(unpaid)}</b></div><div class="hrow"><span>จับคู่กำกวม</span><div class="track"><div class="fill" style="width:${total?amb/total*100:0}%;background:#d97706"></div></div><b class="right">${intFmt.format(amb)}</b></div></div>`;
+ let mm={};state.stm.forEach(x=>{let k=monthKey(x.date);mm[k]=(mm[k]||0)+num(x.pp_paid)});document.getElementById('overviewMonthChart').innerHTML=barChart(Object.entries(mm).sort().map(([k,v])=>({label:thMonth(k),value:v})),true);
+ let svc={};state.recon.forEach(r=>r.items.forEach(it=>{let key=it.replace(/^PPFS-[^_]*_?/,'').slice(0,80);svc[key]=(svc[key]||0)+1}));let top=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value}));document.getElementById('topServices').innerHTML=hBar(top);
+ let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!x.seq).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',state.unmatchedSTM.length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/BQ ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
+ let official=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).length;document.getElementById('priceNotice').className='notice '+(official?'':'warning');document.getElementById('priceNotice').innerHTML=official?`มีราคาแบบนำเข้า/ยืนยันแล้ว <b>${intFmt.format(official)}</b> รายการ ระบบจะใช้ราคานี้ก่อนราคาอนุมานในการแยกยอด PP`:'ยังไม่ได้รับ/นำเข้าตารางราคาอย่างเป็นทางการในชุดไฟล์นี้ ระบบจึงใช้เฉพาะอัตราที่อนุมานจากรายการเดี่ยวที่มีความสอดคล้องสูง และจะแสดงแหล่งราคาเป็น “อนุมาน” จนกว่าจะนำเข้าตารางราคาจริง';
+}
+function barChart(data,money=false){if(!data.length)return '<div class="muted small">ไม่มีข้อมูล</div>';let max=Math.max(...data.map(x=>x.value),1);return `<div class="bars">${data.map(x=>`<div class="barcol"><div class="bar" style="height:${Math.max(2,x.value/max*170)}px"><div class="tip">${money?moneyFmt.format(x.value):intFmt.format(x.value)}</div></div><div class="barlabel">${esc(x.label)}</div></div>`).join('')}</div>`}
+function hBar(data){if(!data.length)return '<div class="muted small">ไม่มีข้อมูล</div>';let max=Math.max(...data.map(x=>x.value),1);return `<div class="hbars">${data.map(x=>`<div class="hrow"><span title="${esc(x.label)}">${esc(x.label)}</span><div class="track"><div class="fill" style="width:${x.value/max*100}%"></div></div><b class="right">${intFmt.format(x.value)}</b></div>`).join('')}</div>`}
+function aggregateBy(keyFn){let m=new Map();state.recon.forEach(r=>{let k=keyFn(r)||'ไม่ระบุ';if(!m.has(k))m.set(k,{key:k,count:0,matched:0,people:new Set(),paid:0});let o=m.get(k);o.count++;if(isMatchedStatus(r.matchStatus))o.matched++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);o.paid+=r.paid});return [...m.values()].map(x=>({...x,peopleCount:x.people.size}))}
+function refreshFundDashboardMonths(){
+ let el=document.getElementById('fundDashMonth');if(!el)return;
+ let current=el.value,vals=[...new Set(state.recon.map(r=>monthKey(r.date)).filter(k=>/^\d{4}-\d{2}$/.test(k)))].sort();
+ el.innerHTML='<option value="">ทุกเดือนบริการ</option>'+vals.map(v=>`<option value="${v}">${esc(thMonth(v))}</option>`).join('');
+ if(vals.includes(current))el.value=current;
+}
+function fundDashboardClaimValue(r){
+ let v=r.registeredExpected;if(v!=null&&Number.isFinite(Number(v)))return num(v);
+ if(num(r.claim_expected)>0)return num(r.claim_expected);
+ return r.expected!=null?num(r.expected):0;
+}
+function aggregateFundPortfolio(){
+ let month=document.getElementById('fundDashMonth')?.value||'',base=state.recon.filter(r=>!month||monthKey(r.date)===month),m=new Map();
+ base.forEach(r=>{
+   let key=fundAuditKey(r)||'ไม่ระบุ';
+   if(!m.has(key))m.set(key,{key,count:0,people:new Set(),registered:0,registeredN:0,expected:0,expectedN:0,paid:0,status:{paid:0,partial:0,'rep-confirmed':0,ambiguous:0,unpaid:0}});
+   let o=m.get(key);o.count++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);
+   let reg=fundDashboardClaimValue(r);if(reg>0){o.registered+=reg;o.registeredN++}
+   if(r.expected!=null&&num(r.expected)>0){o.expected+=num(r.expected);o.expectedN++}
+   o.paid+=num(r.paid);
+   let st=['paid','partial','rep-confirmed','ambiguous'].includes(r.matchStatus)?r.matchStatus:'unpaid';o.status[st]++;
+ });
+ return [...m.values()].map(o=>{
+   let found=o.status.paid+o.status.partial+o.status['rep-confirmed']+o.status.ambiguous;
+   let allocated=o.status.paid+o.status.partial;
+   let outstanding=o.expectedN?Math.max(0,o.expected-o.paid):0;
+   let recovery=o.expectedN&&o.expected>0?o.paid/o.expected*100:null;
+   let matchRate=o.count?found/o.count*100:0;
+   let allocationRate=o.count?allocated/o.count*100:0;
+   let health='good',healthText='ปกติ';
+   if(o.status.unpaid>0||(recovery!=null&&recovery<80)){health='bad';healthText='ต้องติดตาม'}
+   else if(o.status['rep-confirmed']>0||o.status.ambiguous>0||o.status.partial>0||(recovery!=null&&recovery<99.5)){health='watch';healthText='เฝ้าระวัง'}
+   return {...o,peopleCount:o.people.size,found,allocated,outstanding,recovery,matchRate,allocationRate,health,healthText};
+ });
+}
+function filteredFundPortfolio(){
+ let rows=aggregateFundPortfolio(),q=normText(document.getElementById('fundDashSearch')?.value||'').toLowerCase(),issue=document.getElementById('fundDashIssue')?.value||'',sort=document.getElementById('fundDashSort')?.value||'outstanding';
+ if(q)rows=rows.filter(x=>x.key.toLowerCase().includes(q));
+ if(issue==='unpaid')rows=rows.filter(x=>x.status.unpaid>0);
+ if(issue==='rep')rows=rows.filter(x=>x.status['rep-confirmed']>0);
+ if(issue==='ambiguous')rows=rows.filter(x=>x.status.ambiguous>0);
+ if(issue==='partial')rows=rows.filter(x=>x.status.partial>0);
+ if(issue==='low80')rows=rows.filter(x=>x.recovery!=null&&x.recovery<80);
+ if(issue==='complete')rows=rows.filter(x=>x.recovery!=null&&x.recovery>=99.5);
+ let sorts={outstanding:(a,b)=>b.outstanding-a.outstanding||b.count-a.count,expected:(a,b)=>b.expected-a.expected,paid:(a,b)=>b.paid-a.paid,recovery:(a,b)=>(a.recovery??-1)-(b.recovery??-1),services:(a,b)=>b.count-a.count,name:(a,b)=>a.key.localeCompare(b.key,'th')};
+ rows.sort(sorts[sort]||sorts.outstanding);return rows;
+}
+function fundRecoveryHTML(rows){
+ let top=rows.filter(x=>x.recovery!=null).sort((a,b)=>a.recovery-b.recovery).slice(0,12);if(!top.length)return '<div class="muted small">ยังไม่มีข้อมูลมูลค่าตามสิทธิ</div>';
+ return `<div class="fund-recovery-list">${top.map(x=>{let p=Math.max(0,Math.min(100,x.recovery)),cl=p>=99.5?'good':p>=80?'watch':'bad';return `<div class="fund-recovery-row"><span title="${esc(x.key)}">${esc(x.key)}</span><div class="track"><div class="fill ${cl}" style="width:${p}%"></div></div><b class="right">${x.recovery.toFixed(1)}%</b></div>`}).join('')}</div>`;
+}
+
+function percentile(values,p){
+ let a=values.filter(v=>Number.isFinite(v)).sort((x,y)=>x-y);if(!a.length)return 0;if(a.length===1)return a[0];
+ let idx=(a.length-1)*p,lo=Math.floor(idx),hi=Math.ceil(idx);return lo===hi?a[lo]:a[lo]+(a[hi]-a[lo])*(idx-lo)
+}
+function executiveAlertData(rows){
+ let positives=rows.map(x=>num(x.outstanding)).filter(v=>v>0),p50=percentile(positives,.50),p75=percentile(positives,.75),totalOutstanding=rows.reduce((s,x)=>s+num(x.outstanding),0);
+ let alerts=rows.map(x=>{
+   let score=0,reasons=[],share=totalOutstanding>0?num(x.outstanding)/totalOutstanding*100:0;
+   let highOutstanding=x.outstanding>0&&(x.outstanding>=Math.max(1000,p75)||share>=15);
+   let midOutstanding=!highOutstanding&&x.outstanding>0&&(x.outstanding>=Math.max(500,p50)||share>=5);
+   if(highOutstanding){score+=3;reasons.push(`ยอดค้างสูง ${moneyFmt.format(x.outstanding)} บาท${share>=5?` (${share.toFixed(1)}%)`:''}`)}
+   else if(midOutstanding){score+=1;reasons.push(`ยอดคงค้าง ${moneyFmt.format(x.outstanding)} บาท`)}
+   if(x.recovery!=null){if(x.recovery<60){score+=4;reasons.push(`อัตราชดเชยต่ำมาก ${x.recovery.toFixed(1)}%`)}else if(x.recovery<80){score+=3;reasons.push(`อัตราชดเชยต่ำ ${x.recovery.toFixed(1)}%`)}else if(x.recovery<95){score+=2;reasons.push(`อัตราชดเชย ${x.recovery.toFixed(1)}%`)}else if(x.recovery<99.5){score+=1;reasons.push(`ชดเชยยังไม่ครบ ${x.recovery.toFixed(1)}%`)}}
+   let rep=x.status?.['rep-confirmed']||0,amb=x.status?.ambiguous||0,partial=x.status?.partial||0,unpaid=x.status?.unpaid||0;
+   if(rep>0){score+=rep>=3?3:2;reasons.push(`พบ REP แต่รอจัดสรร ${intFmt.format(rep)} รายการ`)}
+   if(unpaid>0){score+=unpaid>=5?4:3;reasons.push(`ยังไม่พบชดเชย ${intFmt.format(unpaid)} รายการ`)}
+   if(amb>0){score+=amb>=3?3:2;reasons.push(`ยอดกำกวม ${intFmt.format(amb)} รายการ`)}
+   if(partial>0){score+=1;reasons.push(`ชดเชยบางส่วน ${intFmt.format(partial)} รายการ`)}
+   let abnormal=amb+partial+unpaid;
+   let level=score>=7?'critical':score>=4?'high':score>=2?'watch':'normal';
+   let levelText=level==='critical'?'วิกฤต':level==='high'?'ต้องติดตาม':level==='watch'?'เฝ้าระวัง':'ปกติ';
+   return {...x,alertScore:score,alertReasons:reasons,alertLevel:level,alertLevelText:levelText,abnormal,shareOutstanding:share}
+ }).sort((a,b)=>b.alertScore-a.alertScore||b.outstanding-a.outstanding||((a.recovery??101)-(b.recovery??101)));
+ return {alerts,p50,p75,totalOutstanding};
+}
+function renderExecutiveAlerts(baseRows){
+ let data=executiveAlertData(baseRows),alerts=data.alerts.filter(x=>x.alertLevel!=='normal'),critical=alerts.filter(x=>x.alertLevel==='critical').length,high=alerts.filter(x=>x.alertLevel==='high').length,
+     rep=baseRows.reduce((s,x)=>s+(x.status?.['rep-confirmed']||0),0),abnormal=baseRows.reduce((s,x)=>s+(x.status?.ambiguous||0)+(x.status?.partial||0)+(x.status?.unpaid||0),0);
+ let s=document.getElementById('executiveAlertSummary');if(s)s.innerHTML=[
+   ['กองทุนระดับวิกฤต',critical,'critical'],['กองทุนต้องติดตาม',high,'high'],['REP รอจัดสรร',rep,'rep'],['รายการผิดปกติ',abnormal,'abnormal']
+ ].map(x=>`<div class="executive-alert-metric ${x[2]}"><div class="m-label">${x[0]}</div><div class="m-value">${intFmt.format(x[1])}</div></div>`).join('');
+ let rule=document.getElementById('executiveAlertRule');if(rule){let t=data.p75>0?moneyFmt.format(data.p75):'0.00';rule.innerHTML=`เกณฑ์ปรับตามข้อมูลอัตโนมัติ · “ยอดค้างสูง” ใช้ P75 ของเดือน/ชุดข้อมูล ≈ <b>${t} บาท</b> หรือมีสัดส่วน ≥ 15% · อัตราชดเชย < 80% = ความเสี่ยงสูง`}
+ let list=document.getElementById('executiveAlertList');if(!list)return;
+ if(!alerts.length){list.innerHTML='<div class="exec-alert-empty" style="grid-column:1/-1"><b>✓ ไม่พบ Executive Alert ที่ต้องเร่งติดตาม</b><br>กองทุนทั้งหมดอยู่ในเกณฑ์ปกติภายใต้เดือน/ข้อมูลที่เลือก</div>';return}
+ list.innerHTML=alerts.slice(0,8).map((x,i)=>`<div class="exec-alert-item ${x.alertLevel}">
+   <div class="exec-alert-rank">${i+1}</div>
+   <div class="exec-alert-main"><div class="exec-alert-name">${esc(x.key)}</div><div class="exec-alert-reasons">${x.alertReasons.slice(0,5).map(r=>`<span class="exec-alert-reason">${esc(r)}</span>`).join('')}</div></div>
+   <div class="exec-alert-score"><span class="exec-alert-level ${x.alertLevel}">${x.alertLevelText}</span><span class="score">Risk score ${x.alertScore}</span><button class="btn fund-drill-btn" onclick="openFundAuditFromDashboard(decodeURIComponent('${encodeURIComponent(x.key)}'))">ตรวจสอบ</button></div>
+ </div>`).join('')
+}
+
+function renderFund(){
+ refreshFundDashboardMonths();let rows=filteredFundPortfolio(),all=aggregateFundPortfolio(),month=document.getElementById('fundDashMonth')?.value||'';
+ let totalServices=rows.reduce((s,x)=>s+x.count,0),people=new Set();state.recon.filter(r=>!month||monthKey(r.date)===month).forEach(r=>{let k=fundAuditKey(r)||'ไม่ระบุ';if(rows.some(x=>x.key===k)&&(r.cid||r.hn))people.add(r.cid||r.hn)});
+ let registered=rows.reduce((s,x)=>s+x.registered,0),expected=rows.reduce((s,x)=>s+x.expected,0),paid=rows.reduce((s,x)=>s+x.paid,0),outstanding=Math.max(0,expected-paid),recovery=expected>0?paid/expected*100:0;
+ let kp=[['กองทุน / โปรแกรม',intFmt.format(rows.length),'กองทุน','info'],['บริการ PP',intFmt.format(totalServices),'ครั้ง','info'],['ผู้รับบริการ',intFmt.format(people.size),'คน (ไม่ซ้ำ)','info'],['ยอดเรียกเก็บทะเบียน',moneyFmt.format(registered),'บาท · อาจมียอดแพ็กเกจ','warn'],['มูลค่าตามสิทธิ PPFS69',moneyFmt.format(expected),'บาท หลังแยกรายบริการ','info'],['PP(AI) จัดสรรแล้ว',moneyFmt.format(paid),'บาท','good'],['ยอดคงค้างตามสิทธิ',moneyFmt.format(outstanding),'บาท','bad'],['อัตราชดเชย',recovery.toFixed(1)+'%','PP(AI) ÷ มูลค่าตามสิทธิ',recovery>=99.5?'good':recovery>=80?'warn':'bad']];
+ let k=document.getElementById('fundDashKPIs');if(k)k.innerHTML=kp.map(x=>`<div class="card kpi ${x[3]}"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="note">${x[2]}</div></div>`).join('');
+ let status={paid:0,partial:0,rep:0,ambiguous:0,unpaid:0};rows.forEach(x=>{status.paid+=x.status.paid;status.partial+=x.status.partial;status.rep+=x.status['rep-confirmed'];status.ambiguous+=x.status.ambiguous;status.unpaid+=x.status.unpaid});
+ let strip=document.getElementById('fundDashStatusStrip');if(strip)strip.innerHTML=[['ได้รับชดเชยแล้ว',status.paid,'good'],['ชดเชยบางส่วน',status.partial,'partial'],['พบ REP · รอจัดสรร',status.rep,'info'],['ยอดรวมกำกวม',status.ambiguous,'warn'],['ยังไม่พบชดเชย',status.unpaid,'bad']].map(x=>`<div class="fund-status-card ${x[2]}"><div class="status-name">${x[0]}</div><div class="status-value">${intFmt.format(x[1])}</div></div>`).join('');
+ renderExecutiveAlerts(all);
+ let outBars=rows.filter(x=>x.outstanding>0).sort((a,b)=>b.outstanding-a.outstanding).slice(0,12).map(x=>({label:x.key,value:x.outstanding}));let ob=document.getElementById('fundOutstandingBars');if(ob)ob.innerHTML=outBars.length?hBar(outBars):'<div class="notice"><b>ยอดคงค้างเป็นศูนย์</b> สำหรับกองทุนที่อยู่ในตัวกรองปัจจุบัน</div>';
+ let rb=document.getElementById('fundRecoveryBars');if(rb)rb.innerHTML=fundRecoveryHTML(rows);
+ let caption=[month?thMonth(month):'ทุกเดือน',document.getElementById('fundDashIssue')?.selectedOptions?.[0]?.text||'ทุกกองทุน'].join(' · ');let cap=document.getElementById('fundDashCaption');if(cap)cap.textContent=caption;let cnt=document.getElementById('fundDashCount');if(cnt)cnt.textContent=`แสดง ${intFmt.format(rows.length)} จาก ${intFmt.format(all.length)} กองทุน`;
+ let body=document.getElementById('fundPortfolioBody');if(body)body.innerHTML=rows.map(x=>`<tr><td><b>${esc(x.key)}</b><div class="small muted">Match ${x.matchRate.toFixed(1)}% · จัดสรร ${x.allocationRate.toFixed(1)}%</div></td><td class="num">${intFmt.format(x.count)}</td><td class="num">${intFmt.format(x.peopleCount)}</td><td class="num optional-col">${x.registeredN?moneyFmt.format(x.registered):'-'}</td><td class="num">${x.expectedN?moneyFmt.format(x.expected):'-'}</td><td class="num"><b>${moneyFmt.format(x.paid)}</b></td><td class="num"><span class="${x.outstanding>0?'b-bad badge':'muted'}">${x.expectedN?moneyFmt.format(x.outstanding):'-'}</span></td><td class="num">${intFmt.format(x.found)}</td><td class="num">${x.status['rep-confirmed']?`<span class="badge b-info">${intFmt.format(x.status['rep-confirmed'])}</span>`:'0'}</td><td class="num">${x.status.ambiguous?`<span class="badge b-violet">${intFmt.format(x.status.ambiguous)}</span>`:'0'}</td><td class="num">${x.status.unpaid?`<span class="badge b-bad">${intFmt.format(x.status.unpaid)}</span>`:'0'}</td><td class="num">${x.recovery==null?'-':`<b>${x.recovery.toFixed(1)}%</b>`}</td><td><span class="fund-health ${x.health}"><span class="fund-health-dot"></span>${x.healthText}</span></td><td><button class="btn fund-drill-btn" onclick="openFundAuditFromDashboard(decodeURIComponent('${encodeURIComponent(x.key)}'))">ตรวจสอบ</button></td></tr>`).join('');
+}
+function clearFundDashboardFilters(){let m=document.getElementById('fundDashMonth'),i=document.getElementById('fundDashIssue'),s=document.getElementById('fundDashSort'),q=document.getElementById('fundDashSearch');if(m)m.value='';if(i)i.value='';if(s)s.value='outstanding';if(q)q.value='';renderFund()}
+function renderFundTable(){renderFund()}
+function exportFundDashboardCSV(){let rows=[['กองทุน/โปรแกรม','บริการ','ผู้รับบริการ','เรียกเก็บทะเบียน','มูลค่าตามสิทธิ','PP(AI) จัดสรรแล้ว','ยอดคงค้าง','พบ Statement','ได้รับชดเชย','ชดเชยบางส่วน','REP รอจัดสรร','ยอดกำกวม','ยังไม่พบ','อัตราชดเชย (%)','Match (%)','สถานะ']];filteredFundPortfolio().forEach(x=>rows.push([x.key,x.count,x.peopleCount,x.registeredN?x.registered:'',x.expectedN?x.expected:'',x.paid,x.outstanding,x.found,x.status.paid,x.status.partial,x.status['rep-confirmed'],x.status.ambiguous,x.status.unpaid,x.recovery==null?'':x.recovery.toFixed(1),x.matchRate.toFixed(1),x.healthText]));downloadCSV(rows,'PP_Fund_Portfolio_Dashboard.csv')}
+function openFundAuditFromDashboard(fund){
+ document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));let b=document.querySelector('.navbtn[data-page="fundAudit"]');if(b)b.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));let p=document.getElementById('fundAudit');if(p)p.classList.add('active');refreshFundAuditFunds();let f=document.getElementById('fundAuditFund');if(f&&fund){f.value=fund;syncFundAuditMonths(false)}if(state.fundAuditLoggedIn)renderFundAudit();
+}
+
+function aggregateServices(){let m=new Map();state.recon.forEach(r=>{let key=r.service_type||r.source_sheet||r.fund_sub||r.items?.[0]||'ไม่ระบุรายการ';if(!m.has(key))m.set(key,{key,count:0,matched:0,people:new Set(),expected:0,expectedN:0,paid:0});let o=m.get(key);o.count++;if(isMatchedStatus(r.matchStatus))o.matched++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);if(r.expected!=null){o.expected+=r.expected;o.expectedN++}o.paid+=r.paid});return [...m.values()].map(o=>({...o,peopleCount:o.people.size,matchRate:o.count?o.matched/o.count*100:0,gap:o.expectedN?o.paid-o.expected:null}))}
+function renderServiceReport(){let rows=aggregateServices().sort((a,b)=>b.count-a.count),q=normText(document.getElementById('serviceSearch')?.value||'').toLowerCase(),flt=document.getElementById('serviceMatchFilter')?.value||'';if(q)rows=rows.filter(x=>x.key.toLowerCase().includes(q));if(flt==='good')rows=rows.filter(x=>x.matchRate>=80);if(flt==='watch')rows=rows.filter(x=>x.matchRate<80);let totalTypes=rows.length,totalVisits=rows.reduce((a,x)=>a+x.count,0),exp=rows.reduce((a,x)=>a+(x.expectedN?x.expected:0),0),paid=rows.reduce((a,x)=>a+x.paid,0),matched=rows.reduce((a,x)=>a+x.matched,0),pct=totalVisits?matched/totalVisits*100:0;let k=document.getElementById('serviceKpis');if(k)k.innerHTML=[['ประเภทรายการบริการ',intFmt.format(totalTypes),'รายการ','info'],['บริการทั้งหมด',intFmt.format(totalVisits),'ครั้ง','info'],['จับคู่ STM',intFmt.format(matched),pct.toFixed(1)+'%','good'],['คาดเรียกเก็บ',moneyFmt.format(exp),'บาท','info'],['PP จ่าย',moneyFmt.format(paid),'บาท','good'],['STM ยอดรวมแยกอัตโนมัติ',intFmt.format(state.autoAllocated),'รายการ STM','warn']].map(x=>`<div class="card kpi ${x[3]}"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="note">${x[2]}</div></div>`).join('');let topExpected=rows.filter(x=>x.expectedN).sort((a,b)=>b.expected-a.expected).slice(0,10).map(x=>({label:x.key,value:x.expected}));let topMatch=rows.sort((a,b)=>b.count-a.count).slice(0,10).map(x=>({label:x.key,value:x.matchRate}));let eb=document.getElementById('serviceExpectedBars');if(eb)eb.innerHTML=hBar(topExpected);let mb=document.getElementById('serviceMatchBars');if(mb)mb.innerHTML=hBar(topMatch);let body=document.getElementById('serviceTableBody');if(body)body.innerHTML=rows.map(x=>`<tr><td><b>${esc(x.key)}</b></td><td class="num">${intFmt.format(x.count)}</td><td class="num">${intFmt.format(x.peopleCount)}</td><td class="num">${x.expectedN?moneyFmt.format(x.expected):'-'}</td><td class="num">${intFmt.format(x.matched)}</td><td class="num">${moneyFmt.format(x.paid)}</td><td class="num">${x.gap==null?'-':moneyFmt.format(x.gap)}</td><td class="num"><span class="badge ${x.matchRate>=80?'b-good':x.matchRate>=50?'b-warn':'b-bad'}">${x.matchRate.toFixed(1)}%</span></td></tr>`).join('')}
+function exportServiceSummaryCSV(){let rows=[['รายการบริการ','จำนวนบริการ','ผู้รับบริการ','คาดเรียกเก็บ','จับคู่ STM','PP จ่าย','ส่วนต่าง','อัตราจับคู่ (%)']];aggregateServices().sort((a,b)=>b.count-a.count).forEach(x=>rows.push([x.key,x.count,x.peopleCount,x.expectedN?x.expected:'',x.matched,x.paid,x.gap??'',x.matchRate.toFixed(1)]));downloadCSV(rows,'PP_Service_Summary.csv')}
+function fundAuditKey(r){
+ if(state.serviceMode==='sheet-services')return normText(r.source_sheet||r.fund_sub||r.service_type)||'ไม่ระบุ';
+ return normText(r.fund_sub||r.source_sheet||r.service_type||r.right_sub||r.right_main)||'ไม่ระบุ';
+}
+function refreshFundAuditFunds(){
+ let el=document.getElementById('fundAuditFund');if(!el)return;
+ let current=el.value,vals=[...new Set(state.recon.map(fundAuditKey).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+ el.innerHTML='<option value="">ทุกกองทุน</option>'+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+ if(vals.includes(current))el.value=current;
+ syncFundAuditMonths(true);
+}
+function syncFundAuditMonths(keep=true){
+ let el=document.getElementById('fundAuditMonth');if(!el)return;
+ let fund=document.getElementById('fundAuditFund')?.value||'',current=keep?el.value:'';
+ let rows=state.recon.filter(r=>!fund||fundAuditKey(r)===fund),vals=[...new Set(rows.map(r=>monthKey(r.date)).filter(k=>/^\d{4}-\d{2}$/.test(k)))].sort();
+ el.innerHTML='<option value="">ทุกเดือน</option>'+vals.map(v=>`<option value="${v}">${esc(thMonth(v))}</option>`).join('');
+ if(vals.includes(current))el.value=current;
+}
+async function loginFundAudit(){
+ let u=document.getElementById('fundAuditUser').value.trim(),p=document.getElementById('fundAuditPass').value;
+ if(u==='admin'&&await sha256(p)===EXPECTED_PASS_HASH){
+   state.fundAuditLoggedIn=true;document.getElementById('fundAuditLoginPanel').classList.add('hidden');document.getElementById('fundAuditPanel').classList.remove('hidden');document.getElementById('fundAuditLoginState').innerHTML='<span class="badge b-good">เข้าสู่ระบบแล้ว: admin</span>';document.getElementById('fundAuditLoginMsg').textContent='';refreshFundAuditFunds();renderFundAudit();
+ }else document.getElementById('fundAuditLoginMsg').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+}
+function logoutFundAudit(){
+ state.fundAuditLoggedIn=false;document.getElementById('fundAuditLoginPanel').classList.remove('hidden');document.getElementById('fundAuditPanel').classList.add('hidden');document.getElementById('fundAuditLoginState').innerHTML='';document.getElementById('fundAuditPass').value='';
+}
+function clearFundAuditFilters(){
+ let f=document.getElementById('fundAuditFund'),m=document.getElementById('fundAuditMonth'),s=document.getElementById('fundAuditStatus'),q=document.getElementById('fundAuditQuery');if(f)f.value='';syncFundAuditMonths(false);if(m)m.value='';if(s)s.value='';if(q)q.value='';renderFundAudit();
+}
+function fundAuditRows(){
+ let fund=document.getElementById('fundAuditFund')?.value||'',month=document.getElementById('fundAuditMonth')?.value||'',status=document.getElementById('fundAuditStatus')?.value||'',q=normText(document.getElementById('fundAuditQuery')?.value||''),qd=digits(q);
+ return state.recon.filter(r=>{
+   if(fund&&fundAuditKey(r)!==fund)return false;
+   if(month&&monthKey(r.date)!==month)return false;
+   if(status&&r.matchStatus!==status)return false;
+   if(q){if(!qd)return false;let hn=digits(r.hn),cid=digits(r.cid);if(!hn.includes(qd)&&!cid.includes(qd))return false;}
+   return true;
+ }).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||'')||(a.hn||'').localeCompare(b.hn||''));
+}
+function fundAuditStatusHTML(r){
+ if(hasAggregateClaim(r))return '<span class="badge b-good aggregate-badge">ได้รับชดเชยจากยอดรวม</span>';
+ if(r.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชยแล้ว</span>';
+ if(r.matchStatus==='partial')return '<span class="badge b-warn">ชดเชยบางส่วน</span>';
+ if(r.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบชดเชยตาม REP · รอจัดสรร</span>';
+ if(r.matchStatus==='ambiguous')return '<span class="badge b-violet">รอตรวจสอบยอดรวม</span>';
+ return '<span class="badge b-bad">ยังไม่พบชดเชย</span>';
+}
+function fundAuditClaimDetail(r){
+ let claims=Array.isArray(r.claims)?r.claims:[];
+ if(claims.length){
+   let reps=[...new Set(claims.map(c=>c.rep).filter(Boolean))],forms=[...new Set(claims.map(c=>c.allocationFormula).filter(Boolean))],methods=[...new Set(claims.map(c=>c.matchMethod).filter(Boolean))];
+   let stmTotals=[...new Set(claims.map(c=>num(c.stmPP)).filter(v=>v>0).map(v=>moneyFmt.format(v)))];
+   let aggregateClaims=claims.filter(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate'].includes(c.allocationStatus)),bundleClaims=claims.filter(c=>c.allocationStatus==='bundle-split'||c.allocationStatus==='global-bundle'),allocated=claims.reduce((a,c)=>a+num(c.allocatedPP),0);
+   let virtual=[];bundleClaims.forEach(c=>(c.virtualComponents||[]).forEach(v=>{let k=(v.label||'')+'|'+num(v.amount);if(!virtual.some(x=>x.k===k))virtual.push({k,label:v.label,amount:num(v.amount)})}));
+   let lines=[];
+   if(reps.length)lines.push(`<div class="claim-line"><span class="claim-key">REP</span><span>${esc(reps.join(', '))}</span></div>`);
+   if(stmTotals.length)lines.push(`<div class="claim-line"><span class="claim-key">PP(AI) รวม</span><span>${stmTotals.join(', ')} บาท</span></div>`);
+   if(forms.length)lines.push(`<div class="claim-line claim-formula"><span class="claim-key">แตกยอด</span><span>${esc(forms.join(' | '))}</span></div>`);
+   if(aggregateClaims.length){
+     lines.push(`<div class="claim-line"><span class="claim-key">จัดสรรบริการนี้</span><span><b>${moneyFmt.format(allocated)} บาท</b></span></div>`);
+     lines.push(`<div class="claim-line"><span class="claim-key">หลักฐาน</span><span>${esc(aggregateEvidenceType(r))}</span></div>`);
+     if(claims.some(c=>c.allocationStatus==='package-paid'))lines.push(`<div class="claim-line"><span class="claim-key">หมายเหตุ</span><span>Statement จ่ายยอดรวมตรงกับทะเบียนแล้ว แต่ยังไม่แยกรายการย่อยอัตโนมัติเพื่อป้องกันการเดาผิด</span></div>`);
+   }
+   if(virtual.length)lines.push(`<div class="claim-line"><span class="claim-key">ไม่มีทะเบียนแยก</span><span>${esc(virtual.map(v=>v.label+' '+moneyFmt.format(v.amount)).join(' + '))}</span></div>`);
+   if(methods.length)lines.push(`<div class="claim-line"><span class="claim-key">วิธีจับคู่</span><span>${esc(methods.join(' | '))}</span></div>`);
+   return `<div class="claim-detail-list">${lines.join('')}</div>`;
+ }
+ let ev=Array.isArray(r.repPaymentEvidence)?r.repPaymentEvidence:[];
+ if(ev.length){
+   let reps=[...new Set(ev.map(x=>x.rep).filter(Boolean))],totals=[...new Set(ev.map(x=>num(x.pp_paid)).filter(v=>v>0).map(v=>moneyFmt.format(v)))];
+   return `<div class="claim-detail-list"><div class="claim-line"><span class="claim-key">REP</span><span>${esc(reps.join(', '))}</span></div><div class="claim-line"><span class="claim-key">PP(AI)</span><span><b>${totals.join(', ')} บาท</b></span></div><div class="claim-line"><span class="claim-key">สถานะ</span><span>พบการจ่ายใน Statement แล้ว แต่ยอดรวมยังแยกกลับมายังบริการนี้ไม่ได้อย่างมั่นใจ</span></div></div>`;
+ }
+ let hints=(r.priceHints||[]).slice(0,2);if(hints.length)return `<div class="claim-detail-list">${hints.map(h=>`<div class="claim-line"><span class="claim-key">ตารางราคาเสนอ</span><span>${esc(h.formula||h.note||'ตรวจสอบเพิ่มเติม')}</span></div>`).join('')}</div>`;
+ return '<span class="muted">ยังไม่พบ Statement ที่ตรง REP+CID/HN หรือจัดสรรให้บริการนี้</span>';
+}
+
+function renderFundAudit(){
+ if(!document.getElementById('fundAuditBody'))return;refreshFundAuditFunds();if(!state.fundAuditLoggedIn)return;
+ let rows=fundAuditRows(),people=new Set(rows.map(r=>r.cid||r.hn).filter(Boolean)),billed=rows.reduce((a,r)=>a+fundAuditExpectedAmount(r),0),paid=rows.reduce((a,r)=>a+num(r.paid),0),paidN=rows.filter(r=>isMatchedStatus(r.matchStatus)).length,unpaidN=rows.filter(r=>r.matchStatus==='unpaid').length;
+ let pct=billed>0?paid/billed*100:(rows.length?paidN/rows.length*100:0);
+ let ks=[['รายการบริการ',intFmt.format(rows.length),'รายการ','info'],['ผู้รับบริการ',intFmt.format(people.size),'คน','info'],['ยอดเรียกเก็บ',moneyFmt.format(billed),'บาท','warn'],['รับชดเชย',moneyFmt.format(paid),'บาท','good'],['อัตราชดเชย',`${pct.toFixed(1)}%`,`${intFmt.format(unpaidN)} รายการยังไม่พบชดเชย`,pct>=95?'good':pct>=70?'warn':'bad']];
+ document.getElementById('fundAuditKPIs').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
+ let fund=document.getElementById('fundAuditFund')?.value||'ทุกกองทุน',month=document.getElementById('fundAuditMonth')?.value||'',status=document.getElementById('fundAuditStatus')?.value||'',statusLabel=status==='paid'?'ได้รับชดเชยแล้ว':status==='partial'?'ชดเชยบางส่วน':status==='rep-confirmed'?'พบชดเชยตาม REP · รอจัดสรร':status==='ambiguous'?'รอตรวจสอบยอดรวม':status==='unpaid'?'ยังไม่พบชดเชย':'ทุกสถานะ';document.getElementById('fundAuditCaption').textContent=`${fund}${month?' · '+thMonth(month):' · ทุกเดือน'} · ${statusLabel}`;document.getElementById('fundAuditCount').textContent=`แสดง ${intFmt.format(rows.length)} รายการ`;
+ document.getElementById('fundAuditBody').innerHTML=rows.length?rows.map(r=>{
+   let billedAmt=num(r.claim_expected||r.registeredExpected||r.expected),auditExpected=fundAuditExpectedAmount(r),svc=r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', ')||r.ppfs||'-',rowCls=r.matchStatus==='paid'?'row-paid':r.matchStatus==='partial'?'row-partial':r.matchStatus==='rep-confirmed'?'row-rep-confirmed':r.matchStatus==='ambiguous'?'row-ambiguous':r.matchStatus==='unpaid'?'row-unpaid':'';
+   let billedHTML='-';
+   if(hasAggregateClaim(r)&&auditExpected>0){
+     billedHTML=`<b>${moneyFmt.format(auditExpected)}</b>`;
+     if(billedAmt>0&&Math.abs(billedAmt-auditExpected)>.001)billedHTML+=`<div class="audit-package-total">ยอดแพ็กเกจ ${moneyFmt.format(billedAmt)}</div>`;
+   }else billedHTML=billedAmt?moneyFmt.format(billedAmt):'-';
+   return `<tr class="${rowCls}"><td>${esc(r.claim_reference||'-')}</td><td class="code">${esc(r.cid||'-')}</td><td class="code">${esc(r.hn||'-')}</td><td>${esc(r.name||'-')}</td><td>${esc(r.date||'-')}</td><td>${esc(r.time||'-')}</td><td class="code">${esc(r.rep_ref||r.seq||'-')}</td><td><b>${esc(svc)}</b><div class="small muted">${esc(fundAuditKey(r))}</div></td><td class="num">${billedHTML}</td><td>${fundAuditStatusHTML(r)}</td><td class="num"><b>${moneyFmt.format(num(r.paid))}</b></td><td><div class="comp-detail">${fundAuditClaimDetail(r)}</div></td></tr>`;
+ }).join(''):'<tr><td colspan="12" style="text-align:center;padding:30px" class="muted">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>';
+}
+function exportFundAuditCSV(){
+ if(!state.fundAuditLoggedIn)return;let rows=fundAuditRows();if(!rows.length){alert('ไม่มีข้อมูลสำหรับส่งออก');return}
+ let head=['VN','CID','HN','ชื่อผู้ป่วย','วันที่ตรวจ','เวลา','เลขที่หนังสือ','กองทุนย่อย','รายการบริการ','เรียกเก็บ','สถานะการชดเชย','รับชดเชย','REP','รายละเอียดการจัดสรร'];
+ let csv=[head,...rows.map(r=>{let claims=r.claims||[],reps=[...new Set(claims.map(c=>c.rep).filter(Boolean))].join('|'),detail=[...new Set(claims.map(c=>c.allocationFormula||c.matchMethod).filter(Boolean))].join(' | '),status=hasAggregateClaim(r)?'ได้รับชดเชยจากยอดรวม':r.matchStatus==='paid'?'ได้รับชดเชยแล้ว':r.matchStatus==='partial'?'ชดเชยบางส่วน':r.matchStatus==='rep-confirmed'?'พบชดเชยตาม REP · รอจัดสรร':r.matchStatus==='ambiguous'?'รอตรวจสอบยอดรวม':'ยังไม่พบชดเชย';return [r.claim_reference||'',r.cid||'',r.hn||'',r.name||'',r.date||'',r.time||'',r.rep_ref||r.seq||'',fundAuditKey(r),r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', '),num(r.claim_expected||r.registeredExpected||r.expected),status,num(r.paid),reps,detail]})].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),fund=(document.getElementById('fundAuditFund')?.value||'all').replace(/[\\/:*?"<>|]/g,'_'),month=document.getElementById('fundAuditMonth')?.value||'all';a.href=URL.createObjectURL(blob);a.download=`PP_Fund_Audit_${fund}_${month}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function renderMonth(){let m=new Map();state.recon.forEach(r=>{let k=monthKey(r.date);if(!m.has(k))m.set(k,{key:k,count:0,matched:0,people:new Set(),paid:0,expected:0,expectedN:0});let o=m.get(k);o.count++;if(isMatchedStatus(r.matchStatus))o.matched++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);o.paid+=r.paid;if(r.expected!=null){o.expected+=r.expected;o.expectedN++}});let rows=[...m.values()].sort((a,b)=>a.key.localeCompare(b.key));document.getElementById('monthBars').innerHTML=barChart(rows.map(x=>({label:thMonth(x.key),value:x.paid})),true);document.getElementById('monthTableBody').innerHTML=rows.map(x=>`<tr><td>${thMonth(x.key)}</td><td class="num">${intFmt.format(x.count)}</td><td class="num">${intFmt.format(x.people.size)}</td><td class="num">${intFmt.format(x.matched)}</td><td class="num">${moneyFmt.format(x.paid)}</td><td class="num">${x.expectedN?moneyFmt.format(x.expected):'<span class="muted">ราคาไม่ครบ</span>'}</td><td class="num">${x.expectedN?moneyFmt.format(x.paid-x.expected):'-'}</td></tr>`).join('')}
+async function sha256(s){if(!globalThis.crypto?.subtle)return s==='1234'?EXPECTED_PASS_HASH:'';let b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function loginIndividual(){let u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPass').value;if(u==='admin'&&await sha256(p)===EXPECTED_PASS_HASH){state.loggedIn=true;document.getElementById('loginPanel').classList.add('hidden');document.getElementById('individualPanel').classList.remove('hidden');document.getElementById('loginState').innerHTML='<span class="badge b-good">เข้าสู่ระบบแล้ว: admin</span>';document.getElementById('loginMsg').textContent=''}else document.getElementById('loginMsg').textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}
+function logoutIndividual(){state.loggedIn=false;document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('individualPanel').classList.add('hidden');document.getElementById('loginState').innerHTML=''}
+function maskCID(cid){let s=String(cid||'');return s.length>=13?s.slice(0,3)+'-xxxx-xxxxx-'+s.slice(-1):s}
+function searchPerson(){if(!state.loggedIn)return;let q=normText(document.getElementById('personQuery').value).toLowerCase();if(!q){document.getElementById('personResults').innerHTML='<div class="muted small">กรอก HN, PID หรือชื่อก่อนค้นหา</div>';return}let qd=digits(q);let rows=state.recon.filter(r=>(qd&&((r.hn||'').includes(qd)||(r.cid||'').includes(qd)))||(r.name||'').toLowerCase().includes(q)).slice(0,100);let orphan=state.unmatchedSTM.filter(r=>(qd&&((r.hn||'').includes(qd)||(r.cid||'').includes(qd)))||(r.name||'').toLowerCase().includes(q)).slice(0,50);document.getElementById('personResults').innerHTML=(rows.length?rows.map(personRowHTML).join(''):'<div class="muted small">ไม่พบบริการ PP ในไฟล์บริการ</div>')+(orphan.length?`<h3 class="section-title" style="margin-top:18px">STM ที่มียอด PP แต่ยังจับคู่ไม่ได้</h3>${orphan.map(x=>`<div class="person-card"><div class="person-name">${esc(x.name)} · HN ${esc(x.hn)}</div><div class="small muted">PID ${esc(maskCID(x.cid))} · ${esc(x.date)} · REP ${esc(x.rep)}</div><div><b>PP จ่าย ${moneyFmt.format(x.pp_paid)} บาท</b></div></div>`).join('')}`:'')}
+function personRowHTML(r){let price=priceForItems(r.items);let bd=r.breakdown;let breakdown='';let hints=(r.priceHints||[]).slice(0,3);if(r.paid>0&&bd.solutions.length===1){let paidSet=new Set(bd.solutions[0].map(x=>x.item));breakdown=`<div class="notice"><b>แยกยอดจากราคา:</b><ul class="ppitems">${r.items.map(it=>{let p=getPriceForItem(it);return `<li>${paidSet.has(it)?'✓':'–'} ${esc(it)} ${p&&num(p.rate)>0?`<b>${moneyFmt.format(num(p.rate))} บาท</b>`:'<span class="badge b-warn">ไม่มีราคา</span>'}</li>`}).join('')}</ul></div>`}else if(r.paid>0)breakdown=`<div class="notice warning">${esc(bd.note)}</div>`;return `<div class="person-card"><div class="person-head"><div><div class="person-name">${esc(r.name||'-')}</div><div class="small muted">HN ${esc(r.hn)} · PID ${esc(maskCID(r.cid))} · วันที่ ${esc(r.date)} · REP ${esc(r.rep_ref||'-')} · SEQ ${esc(r.seq||'-')}</div></div>${statusBadge(r)}</div><div class="split" style="margin-top:10px"><div><b>บริการ PP ที่บันทึก</b><ul class="ppitems">${r.items.length?r.items.map(it=>`<li>${esc(it)}</li>`).join(''):'<li class="muted">ไม่พบ PP Fee schedule แต่เข้าเกณฑ์ PP จากคอลัมน์ I</li>'}</ul></div><div><div><b>รายการบริการ:</b> ${esc(r.service_type||r.fund_sub||'-')}</div><div><b>ชีตต้นทาง:</b> ${esc(r.source_sheet||'-')}</div><div><b>กองทุนย่อย:</b> ${esc(r.fund_sub||'-')}</div><div><b>ยอดคาดเรียกเก็บ:</b> ${r.expected!=null?moneyFmt.format(r.expected)+' บาท':'-'}</div>${r.officialPrice?`<div><b>ราคามาตรฐาน PPFS69:</b> ${moneyFmt.format(num(r.officialPrice.rate))} บาท · ${esc(r.officialPrice.name||'')}</div>`:''}${r.priceMismatch?`<div><span class="badge b-warn">ยอดทะเบียนไม่ตรงราคามาตรฐาน</span></div>`:''}<div><b>ยอด PP จ่าย:</b> ${moneyFmt.format(r.paid)} บาท</div><div><b>วิธีวิเคราะห์:</b> ${esc(r.claims[0]?.matchMethod||'-')}</div>${r.claims[0]?.allocationFormula?`<div><b>แตกยอด STM:</b> ${esc(r.claims[0].allocationFormula)}</div>`:''}</div></div>${breakdown}${hints.length?`<div class="notice warning"><b>วิเคราะห์จากตารางราคา PPFS69:</b>${hints.map(h=>`<div style="margin-top:5px">${esc(h.note)}</div>`).join('')}</div>`:''}<button class="btn" onclick="showDetail('${encodeURIComponent(r._id)}')">ดูรายละเอียด STM</button></div>`}
+function showDetail(idenc){let id=decodeURIComponent(idenc),r=state.recon.find(x=>x._id===id);if(!r)return;document.getElementById('modalContent').innerHTML=`<h2 style="color:var(--navy)">รายละเอียดการตรวจสอบ</h2><p><b>${esc(r.name)}</b> · HN ${esc(r.hn)} · ${esc(r.date)}</p><h3>บริการ PP</h3><ol>${r.items.map(it=>{let p=getPriceForItem(it);return `<li>${esc(it)} ${p&&num(p.rate)>0?`— ${moneyFmt.format(num(p.rate))} บาท <span class="badge ${p.source==='official'?'b-good':'b-warn'}">${p.source==='official'?'ราคาแหล่งนำเข้า':'อนุมาน'}</span>`:''}</li>`}).join('')}</ol><h3>STM ที่จับคู่</h3>${r.claims.length?`<div class="table-wrap"><table class="table"><thead><tr><th>ไฟล์</th><th>REP</th><th>TRAN_ID</th><th>แหล่งข้อมูล</th><th>วิธีวิเคราะห์</th><th>การแตกยอด</th><th class="num">PP(AI) ใน STM</th><th class="num">จัดสรรให้บริการนี้</th></tr></thead><tbody>${r.claims.map(c=>`<tr><td>${esc(c.file)}</td><td>${esc(c.rep)}</td><td>${esc(c.tran)}</td><td>${esc(c.source)}</td><td>${esc(c.matchMethod)}</td><td>${esc(c.allocationFormula||'-')}</td><td class="num">${moneyFmt.format(c.stmPP??c.pp_paid)}</td><td class="num"><b>${moneyFmt.format(c.allocatedPP??c.pp_paid)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="notice danger-note">ยังไม่พบ STM ที่จับคู่</div>'}`;document.getElementById('detailModal').classList.remove('hidden')}
+function closeModal(){document.getElementById('detailModal').classList.add('hidden')}
+function renderPrices(){let q=normText(document.getElementById('priceSearch')?.value||'').toLowerCase(),sf=document.getElementById('priceSourceFilter')?.value||'';let arr=state.prices.map((p,i)=>({...p,_i:i})).filter(p=>!q||(p.code||'').toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q));if(sf==='official')arr=arr.filter(p=>p.source==='official');if(sf==='inferred')arr=arr.filter(p=>p.source==='inferred');if(sf==='missing')arr=arr.filter(p=>!num(p.rate));document.getElementById('priceList').innerHTML=arr.map(p=>`<div class="price-row"><input data-price-i="${p._i}" data-field="code" value="${esc(p.code||'')}"><div><input data-price-i="${p._i}" data-field="name" value="${esc(p.name||'')}"><div class="${p.source==='official'?'source-official':p.source==='inferred'?'source-inferred':'muted'}">${p.source==='official'?`ราคาจากไฟล์นำเข้า${p.category?' · '+esc(p.category):''}${p.unit?' · '+esc(p.unit):''}`:p.source==='inferred'?'ราคาอนุมานจาก STM รายการเดี่ยว'+(p.evidence?' · '+esc(p.evidence):''):'ยังไม่มีราคา'}</div></div><input data-price-i="${p._i}" data-field="rate" type="number" step="0.01" min="0" value="${esc(p.rate||'')}" placeholder="บาท"><button class="btn danger" onclick="deletePrice(${p._i})">ลบ</button></div>`).join('')||'<div class="muted small">ไม่พบรายการ</div>'}
+function savePriceEdits(){document.querySelectorAll('[data-price-i]').forEach(el=>{let i=+el.dataset.priceI,f=el.dataset.field;state.prices[i][f]=el.value;if(f==='rate'&&el.value!==''){state.prices[i].source='official';state.prices[i].evidence='แก้ไข/ยืนยันโดยผู้ใช้'}});recomputeAll()}
+function addBlankPrice(){state.prices.unshift({code:'',name:'',rate:'',source:'missing',evidence:''});renderPrices()}
+function deletePrice(i){state.prices.splice(i,1);recomputeAll()}
+function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean));document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div></div>`}
+function setProcessStatus(msg,type='ok'){let el=document.getElementById('processStatus');if(!el)return;el.className='notice'+(type==='error'?' warning':'');el.innerHTML='<b>สถานะ:</b> '+msg}
+function safeRecompute(context='ประมวลผล'){try{recomputeAll();let ppSTM=state.stm.filter(x=>num(x.pp_paid)!==0).length;setProcessStatus(`${esc(context)}สำเร็จ · บริการ PP ${intFmt.format(state.services.length)} รายการ · STM ${intFmt.format(state.stm.length)} รายการ · STM ที่มียอด PP ${intFmt.format(ppSTM)} รายการ · จับคู่บริการได้ ${intFmt.format(state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length)} รายการ`);return true}catch(err){console.error(err);setProcessStatus(`${esc(context)}ไม่สำเร็จ: ${esc(err.message||err)}`,'error');return false}}
+function manualReprocess(){safeRecompute('ประมวลผลใหม่')}
+function restoreEmbedded(){loadEmbedded();safeRecompute('ล้างข้อมูลและคืนค่าเริ่มต้น')}
+function loadEmbedded(){state.services=structuredClone(EMBEDDED.services);state.stm=structuredClone(EMBEDDED.stm);state.prices=structuredClone(OFFICIAL_PPFS69);let inferred=buildInferredPrices();for(const p of inferred){if(!state.prices.some(x=>normText(x.name)===normText(p.name)))state.prices.push(p)}state.label=EMBEDDED.sourceLabel;state.serviceMode='';state.autoAllocated=0;document.getElementById('serviceFileStatus').textContent='ยังไม่มีข้อมูลบริการ';document.getElementById('stmFileStatus').textContent='ยังไม่มี STM';document.getElementById('priceFileStatus').textContent=`มีตารางราคา PPFS69 ฝังในระบบ ${OFFICIAL_PPFS69.length} รายการ · สามารถนำเข้าไฟล์ราคาใหม่เพื่อเพิ่ม/แก้ไขได้`;let p=document.getElementById('processStatus');if(p)p.innerHTML='<b>สถานะ:</b> พร้อมใช้ตารางราคา PPFS69 ที่ฝังในระบบ · รอการนำเข้าข้อมูลบริการและ STM'}
+function isPPFundText(s){s=String(s||'');return /(^|,)\s*ANC(?:-|,|$)|ส่งเสริมป้องกัน|NHSO_BOARD|(^|,)\s*HPV(?:-|,|$)|(^|,)\s*PP(?:-|,|$)|หลังคลอด|เคลือบฟลูออไรด์/i.test(s)}
+function findHeaderRow(aoa,needles,max=25){for(let r=0;r<Math.min(max,aoa.length);r++){let raw=Array.isArray(aoa[r])?aoa[r]:[];let row=raw.map(x=>normText(x).toLowerCase());let score=needles.reduce((a,n)=>a+(row.some(x=>n.test(x))?1:0),0);if(score>=Math.min(2,needles.length))return r}return -1}
+function headerIndex(headers,tests,fallback=-1){for(let i=0;i<headers.length;i++){let h=normText(headers[i]);if(tests.some(t=>t.test(h)))return i}return fallback}
+let xlsxLoader=null;function ensureXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(xlsxLoader)return xlsxLoader;xlsxLoader=new Promise((resolve,reject)=>{let sc=document.createElement('script');sc.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';sc.onload=()=>window.XLSX?resolve(window.XLSX):reject(new Error('โหลดไลบรารี Excel ไม่สำเร็จ'));sc.onerror=()=>reject(new Error('ไม่สามารถโหลดไลบรารี Excel ได้ กรุณาเชื่อมต่ออินเทอร์เน็ตเฉพาะตอนนำเข้าไฟล์ .xls/.xlsx'));document.head.appendChild(sc)});return xlsxLoader}async function readNamedAoa(file){let fn=file.name.toLowerCase();if(fn.endsWith('.csv')){let txt=await file.text();return [{name:file.name.replace(/\.csv$/i,''),aoa:parseCSV(txt)}]}let ab=await file.arrayBuffer();if(fn.endsWith('.xls'))return XLS_BIFF.parseWorkbook(ab).map((s,i)=>({name:s.name||('Sheet'+(i+1)),aoa:s.aoa}));await ensureXLSX();let wb=XLSX.read(ab,{type:'array',cellDates:false});return wb.SheetNames.map(n=>({name:n,aoa:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''})}))}
+async function readAoa(file){return (await readNamedAoa(file)).map(s=>s.aoa)}
+function parseCSV(text){let rows=[],row=[],cell='',q=false;for(let i=0;i<text.length;i++){let c=text[i];if(q){if(c==='"'&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else{if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}}if(cell||row.length){row.push(cell);rows.push(row)}return rows}
+function standardServiceName(sheetName){let s=normText(sheetName);let map=[[/เคลือบฟลูออไรด์/i,'เคลือบฟลูออไรด์'],[/ทันตกรรม\s*ในเขต/i,'ทันตกรรมในเขต'],[/ทันตกรรม\s*นอกเขต/i,'ทันตกรรมนอกเขต'],[/ทดสอบการตั้งครรภ์/i,'ทดสอบการตั้งครรภ์'],[/CAปากมดลูก|มะเร็งปากมดลูก/i,'คัดกรองมะเร็งปากมดลูก'],[/วางแผนครอบครัว/i,'วางแผนครอบครัว'],[/ยาเม็ดเสริมธาตุเหล็ก/i,'ยาเม็ดเสริมธาตุเหล็ก'],[/HepC/i,'ไวรัสตับอักเสบซี'],[/ขูดและขัดฟัน/i,'ตรวจสุขภาพช่องปากและขัดทำความสะอาดฟัน'],[/Triferdine/i,'Triferdine / ยาเสริมหลังคลอด'],[/ย้ายหน่วย/i,'ย้ายหน่วยบริการ'],[/HDL/i,'Total Cholesterol & HDL'],[/ฝากครรภ์/i,'ฝากครรภ์'],[/หลังคลอด/i,'ตรวจหลังคลอด'],[/ยุติการตั้งครรภ์/i,'ยุติการตั้งครรภ์'],[/FPG/i,'FPG'],[/HepB/i,'ไวรัสตับอักเสบบี']];for(const [re,n] of map)if(re.test(s))return n;return s||'ไม่ระบุรายการ'}
+function serviceItemLabel(sheetName,detail){let base=standardServiceName(sheetName),d=normText(detail);return d?`${base} — ${d}`:base}
+async function parseServiceFile(file){
+ let sheets=await readNamedAoa(file),out=[];
+ // รูปแบบเดิม: ไฟล์บริการรวมที่มี PP Fee schedule
+ for(const sh of sheets){let aoa=sh.aoa,hr=findHeaderRow(aoa,[/^hn$/i,/pp fee/i,/วันที่รับบริการ/i],30);if(hr<0)continue;let h=aoa[hr],iFund=headerIndex(h,[/กองทุนย่อย/],8),iDate=headerIndex(h,[/วันที่รับบริการ/],17),iHN=headerIndex(h,[/^HN$/i],21),iName=headerIndex(h,[/ชื่อ.*สกุล/],22),iCID=headerIndex(h,[/เลขบัตร|ประชาชน|pid/i],24),iPP=headerIndex(h,[/pp fee/i],59),iRight=headerIndex(h,[/สิทธิหลัก/],55),iRSub=headerIndex(h,[/สิทธิย่อย/],56),iSeqN=headerIndex(h,[/nhso seq/i],13),iSeq=headerIndex(h,[/seq รับบริการ/i],12);for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],pp=normText(row[iPP]),fund=normText(row[iFund]);if(!pp&&!isPPFundText(fund))continue;out.push({row:r+1,date:thaiDateToISO(row[iDate]),hn:normHN(row[iHN]),cid:normCID(row[iCID]),name:normText(row[iName]),fund_sub:fund,right_main:normText(row[iRight]),right_sub:normText(row[iRSub]),seq:normText(row[iSeqN]||row[iSeq]).replace(/\.0$/,''),ppfs:pp,items:splitItems(pp),service_type:fund||'PP Fee schedule',source_sheet:sh.name,claim_expected:null,claim_reference:''})}}
+ if(out.length){state.serviceMode='PP-wide';return out}
+ // รูปแบบใหม่: Google Sheet/Workbook แยกชีตตามรายการบริการ
+ for(const sh of sheets){let aoa=sh.aoa||[],hr=findHeaderRow(aoa,[/^(vn|visit no\.)$/i,/^hn$/i,/วันที่ตรวจ|วันที่รับบริการ/i],12);if(hr<0)continue;let h=aoa[hr]||[];
+  let iVN=headerIndex(h,[/^VN$/i,/^Visit No\.?$/i],-1),iHN=headerIndex(h,[/^HN$/i],-1),iCID=headerIndex(h,[/^CID$/i,/เลขบัตร/i,/ปปช/i],-1),iName=headerIndex(h,[/ชื่อผู้ป่วย/i,/ชื่อ-สกุล/i,/ชื่อ.*สกุล/i],-1),iDate=headerIndex(h,[/วันที่ตรวจ/i,/วันที่รับบริการ/i],-1),iTime=headerIndex(h,[/^เวลา$/i,/เวลาตรวจ/i,/เวลา.*บริการ/i],-1),iRepRef=headerIndex(h,[/เลขที่หนังสือ/i,/เลขหนังสือ/i,/REP No/i,/^REP$/i],-1),iSeq=headerIndex(h,[/^SEQ(?: NO)?$/i,/NHSO SEQ/i,/SEQ รับบริการ/i],-1),iAmount=headerIndex(h,[/^เรียกเก็บ$/i,/ประมาณการชดเชย/i,/^ค่าใช้จ่าย$/i],-1),iDetail=headerIndex(h,[/ชื่อรายการ/i],-1);
+  if(iAmount<0)iAmount=headerIndex(h,[/เรียกเก็บ/i],-1);
+  if(iHN<0&&iCID<0)continue;
+  for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],hn=normHN(iHN>=0?row[iHN]:''),cid=normCID(iCID>=0?row[iCID]:'');if(!hn&&!cid)continue;let rawVN=iVN>=0?row[iVN]:'',date=correctServiceDateByVN(thaiDateToISO(iDate>=0?row[iDate]:''),rawVN);if(!date)continue;let detail=normText(iDetail>=0?row[iDetail]:''),svc=standardServiceName(sh.name),item=serviceItemLabel(sh.name,detail),amount=iAmount>=0?num(row[iAmount]):0,rep_ref=normREP(iRepRef>=0?row[iRepRef]:''),seq=normText(iSeq>=0?row[iSeq]:'').replace(/\.0$/,'');out.push({row:r+1,date,time:timeText(iTime>=0?row[iTime]:''),hn,cid,name:normText(iName>=0?row[iName]:''),fund_sub:svc,right_main:'',right_sub:'',rep_ref,seq,ppfs:item,items:[item],service_type:svc,source_sheet:sh.name,claim_expected:amount>0?amount:null,claim_reference:normText(rawVN),item_detail:detail})}
+ }
+ if(!out.length)throw new Error('ไม่พบชีต/หัวคอลัมน์บริการ PP ที่รองรับ');state.serviceMode='sheet-services';return out
+}
+function excelColumnName(n){let s='';while(n>0){n--;s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26)}return s}
+async function parseSTMFile(file){let sheets=await readAoa(file),out=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/^REP$/i,/TRAN_ID/i,/^HN$/i],30);if(hr<0)continue;let h1=Array.isArray(aoa[hr])?aoa[hr]:[],h2=Array.isArray(aoa[hr+1])?aoa[hr+1]:[];let iREP=headerIndex(h1,[/^REP$/i],0),iTran=headerIndex(h1,[/TRAN_ID/i],2),iHN=headerIndex(h1,[/^HN$/i],3),iCID=headerIndex(h1,[/^PID$/i,/ประชาชน/],5),iName=headerIndex(h1,[/ชื่อ.*สกุล/],6),iDate=headerIndex(h1,[/วันเข้ารักษา/],7),iRight=headerIndex(h1,[/MAININSCL/i],9),iTotal=headerIndex(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),iSource=headerIndex(h1,[/แหล่งข้อมูล/],40),iSeq=headerIndex(h1,[/SEQ NO/i],41);const AI_INDEX=34;let iPP=AI_INDEX,ppSource='AI';let maxCols=Math.max(h1.length,h2.length,...aoa.slice(hr+1,Math.min(aoa.length,hr+8)).map(r=>Array.isArray(r)?r.length:0));if(maxCols<=AI_INDEX){let ppCandidates=[];for(let i=0;i<Math.max(h1.length,h2.length);i++){if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))ppCandidates.push(i)}if(ppCandidates.length){iPP=ppCandidates[ppCandidates.length-1];ppSource='HEADER_PP'}}for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],hn=normHN(row[iHN]),cid=normCID(row[iCID]);if(!hn&&!cid)continue;out.push({file:file.name,sheet:'STM',type:'normal',rep:normREP(row[iREP]),tran:normText(row[iTran]).replace(/\.0$/,''),hn,cid,name:normText(row[iName]),date:thaiDateToISO(row[iDate]),maininscl:normText(row[iRight]),pp_paid:num(row[iPP]),pp_col_index:iPP,pp_col_excel:(iPP===34?'AI':excelColumnName(iPP+1)),pp_source:ppSource,total_paid:num(row[iTotal]),source:normText(row[iSource]),seq:normText(row[iSeq]).replace(/\.0$/,'')})}}if(!out.length)throw new Error('ไม่พบชีตรายละเอียด STM ที่รองรับ');return out}
+async function parsePriceFile(file){let sheets=await readAoa(file),all=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/ราคา|price|rate|อัตรา/i,/รายการย่อย|รายการ|บริการ|service/i],50);if(hr<0)continue;let h=aoa[hr]||[],iRate=headerIndex(h,[/อัตราจ่าย|อัตรา.*บาท|ราคา|price|rate/i]),iCode=headerIndex(h,[/^รหัส$/i,/code/i],-1),iItem=headerIndex(h,[/^รายการย่อย$/i,/รายการย่อย/i,/ชื่อรายการ/i,/รายละเอียดรายการ/i],-1),iCategory=headerIndex(h,[/^บริการ$/i,/หมวดบริการ/i,/กลุ่มบริการ/i],-1),iUnit=headerIndex(h,[/^หน่วย$/i,/unit/i],-1);if(iRate<0)continue;let rows=[];for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],rate=num(row[iRate]),category=iCategory>=0?normText(row[iCategory]):'',name=iItem>=0?normText(row[iItem]):category,code=iCode>=0?normText(row[iCode]):'',unit=iUnit>=0?normText(row[iUnit]):'';if(rate>0&&name)rows.push({code,name,category,unit,rate,source:'official',evidence:'นำเข้าจาก '+file.name})}all.push(...rows)}if(!all.length)throw new Error('ไม่พบคอลัมน์ “รายการย่อย/บริการ” และ “อัตราจ่าย(บาท)” ในไฟล์ราคา');let uniq=new Map();for(const p of all){let k=[p.code,normText(p.category),normText(p.name),Math.round(num(p.rate)*100)].join('|');if(!uniq.has(k))uniq.set(k,p)}return [...uniq.values()]}
+function mergeOfficialPrices(rows){let current=state.prices;for(const p of rows){let exact=current.findIndex(x=>x.source!=='official'&&((p.code&&x.code===p.code)||(p.name&&normText(x.name)===normText(p.name))));if(exact>=0){current[exact]={...current[exact],...p,source:'official'};continue}let k=[p.code,normText(p.category),normText(p.name),Math.round(num(p.rate)*100)].join('|');let exists=current.some(x=>[x.code,normText(x.category),normText(x.name),Math.round(num(x.rate)*100)].join('|')===k);if(!exists)current.push({...p,source:'official'})}state.prices=current}
+
+
+const LIVE_GOOGLE_SHEETS={
+ serviceId:(window.PP_GITHUB_CONFIG&&window.PP_GITHUB_CONFIG.SERVICE_SHEET_ID)||'1NdQ_f-oTWEeYgf0ijSEdEizrML_pqIMFXmN8HIa_7pQ',
+ statementId:(window.PP_GITHUB_CONFIG&&window.PP_GITHUB_CONFIG.STATEMENT_SHEET_ID)||'1Psmp2tKYDDMIjIZy01kn89u7FN0sn-SRHGcQxjCjKRY'
+};
+const GOOGLE_SCOPE='https://www.googleapis.com/auth/spreadsheets.readonly';
+let googleTokenClient=null;
+let googleAccessToken='';
+let googleTokenExpiresAt=0;
+let pendingSyncAfterAuth=false;
+
+function getGithubConfig(){return window.PP_GITHUB_CONFIG||{}}
+function isOAuthConfigured(){
+ let id=normText(getGithubConfig().GOOGLE_CLIENT_ID);
+ return !!id && !/PUT_|YOUR_|xxxxxxxx/i.test(id)
+}
+function initGoogleOAuth(){
+ let btn=document.getElementById('googleAuthBtn');
+ if(!isOAuthConfigured()){
+   if(btn){btn.classList.add('danger');btn.textContent='⚠ ตั้งค่า Google Client ID'}
+   setLiveSyncUI('error','ยังไม่ได้ตั้งค่า Google OAuth','เปิดไฟล์ config.js และใส่ GOOGLE_CLIENT_ID จาก Google Cloud Console');
+   return false
+ }
+ if(!(window.google&&google.accounts&&google.accounts.oauth2)){
+   setTimeout(initGoogleOAuth,400);
+   return false
+ }
+ if(googleTokenClient)return true;
+ googleTokenClient=google.accounts.oauth2.initTokenClient({
+   client_id:getGithubConfig().GOOGLE_CLIENT_ID,
+   scope:GOOGLE_SCOPE,
+   callback:(resp)=>{
+     if(resp.error){
+       pendingSyncAfterAuth=false;
+       setLiveSyncUI('error','เชื่อม Google ไม่สำเร็จ',resp.error_description||resp.error);
+       return
+     }
+     googleAccessToken=resp.access_token||'';
+     googleTokenExpiresAt=Date.now()+Math.max(60,Number(resp.expires_in||3600)-60)*1000;
+     if(btn){btn.className='btn dark';btn.textContent='✓ เชื่อม Google แล้ว'}
+     setLiveSyncUI('ok','เชื่อมบัญชี Google สำเร็จ','พร้อมอ่าน Google Sheets แบบ read-only');
+     if(pendingSyncAfterAuth){
+       pendingSyncAfterAuth=false;
+       syncGoogleSheets(true)
+     }
+   }
+ });
+ return true
+}
+function connectGoogle(){
+ if(!initGoogleOAuth())return;
+ pendingSyncAfterAuth=false;
+ googleTokenClient.requestAccessToken({prompt:googleAccessToken?'':'consent'})
+}
+function disconnectGoogle(){
+ if(googleAccessToken&&window.google&&google.accounts&&google.accounts.oauth2){
+   google.accounts.oauth2.revoke(googleAccessToken,()=>{})
+ }
+ googleAccessToken='';googleTokenExpiresAt=0;
+ let btn=document.getElementById('googleAuthBtn');
+ if(btn){btn.className='btn';btn.textContent='G เชื่อมบัญชี Google'}
+ setLiveSyncUI('error','ยังไม่ได้เชื่อมบัญชี Google','กด “เชื่อมบัญชี Google” ก่อนซิงก์ข้อมูล')
+}
+function ensureGoogleToken(){
+ if(googleAccessToken&&Date.now()<googleTokenExpiresAt)return Promise.resolve(true);
+ return new Promise((resolve,reject)=>{
+   if(!initGoogleOAuth()){reject(new Error('ยังไม่ได้ตั้งค่า Google OAuth Client ID'));return}
+   const old=googleTokenClient.callback;
+   googleTokenClient.callback=(resp)=>{
+     googleTokenClient.callback=old;
+     if(resp.error){reject(new Error(resp.error_description||resp.error));return}
+     googleAccessToken=resp.access_token||'';
+     googleTokenExpiresAt=Date.now()+Math.max(60,Number(resp.expires_in||3600)-60)*1000;
+     let btn=document.getElementById('googleAuthBtn');
+     if(btn){btn.className='btn dark';btn.textContent='✓ เชื่อม Google แล้ว'}
+     resolve(true)
+   };
+   googleTokenClient.requestAccessToken({prompt:googleAccessToken?'':'consent'})
+ })
+}
+async function googleApiFetch(url){
+ let r=await fetch(url,{headers:{Authorization:'Bearer '+googleAccessToken}});
+ if(r.status===401){
+   googleAccessToken='';googleTokenExpiresAt=0;
+   throw new Error('สิทธิ์ Google หมดอายุ กรุณาเชื่อมบัญชี Google ใหม่')
+ }
+ if(!r.ok){
+   let body='';try{body=await r.text()}catch(e){}
+   throw new Error(`Google Sheets API ${r.status}: ${body.slice(0,500)}`)
+ }
+ return r.json()
+}
+function qSheetTitle(title){return "'"+String(title).replace(/'/g,"''")+"'"}
+async function getSpreadsheetMeta(id){
+ let url=`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=properties.title,sheets.properties(sheetId,title,rowCount,columnCount)`;
+ return googleApiFetch(url)
+}
+async function getSheetValues(id,title,rangeA1){
+ let range=`${qSheetTitle(title)}!${rangeA1}`;
+ let url=`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${encodeURIComponent(range)}?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`;
+ let j=await googleApiFetch(url);
+ return Array.isArray(j.values)?j.values:[]
+}
+async function mapLimit(items,limit,fn){
+ let out=new Array(items.length),next=0;
+ async function worker(){
+   while(true){
+     let i=next++;if(i>=items.length)return;
+     out[i]=await fn(items[i],i)
+   }
+ }
+ await Promise.all(Array.from({length:Math.min(limit,items.length)},worker));
+ return out
+}
+function rowVal(row,i){return i>=0&&i<row.length?row[i]:''}
+function headerIdx(headers,tests,fallback=-1){
+ for(let i=0;i<headers.length;i++){let h=normText(headers[i]);if(tests.some(re=>re.test(h)))return i}
+ return fallback
+}
+function headerRowLocal(rows,tests){
+ for(let r=0;r<rows.length;r++){
+   let cells=(rows[r]||[]).map(normText),score=0;
+   for(const re of tests)if(cells.some(v=>re.test(v)))score++;
+   if(score>=Math.min(2,tests.length))return r
+ }
+ return -1
+}
+function serviceNameFromSheet(sheetName){
+ let s=normText(sheetName),map=[
+  [/เคลือบฟลูออไรด์/i,'เคลือบฟลูออไรด์'],
+  [/ทันตกรรม\s*ในเขต/i,'ทันตกรรมในเขต'],
+  [/ทันตกรรม\s*นอกเขต/i,'ทันตกรรมนอกเขต'],
+  [/ทดสอบการตั้งครรภ์/i,'ทดสอบการตั้งครรภ์'],
+  [/CAปากมดลูก|มะเร็งปากมดลูก/i,'คัดกรองมะเร็งปากมดลูก'],
+  [/วางแผนครอบครัว/i,'วางแผนครอบครัว'],
+  [/ยาเม็ดเสริมธาตุเหล็ก/i,'ยาเม็ดเสริมธาตุเหล็ก'],
+  [/HepC/i,'ไวรัสตับอักเสบซี'],
+  [/ขูดและขัดฟัน/i,'ตรวจสุขภาพช่องปากและขัดทำความสะอาดฟัน'],
+  [/Triferdine/i,'Triferdine / ยาเสริมหลังคลอด'],
+  [/ย้ายหน่วย/i,'ย้ายหน่วยบริการ'],
+  [/HDL/i,'Total Cholesterol & HDL'],
+  [/ฝากครรภ์/i,'ฝากครรภ์'],
+  [/หลังคลอด/i,'ตรวจหลังคลอด'],
+  [/ยุติการตั้งครรภ์/i,'ยุติการตั้งครรภ์'],
+  [/FPG/i,'FPG'],
+  [/HepB/i,'ไวรัสตับอักเสบบี']
+ ];
+ for(const [re,name] of map)if(re.test(s))return name;
+ return s||'ไม่ระบุรายการ'
+}
+async function loadServiceRegistryFromGoogle(){
+ let id=LIVE_GOOGLE_SHEETS.serviceId,meta=await getSpreadsheetMeta(id);
+ let sheets=(meta.sheets||[]).map(x=>x.properties).filter(Boolean),all=[],read=0,skipped=0,warnings=[];
+ await mapLimit(sheets,4,async p=>{
+   let preview=await getSheetValues(id,p.title,'A1:AZ12');
+   let hr=headerRowLocal(preview,[/^(vn|visit no\.?)$/i,/^hn$/i,/วันที่ตรวจ|วันที่รับบริการ/i]);
+   if(hr<0){skipped++;return}
+   let h=(preview[hr]||[]).map(normText),m={
+    vn:headerIdx(h,[/^VN$/i,/^Visit No\.?$/i]),
+    hn:headerIdx(h,[/^HN$/i]),
+    cid:headerIdx(h,[/^CID$/i,/เลขบัตร/i,/ปปช/i]),
+    name:headerIdx(h,[/ชื่อผู้ป่วย/i,/ชื่อ-สกุล/i,/ชื่อ.*สกุล/i]),
+    date:headerIdx(h,[/วันที่ตรวจ/i,/วันที่รับบริการ/i]),
+    time:headerIdx(h,[/^เวลา$/i,/เวลาตรวจ/i,/เวลา.*บริการ/i]),
+    rep:headerIdx(h,[/เลขที่หนังสือ/i,/เลขหนังสือ/i,/REP No/i,/^REP$/i]),
+    seq:headerIdx(h,[/^SEQ(?: NO)?$/i,/NHSO SEQ/i,/SEQ รับบริการ/i]),
+    amount:headerIdx(h,[/^เรียกเก็บ$/i,/ประมาณการชดเชย/i,/^ค่าใช้จ่าย$/i,/เรียกเก็บ/i]),
+    detail:headerIdx(h,[/ชื่อรายการ/i,/รายการย่อย/i,/รายละเอียดรายการ/i])
+   };
+   if(m.hn<0&&m.cid<0){skipped++;return}
+   let svc=serviceNameFromSheet(p.title),rowCount=Number(p.rowCount||0),start=hr+2+1;
+   for(let r=start;r<=rowCount;r+=5000){
+     let e=Math.min(rowCount,r+4999),rows=await getSheetValues(id,p.title,`A${r}:AZ${e}`);
+     for(let j=0;j<rows.length;j++){
+       let row=rows[j]||[],hn=normHN(rowVal(row,m.hn)),cid=normCID(rowVal(row,m.cid));
+       if(!hn&&!cid)continue;
+       let rawVN=normText(rowVal(row,m.vn));
+       let date=correctServiceDateByVN(thaiDateToISO(rowVal(row,m.date)),rawVN);
+       if(!date)continue;
+       let detail=normText(rowVal(row,m.detail)),item=detail?`${svc} — ${detail}`:svc,amount=num(rowVal(row,m.amount));
+       all.push({
+        row:r+j,date,time:extractTime(rowVal(row,m.time)),hn,cid,
+        name:normText(rowVal(row,m.name)),fund_sub:svc,right_main:'',right_sub:'',
+        rep_ref:normREP(rowVal(row,m.rep)),seq:normText(rowVal(row,m.seq)).replace(/\.0$/,''),
+        ppfs:item,items:[item],service_type:svc,source_sheet:p.title,
+        claim_expected:amount>0?amount:null,claim_reference:rawVN,item_detail:detail
+       })
+     }
+   }
+   read++
+ });
+ if(skipped)warnings.push(`ฐานบริการข้าม ${skipped} ชีตที่ไม่ใช่ทะเบียนบริการ`);
+ return {rows:all,sheetsRead:read,sheetsSkipped:skipped,warnings,title:meta.properties&&meta.properties.title||'ข้อมูลบริการ'}
+}
+async function loadStatementFromGoogle(){
+ let id=LIVE_GOOGLE_SHEETS.statementId,meta=await getSpreadsheetMeta(id);
+ let sheets=(meta.sheets||[]).map(x=>x.properties).filter(Boolean),all=[],read=0,skipped=0,warnings=[],seen=new Set();
+ await mapLimit(sheets,2,async p=>{
+   let preview=await getSheetValues(id,p.title,'A1:AP12');
+   let hr=headerRowLocal(preview,[/^REP$/i,/^HN$/i,/^PID$/i]);
+   if(hr<0){skipped++;return}
+   let h1=(preview[hr]||[]).map(normText),h2=(preview[hr+1]||[]).map(normText),m={
+    rep:headerIdx(h1,[/^REP$/i],0),tran:headerIdx(h1,[/TRAN_ID/i],2),
+    hn:headerIdx(h1,[/^HN$/i],3),cid:headerIdx(h1,[/^PID$/i,/ประชาชน/i],5),
+    name:headerIdx(h1,[/ชื่อ.*สกุล/i],6),date:headerIdx(h1,[/วันเข้ารักษา/i],7),
+    right:headerIdx(h1,[/MAININSCL/i],9),total:headerIdx(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),
+    source:headerIdx(h1,[/แหล่งข้อมูล/i],40),seq:headerIdx(h1,[/SEQ NO/i],41)
+   };
+   let ppIndex=34,ppSource='AI';
+   if(Number(p.columnCount||0)<35){
+     let cand=[];for(let i=0;i<Math.max(h1.length,h2.length);i++)if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))cand.push(i);
+     if(!cand.length){skipped++;warnings.push(`ข้ามชีต ${p.title}: ไม่พบ AI/PP`);return}
+     ppIndex=cand[cand.length-1];ppSource=excelColumnName(ppIndex+1)+'(PP)'
+   }
+   let rowCount=Number(p.rowCount||0),start=hr+2+1;
+   for(let r=start;r<=rowCount;r+=4000){
+     let e=Math.min(rowCount,r+3999),rows=await getSheetValues(id,p.title,`A${r}:AP${e}`);
+     for(const row of rows){
+       let hn=normHN(rowVal(row,m.hn)),cid=normCID(rowVal(row,m.cid));if(!hn&&!cid)continue;
+       let item={file:'statement OP-UC 69',sheet:p.title,type:'normal',
+        rep:normREP(rowVal(row,m.rep)),tran:normText(rowVal(row,m.tran)).replace(/\.0$/,''),
+        hn,cid,name:normText(rowVal(row,m.name)),date:thaiDateToISO(rowVal(row,m.date)),
+        maininscl:normText(rowVal(row,m.right)),pp_paid:num(rowVal(row,ppIndex)),
+        pp_col_index:ppIndex,pp_col_excel:ppIndex===34?'AI':excelColumnName(ppIndex+1),pp_source:ppSource,
+        total_paid:num(rowVal(row,m.total)),source:normText(rowVal(row,m.source)),
+        seq:normText(rowVal(row,m.seq)).replace(/\.0$/,'')};
+       let key=[item.rep,item.tran,item.hn,item.cid,item.date,Math.round(item.pp_paid*100),item.seq].join('|');
+       if(!seen.has(key)){seen.add(key);all.push(item)}
+     }
+   }
+   read++
+ });
+ if(skipped)warnings.push(`ฐาน Statement ข้าม ${skipped} ชีตที่ไม่ใช่รายละเอียด Statement`);
+ let paidRows=all.filter(x=>num(x.pp_paid)!==0),paidTotal=paidRows.reduce((s,x)=>s+num(x.pp_paid),0);
+ return {rows:all,sheetsRead:read,sheetsSkipped:skipped,warnings,title:meta.properties&&meta.properties.title||'Statement',paidRows:paidRows.length,paidTotal}
+}
+function setLiveSyncUI(mode,title,sub){
+ let dot=document.getElementById('liveSyncDot'),t=document.getElementById('liveSyncTitle'),s=document.getElementById('liveSyncSub'),btn=document.getElementById('liveSyncBtn');
+ if(dot){dot.classList.remove('loading','error');if(mode==='loading')dot.classList.add('loading');if(mode==='error')dot.classList.add('error')}
+ if(t)t.textContent=title||'';if(s)s.textContent=sub||'';if(btn)btn.disabled=mode==='loading'
+}
+async function syncGoogleSheets(force=false){
+ try{
+   if(!isOAuthConfigured())throw new Error('ยังไม่ได้ตั้งค่า GOOGLE_CLIENT_ID ใน config.js');
+   if(!googleAccessToken||Date.now()>=googleTokenExpiresAt){
+     pendingSyncAfterAuth=true;connectGoogle();return
+   }
+   setLiveSyncUI('loading','กำลังซิงก์ Google Sheets…','อ่านฐานบริการและ Statement ผ่าน Google Sheets API');
+   setProcessStatus('กำลังซิงก์ข้อมูลจาก Google Sheets…');
+   let started=Date.now();
+   let [svc,stm]=await Promise.all([loadServiceRegistryFromGoogle(),loadStatementFromGoogle()]);
+   applyLiveGoogleData({
+    ok:true,version:'6.0-github',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
+     service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
+     statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
+     warnings:[...(svc.warnings||[]),...(stm.warnings||[])]}
+   })
+ }catch(err){
+   console.error(err);setLiveSyncUI('error','ซิงก์ไม่สำเร็จ',String(err&&err.message||err));
+   setProcessStatus('ซิงก์ Google Sheets ไม่สำเร็จ: '+esc(err&&err.message||err),'error')
+ }
+}
+function applyLiveGoogleData(payload){
+ if(!payload||!payload.ok)throw new Error('Google Sheets API ส่งข้อมูลกลับไม่สมบูรณ์');
+ state.services=Array.isArray(payload.services)?payload.services:[];
+ state.stm=Array.isArray(payload.stm)?payload.stm:[];
+ state.serviceMode=payload.serviceMode||'sheet-services';
+ state.prices=structuredClone(OFFICIAL_PPFS69);
+ let inferred=buildInferredPrices();
+ for(const p of inferred)if(!state.prices.some(x=>(p.code&&x.code===p.code)||normText(x.name)===normText(p.name)))state.prices.push(p);
+ state.label=`LIVE · ${payload.meta?.service?.name||'Service'} + ${payload.meta?.statement?.name||'Statement'} · Sync ${payload.meta?.syncedAt||''}`;
+ let meta=payload.meta||{},sm=meta.service||{},tm=meta.statement||{},set=(id,v)=>{let e=document.getElementById(id);if(e)e.textContent=v};
+ set('liveSyncTime',meta.syncedAt||'—');set('liveServiceRows',intFmt.format(sm.rows||0));set('liveServiceSheets',intFmt.format(sm.sheetsRead||0));
+ set('liveServiceFunds',intFmt.format(new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)).size));
+ set('liveSTMRows',intFmt.format(tm.rows||0));set('liveSTMPaid',intFmt.format(tm.paidRows||0));set('liveSTMSum',moneyFmt.format(tm.paidTotal||0));
+ let warnings=Array.isArray(meta.warnings)?meta.warnings:[],w=document.getElementById('liveWarnings');
+ if(w)w.innerHTML=warnings.length?`<div class="notice warning"><b>หมายเหตุการซิงก์:</b><br>${warnings.map(esc).join('<br>')}</div>`:'';
+ let a=document.getElementById('serviceLiveBadge'),b=document.getElementById('stmLiveBadge');
+ if(a){a.className='badge b-good';a.textContent='LIVE'}if(b){b.className='badge b-good';b.textContent='LIVE · AI(PP)'}
+ setLiveSyncUI('ok','ซิงก์สำเร็จ','GitHub Pages → Google OAuth → Sheets API → Reconciliation Engine');
+ safeRecompute('ซิงก์ Google Sheets')
+}
+
+document.getElementById('serviceFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let el=document.getElementById('serviceFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่านไฟล์บริการ '+esc(f.name));let keepOfficial=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).map(p=>({...p}));state.services=await parseServiceFile(f);state.prices=buildInferredPrices();mergeOfficialPrices(keepOfficial);state.label='ข้อมูลบริการ: '+f.name+' · STM: '+(state.stm.length?'ชุดที่โหลดอยู่':'ยังไม่มี');el.textContent=`อ่านสำเร็จ ${intFmt.format(state.services.length)} บริการ · ${intFmt.format(new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)).size)} ประเภทรายการ · โหมด ${state.serviceMode}`;safeRecompute('นำเข้าไฟล์บริการ')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้าไฟล์บริการไม่สำเร็จ: '+esc(err.message||err),'error')}})
+document.getElementById('stmFiles').addEventListener('change',async e=>{let fs=[...e.target.files];if(!fs.length)return;let el=document.getElementById('stmFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่าน STM '+fs.length+' ไฟล์');let all=[];for(const f of fs){let part=await parseSTMFile(f);all.push(...part)}state.stm=all;state.label='ข้อมูลที่นำเข้าใหม่ · STM '+fs.length+' ไฟล์';let aiPaid=all.filter(x=>num(x.pp_paid)!==0).length,aiSum=all.reduce((s,x)=>s+num(x.pp_paid),0);el.textContent=`อ่านสำเร็จ ${intFmt.format(all.length)} รายการ จาก ${fs.length} ไฟล์ · ใช้ PP คอลัมน์ AI · จ่าย ${intFmt.format(aiPaid)} รายการ รวม ${moneyFmt.format(aiSum)} บาท`;safeRecompute('นำเข้า STM')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้า STM ไม่สำเร็จ: '+esc(err.message||err),'error')}})
+document.getElementById('priceFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let el=document.getElementById('priceFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่านตารางราคา '+esc(f.name));let rows=await parsePriceFile(f);mergeOfficialPrices(rows);el.textContent=`นำเข้าราคา ${intFmt.format(rows.length)} รายการ จาก ${f.name}`;safeRecompute('นำเข้าตารางราคา')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้าตารางราคาไม่สำเร็จ: '+esc(err.message||err),'error')}})
+function exportReconcileCSV(){let rows=[['วันที่','HN','PID','ชื่อ-สกุล','รายการบริการ','ชีตต้นทาง','กองทุนย่อย','สิทธิหลัก','REP/เลขที่หนังสือ','SEQ','PP Fee schedule','สถานะ','ยอด PP จ่าย','ยอดคาดเรียกเก็บ','แหล่งยอดคาด','รายการราคาที่ยังขาด','วิธีจับคู่']];state.recon.forEach(r=>rows.push([r.date,r.hn,r.cid,r.name,r.service_type||'',r.source_sheet||'',r.fund_sub,r.right_main,r.rep_ref||'',r.seq,r.ppfs,r.matchStatus,r.paid,r.expected??'',r.expectedSource||'',r.priceMissing.join(' | '),r.claims.map(c=>c.matchMethod).join('|')]));state.unmatchedSTM.forEach(x=>rows.push([x.date,x.hn,x.cid,x.name,'','',x.seq,'','STM_PP_UNMATCHED',x.pp_paid,'','','']));let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='PP_reconcile_result.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active')}));
+loadEmbedded();safeRecompute('เริ่มต้นระบบ');
+setTimeout(()=>{
+  initGoogleOAuth();
+  if(isOAuthConfigured()){
+    setLiveSyncUI('error','รอเชื่อมบัญชี Google','กด “เชื่อมบัญชี Google” เพื่ออนุญาต read-only Google Sheets')
+  }
+},500);
+</script>
+</body></html>
