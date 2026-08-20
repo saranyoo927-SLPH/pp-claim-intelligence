@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.0 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.0.1 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -874,7 +874,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.0 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
+<div class="footer">PP Claim Intelligence v6.0.1 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -1768,7 +1768,7 @@ async function googleApiFetch(url){
 }
 function qSheetTitle(title){return "'"+String(title).replace(/'/g,"''")+"'"}
 async function getSpreadsheetMeta(id){
- let url=`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=properties.title,sheets.properties(sheetId,title,rowCount,columnCount)`;
+ let url=`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}?fields=properties.title,sheets.properties(sheetId,title,gridProperties(rowCount,columnCount))`;
  return googleApiFetch(url)
 }
 async function getSheetValues(id,title,rangeA1){
@@ -1844,7 +1844,7 @@ async function loadServiceRegistryFromGoogle(){
     detail:headerIdx(h,[/ชื่อรายการ/i,/รายการย่อย/i,/รายละเอียดรายการ/i])
    };
    if(m.hn<0&&m.cid<0){skipped++;return}
-   let svc=serviceNameFromSheet(p.title),rowCount=Number(p.rowCount||0),start=hr+2+1;
+   let svc=serviceNameFromSheet(p.title),rowCount=Number((p.gridProperties&&p.gridProperties.rowCount)||0),start=hr+2+1;
    for(let r=start;r<=rowCount;r+=5000){
      let e=Math.min(rowCount,r+4999),rows=await getSheetValues(id,p.title,`A${r}:AZ${e}`);
      for(let j=0;j<rows.length;j++){
@@ -1883,12 +1883,12 @@ async function loadStatementFromGoogle(){
     source:headerIdx(h1,[/แหล่งข้อมูล/i],40),seq:headerIdx(h1,[/SEQ NO/i],41)
    };
    let ppIndex=34,ppSource='AI';
-   if(Number(p.columnCount||0)<35){
+   if(Number((p.gridProperties&&p.gridProperties.columnCount)||0)<35){
      let cand=[];for(let i=0;i<Math.max(h1.length,h2.length);i++)if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))cand.push(i);
      if(!cand.length){skipped++;warnings.push(`ข้ามชีต ${p.title}: ไม่พบ AI/PP`);return}
      ppIndex=cand[cand.length-1];ppSource=excelColumnName(ppIndex+1)+'(PP)'
    }
-   let rowCount=Number(p.rowCount||0),start=hr+2+1;
+   let rowCount=Number((p.gridProperties&&p.gridProperties.rowCount)||0),start=hr+2+1;
    for(let r=start;r<=rowCount;r+=4000){
      let e=Math.min(rowCount,r+3999),rows=await getSheetValues(id,p.title,`A${r}:AP${e}`);
      for(const row of rows){
@@ -1926,7 +1926,7 @@ async function syncGoogleSheets(force=false){
    let started=Date.now();
    let [svc,stm]=await Promise.all([loadServiceRegistryFromGoogle(),loadStatementFromGoogle()]);
    applyLiveGoogleData({
-    ok:true,version:'6.0-github',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.0.1-github',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
