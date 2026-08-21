@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.5.5 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.5.6 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1188,6 +1188,193 @@ body{
  .card{padding:14px;border-radius:17px}
 }
 
+
+/* =========================================================
+   v6.1.5.6 — UI Polish & Readability
+   ========================================================= */
+
+/* Overall readability */
+body{font-size:13px;line-height:1.62}
+.content{padding-top:22px}
+.page-head{margin-bottom:20px}
+.page-head h2{font-size:27px}
+.page-head p{font-size:13px;line-height:1.65}
+.section-title{font-size:18px;line-height:1.4;margin-bottom:5px}
+.section-subtitle{font-size:11.5px;color:#667085;line-height:1.5;margin-top:2px}
+.small{font-size:11.5px}
+.muted{line-height:1.55}
+.notice{font-size:11.5px}
+.footer{font-size:9.5px}
+
+/* Header: clean and compact, account actions grouped together */
+.topbar{
+  min-height:88px;
+  padding:14px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.topbar-copy{min-width:0;flex:1}
+.top-kicker{font-size:9px;margin-bottom:5px}
+.top-title{font-size:21px;line-height:1.25}
+.top-sub{font-size:10.5px;line-height:1.45;margin-top:4px;color:#667085}
+.topbar-actions{flex:0 0 auto;display:flex;align-items:center}
+.auth-account{
+  display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:nowrap
+}
+.auth-user-block{
+  display:flex;align-items:center;gap:8px;padding:0;margin:0
+}
+.auth-chip{
+  display:flex;align-items:center;gap:9px;
+  min-width:215px;max-width:310px;
+  padding:7px 10px;border-radius:13px;
+  border:1px solid #e4eaf1;background:#fff;
+}
+.auth-avatar{width:32px;height:32px;font-size:12px}
+.auth-meta{min-width:0;line-height:1.25}
+.auth-meta b{
+  display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:11.5px;font-weight:700
+}
+.auth-meta span{font-size:10px;margin-top:2px;display:block;color:#667085}
+.auth-logout{min-height:36px;padding:7px 11px;white-space:nowrap}
+#engineStatus{min-height:36px;display:inline-flex;align-items:center;white-space:nowrap;font-size:10.5px}
+
+/* Sidebar readability */
+.sidebar{width:286px}
+.brand p{font-size:11px}
+.nav-section-label{font-size:8.5px;padding-top:15px}
+.navbtn{
+  min-height:47px;
+  font-size:12.5px;
+  font-weight:500;
+  line-height:1.42;
+  padding:10px 11px
+}
+.nav-icon{width:20px;height:20px;flex-basis:20px}
+.nav-icon svg{width:19px;height:19px}
+.sidefoot-flow{font-size:10px}
+.sidefoot-rule{font-size:9px}
+.sidefoot-privacy{font-size:9px}
+
+/* Cards */
+.card{padding:18px;border-radius:19px}
+.card-heading-row{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding-bottom:8px;margin-bottom:4px
+}
+.fy-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 9px;border-radius:999px;
+  background:#eff4ff;color:#175cd3;border:1px solid #dbe7ff;
+  font:700 9px "Inter";white-space:nowrap
+}
+
+/* KPI and summary */
+.kpi .label{font-size:11px;line-height:1.5}
+.kpi .value{font-size:28px}
+.kpi .note{font-size:10.5px}
+
+/* Buttons */
+.btn{
+  min-height:40px;
+  padding:8px 13px;
+  font-size:11.5px;
+  border-radius:11px
+}
+.toolbar{gap:8px;align-items:center}
+
+/* Filters */
+.filters{padding:11px;gap:8px}
+.filters input,.filters select,.form-control,
+.exception-filter-field input,.exception-filter-field select,
+.filter-field input,.filter-field select{
+  min-height:40px;
+  font-size:11.5px;
+  padding:9px 10px
+}
+.exception-filter-field label,.filter-field label{font-size:10px}
+
+/* Tables are the main working interface: make them comfortably readable */
+.table{font-size:11.5px;line-height:1.55}
+.table th{
+  font-size:10.5px;
+  padding:11px 10px;
+  line-height:1.4
+}
+.table td{
+  padding:11px 10px;
+  line-height:1.5
+}
+.badge{font-size:10px}
+.priority-pill{font-size:10px}
+.issue-title{font-size:11.5px}
+.issue-reason,.patient-mini,.recommendation{font-size:10.5px}
+.patient-mini b{font-size:11.5px}
+
+/* Charts */
+.chart{min-height:225px}
+.bars{
+  height:235px;
+  gap:6px;
+  align-items:flex-end;
+  padding:18px 5px 0
+}
+.barcol{min-width:0}
+.bar{min-width:18px;border-radius:7px 7px 3px 3px}
+.bar .tip{font-size:9.5px}
+.barlabel{
+  font-size:10px;
+  line-height:1.25;
+  margin-top:7px;
+  min-height:26px;
+  white-space:normal
+}
+.hrow{font-size:11.5px}
+
+/* Exception / audit workspace */
+.exception-hero-title h3{font-size:19px}
+.exception-mode{font-size:9px}
+.exception-kpi .ek-label{font-size:10px}
+.exception-kpi .ek-value{font-size:21px}
+.exception-kpi .ek-note{font-size:9.5px}
+.queue-name{font-size:11px}
+.queue-money{font-size:10.5px}
+.queue-desc{font-size:10px}
+
+/* User management / auth */
+.auth-modal-head h3{font-size:21px}
+.auth-modal-head p{font-size:11px}
+.auth-field label{font-size:11px}
+.auth-field input,.auth-field select{font-size:12px;min-height:41px}
+.auth-msg{font-size:11px}
+
+/* Remove unused hero CSS impact */
+.platform-hero{display:none!important}
+
+/* Responsive top bar */
+@media(max-width:1180px){
+  .topbar{align-items:flex-start}
+  .auth-account{flex-wrap:wrap}
+  .auth-chip{min-width:190px}
+}
+@media(max-width:760px){
+  .sidebar{width:100%}
+  .topbar{min-height:auto;flex-direction:column;align-items:stretch;padding:14px 16px}
+  .topbar-actions{width:100%}
+  .auth-account{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .auth-user-block{flex-wrap:wrap}
+  .auth-chip{min-width:0;max-width:100%}
+  .page-head h2{font-size:24px}
+  .page-head p{font-size:12px}
+  .navbtn{font-size:12px}
+  .table{font-size:11px}
+  .bars{overflow-x:auto;justify-content:flex-start}
+  .barcol{min-width:56px}
+}
+
 </style>
 <script src="./config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -1240,32 +1427,28 @@ body{
     <div class="top-sub" id="datasetLabel"></div>
   </div>
   <div class="topbar-actions">
-    <div class="top-capability"><span>Automated Reconciliation</span><span>Revenue Intelligence</span><span>Executive Intelligence</span></div>
-    <div class="auth-account"><div id="authAccountArea"><button class="btn" onclick="openAuthModal('login')">เข้าสู่ระบบ</button></div><div class="pill" id="engineStatus">● พร้อมใช้งาน</div></div>
+    <div class="auth-account">
+      <div id="authAccountArea"><button class="btn" onclick="openAuthModal('login')">เข้าสู่ระบบ</button></div>
+      <div class="pill" id="engineStatus">● พร้อมใช้งาน</div>
+    </div>
   </div>
 </header>
 <div class="content">
 <section id="overview" class="page active">
- <div class="platform-hero">
-   <div class="platform-hero-copy">
-     <div class="hero-eyebrow"><span></span> AUTOMATED CLAIM RECONCILIATION PLATFORM</div>
-     <h2>เปลี่ยนข้อมูลการชดเชย<br><strong>ให้เป็น Revenue Intelligence</strong></h2>
-     <p>ตรวจสอบบริการ PP → จับคู่ Statement → วิเคราะห์รายได้คงค้าง → จัดลำดับงาน → สนับสนุนการตัดสินใจผู้บริหาร</p>
-     <div class="hero-flow">
-       <span>Service Registry</span><i>→</i><span>Reconciliation</span><i>→</i><span>Revenue Assurance</span><i>→</i><span>Executive Intelligence</span>
-     </div>
-   </div>
-   <div class="hero-visual">
-      <div class="hero-orbit orbit-a"></div><div class="hero-orbit orbit-b"></div>
-      <div class="hero-core"><span>PP</span><small>INTELLIGENCE</small></div>
-      <div class="hero-chip chip-1">AI(PP)</div><div class="hero-chip chip-2">PPFS69</div><div class="hero-chip chip-3">LIVE</div>
-   </div>
- </div>
  <div class="page-head"><div><h2>ภาพรวมการตรวจสอบ PP</h2><p>เปรียบเทียบบริการที่จัดทำไว้กับผลตอบกลับการชดเชยจาก สปสช.</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
  <div class="grid kpis" id="kpiGrid"></div>
  <div class="grid two">
   <div class="card"><h3 class="section-title">สถานะการจับคู่บริการกับ STM</h3><div class="split"><div><div class="donut-wrap"><div class="donut" id="matchDonut"></div><div class="donut-label" id="matchPct" style="inset:57px 0 auto 0"></div></div></div><div id="statusLegend"></div></div></div>
-  <div class="card"><h3 class="section-title">ยอดชดเชย PP ตามเดือนของ STM</h3><div id="overviewMonthChart" class="chart"></div></div>
+  <div class="card">
+    <div class="card-heading-row">
+      <div>
+        <h3 class="section-title">ยอดชดเชย PP ตามเดือนของ STM</h3>
+        <div class="section-subtitle">ปีงบประมาณ 2569 · ตุลาคม 2568 – กันยายน 2569</div>
+      </div>
+      <span class="fy-badge">FY 2569</span>
+    </div>
+    <div id="overviewMonthChart" class="chart"></div>
+  </div>
  </div>
  <div class="grid two" style="margin-top:14px">
   <div class="card"><h3 class="section-title">บริการ PP ที่พบมาก</h3><div id="topServices"></div></div>
@@ -1660,7 +1843,7 @@ body{
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.5.5 · National Innovation UI · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.5.6 · UI Polish · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -1858,7 +2041,7 @@ function updateAuthAccountUI(extra=''){
    box.innerHTML='<button class="btn" onclick="openAuthModal(\'login\')">เข้าสู่ระบบ</button><button class="btn dark" onclick="openAuthModal(\'register\')">สมัครใช้งาน</button>';return
  }
  let role=ppUserProfile?.role||'pending',status=ppUserProfile?.status||'pending';
- box.innerHTML=`<div class="auth-chip"><div class="auth-avatar">${esc((ppCurrentUser.email||'?')[0].toUpperCase())}</div><div class="auth-meta"><b>${esc(ppCurrentUser.displayName||ppCurrentUser.email)}</b><span>${esc(roleLabel(role))} · ${esc(status)}</span></div></div><button class="btn" onclick="logoutPPUser()">ออกจากระบบ</button>`
+ box.innerHTML=`<div class="auth-user-block"><div class="auth-chip"><div class="auth-avatar">${esc((ppCurrentUser.email||'?')[0].toUpperCase())}</div><div class="auth-meta"><b>${esc(ppCurrentUser.displayName||ppCurrentUser.email)}</b><span>${esc(roleLabel(role))} · ${esc(status)}</span></div></div><button class="btn auth-logout" onclick="logoutPPUser()">ออกจากระบบ</button></div>`
 }
 function openAuthModal(mode='login',message=''){
  let m=document.getElementById('authModal');if(m)m.classList.add('show');
@@ -3064,7 +3247,16 @@ function renderAll(){document.getElementById('datasetLabel').textContent=state.l
 function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length,partial=state.recon.filter(x=>x.matchStatus==='partial').length,amb=state.recon.filter(x=>x.matchStatus==='ambiguous').length,unpaid=total-paid-amb;let stmPP=state.stm.reduce((a,x)=>a+num(x.pp_paid),0),matchedPaid=state.recon.reduce((a,x)=>a+num(x.paid),0);let expRows=state.recon.filter(x=>x.expected!=null),expected=expRows.reduce((a,x)=>a+x.expected,0);let pct=total?paid/total*100:0;
  let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(currentYearUnmatchedSTM().length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
  document.getElementById('matchDonut').style.setProperty('--angle',(pct*3.6)+'deg');document.getElementById('matchPct').innerHTML=`${pct.toFixed(1)}%<div class="small muted">จับคู่ได้</div>`;document.getElementById('statusLegend').innerHTML=`<div class="hbars"><div class="hrow"><span>ได้รับชดเชย</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><b class="right">${intFmt.format(paid)}</b></div><div class="hrow"><span>ยังไม่พบชดเชย</span><div class="track"><div class="fill" style="width:${total?unpaid/total*100:0}%;background:#dc2626"></div></div><b class="right">${intFmt.format(unpaid)}</b></div><div class="hrow"><span>จับคู่กำกวม</span><div class="track"><div class="fill" style="width:${total?amb/total*100:0}%;background:#d97706"></div></div><b class="right">${intFmt.format(amb)}</b></div></div>`;
- let mm={};state.stm.forEach(x=>{let k=monthKey(x.date);mm[k]=(mm[k]||0)+num(x.pp_paid)});document.getElementById('overviewMonthChart').innerHTML=barChart(Object.entries(mm).sort().map(([k,v])=>({label:thMonth(k),value:v})),true);
+ const FY2569_MONTHS=['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09'];
+ let mm=Object.fromEntries(FY2569_MONTHS.map(k=>[k,0]));
+ state.stm.forEach(x=>{
+   let k=monthKey(x.date);
+   if(FY2569_MONTHS.includes(k))mm[k]+=num(x.pp_paid)
+ });
+ document.getElementById('overviewMonthChart').innerHTML=barChart(
+   FY2569_MONTHS.map(k=>({label:thMonth(k),value:mm[k]})),
+   true
+ );
  let svc={};state.recon.forEach(r=>r.items.forEach(it=>{let key=it.replace(/^PPFS-[^_]*_?/,'').slice(0,80);svc[key]=(svc[key]||0)+1}));let top=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value}));document.getElementById('topServices').innerHTML=hBar(top);
  let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!x.seq).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',currentYearUnmatchedSTM().length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/BQ ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
  let official=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).length;document.getElementById('priceNotice').className='notice '+(official?'':'warning');document.getElementById('priceNotice').innerHTML=official?`มีราคาแบบนำเข้า/ยืนยันแล้ว <b>${intFmt.format(official)}</b> รายการ ระบบจะใช้ราคานี้ก่อนราคาอนุมานในการแยกยอด PP`:'ยังไม่ได้รับ/นำเข้าตารางราคาอย่างเป็นทางการในชุดไฟล์นี้ ระบบจึงใช้เฉพาะอัตราที่อนุมานจากรายการเดี่ยวที่มีความสอดคล้องสูง และจะแสดงแหล่งราคาเป็น “อนุมาน” จนกว่าจะนำเข้าตารางราคาจริง';
@@ -3757,7 +3949,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.5.5-national-ui',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.5.6-ui-polish',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
