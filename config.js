@@ -16,4 +16,20 @@ window.PP_GITHUB_CONFIG = {
 
   SERVICE_SHEET_ID: "1NdQ_f-oTWEeYgf0ijSEdEizrML_pqIMFXmN8HIa_7pQ",
   STATEMENT_SHEET_ID: "1Psmp2tKYDDMIjIZy01kn89u7FN0sn-SRHGcQxjCjKRY"
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+const firebaseConfig = {
+  apiKey: "AIzaSyDijJgPufTk9UJ36n_YtGFoZ6a1yF16xjU",
+  authDomain: "pp-claim-intelligence-3eb40.firebaseapp.com",
+  projectId: "pp-claim-intelligence-3eb40",
+  storageBucket: "pp-claim-intelligence-3eb40.firebasestorage.app",
+  messagingSenderId: "273830068500",
+  appId: "1:273830068500:web:a2fb6d81c4c55701774201",
+  measurementId: "G-3Z9ZH5WLLK"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 };
