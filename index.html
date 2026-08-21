@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.5.6 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.5.9 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1632,7 +1632,7 @@ body{font-size:13px;line-height:1.62}
      <div class="fund-audit-toolbar">
        <div class="filter-field"><label>กองทุนย่อย / ชีตบริการ</label><select id="fundAuditFund" onchange="syncFundAuditMonths();renderFundAudit()"><option value="">ทุกกองทุน</option></select></div>
        <div class="filter-field"><label>เดือนบริการ</label><select id="fundAuditMonth" onchange="renderFundAudit()"><option value="">ทุกเดือน</option></select></div>
-       <div class="filter-field"><label>สถานะการชดเชย</label><select id="fundAuditStatus" onchange="renderFundAudit()"><option value="">ทุกสถานะ</option><option value="paid">ได้รับชดเชยแล้ว</option><option value="partial">ชดเชยบางส่วน</option><option value="rep-confirmed">พบชดเชยตาม REP · รอจัดสรร</option><option value="ambiguous">รอตรวจสอบยอดรวม</option><option value="unpaid">ยังไม่พบชดเชย</option></select></div>
+       <div class="filter-field"><label>สถานะการชดเชย</label><select id="fundAuditStatus" onchange="renderFundAudit()"><option value="">ทุกสถานะ</option><option value="paid">ได้รับชดเชยแล้ว</option><option value="partial">ชดเชยบางส่วน</option><option value="rep-confirmed">พบ REP · ยังไม่มีหลักฐานพอจัดสรร</option><option value="ambiguous">รอตรวจสอบยอดรวม</option><option value="unpaid">ยังไม่พบชดเชย</option></select></div>
        <div class="filter-field search-grow"><label>ค้นหา HN / CID</label><input id="fundAuditQuery" placeholder="เช่น 000236114 หรือเลขบัตรประชาชน" oninput="if(!this.value)renderFundAudit()" onkeydown="if(event.key==='Enter')renderFundAudit()"></div>
        <div class="filter-action"><button class="btn primary" onclick="renderFundAudit()">ค้นหา</button></div>
        <div class="filter-action"><button class="btn" onclick="clearFundAuditFilters()">ล้างตัวกรอง</button></div>
@@ -1830,6 +1830,19 @@ body{font-size:13px;line-height:1.62}
    <div><div class="notice"><b>2. Payment Intelligence</b><br>AI(PP) → PPFS69 → แตกยอดรวม → จัดสรรกลับแต่ละบริการ/กองทุน</div></div>
   </div>
  </div>
+ <div class="card" style="margin-top:14px">
+   <div class="card-heading-row">
+     <div>
+       <h3 class="section-title">Claim Reference Audit</h3>
+       <div class="section-subtitle">ตรวจทุกบริการ: REP/SEQ จากทะเบียน ↔ Statement โดย CID/HN + วันที่</div>
+     </div>
+     <button class="btn" onclick="exportClaimReferenceAuditCSV()">ส่งออก Audit CSV</button>
+   </div>
+   <div id="claimRefAuditSummary"></div>
+   <div class="notice" style="margin-top:10px">
+     ระบบไม่เขียนทับ REP/SEQ ต้นฉบับ แต่เก็บ <b>REP/SEQ จาก Statement</b> แยกเป็นหลักฐาน และนำค่า Effective Claim Reference ไปใช้จับคู่เมื่อมีเพียงชุดเดียวที่ยืนยันได้
+   </div>
+ </div>
 
  <div class="card" style="margin-top:14px"><h3 class="section-title">สรุปข้อมูลที่โหลดอยู่</h3><div id="dataSummary"></div></div>
  
@@ -1843,7 +1856,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.5.6 · UI Polish · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.5.9 · Claim Reference Backfill & Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2252,7 +2265,7 @@ async function changePPUserRole(uid){
 }
 
 const OFFICIAL_PPFS69=[{"category":"บริการ  1  บริการฝากครรภ์","name":"ฝากครรภ์","rate":360.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ1","rate":600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ2","rate":190.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"อัลตราซาวน์","rate":400.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"ตรวจและทำความสะอาดฟัน","rate":500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Alpha-thalassemia 1 (PCR)","rate":800.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Beta-thalassemia (Mutation analysis)","rate":3000.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"หัตถการเพื่อตรวจวินิจฉัยทารกในครรภ์","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"DNA Based Analysis","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์","rate":120.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบย้อนทาง Treponemal test (TT)ด้วยวิธี Chemiluminescent immunoassay (CIA/CLIA)หรือ Enzyme immunoassay (EIA) หรือ RapidDiagnostic Test (RDT)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบตั้งเดิม Nontreponemal test (NTT)ด้วยวิธี Rapid Plasma Reagin (RPR) หรือVenereal Disease Research Laboratory (VDRL)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจ Treponemal test (TT) ด้วยวิธี Treponema pallidum particle agglutination test (TPPA) หรือ Treponema pallidum hemagglutination test(TPHA)","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษาพร้อมจัดส่งเลือด","rate":200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Non-Invasive Prenatal Test : NIPT","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจNon-Invasive Prenatal Test : NIPT","rate":2600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Quadruple test","rate":1200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจQuadruple test","rate":1300.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Prenatal Diagnosis: PND","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"ตรวจโครโมโชม","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าตรวจTSHรวมค่าส่งสิ่งส่งตรวจ","rate":135.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าติดตามและค่าตรวจTSH","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  6  บริการตรวจคัดกรองผู้ป่วยโรคพันธุกรรมเมตาบอลิกด้วยเครื่อง Tandem mass spectrometry (TMS)","name":"ค่าตรวจด้วยเครื่อง TMS","rate":500.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ค่าบริการตรวจหลังคลอด","rate":150.0,"unit":"ไม่เกิน 2 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน","rate":135.0,"unit":"ไม่เกิน 3 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  8  บริการทดสอบการตั้งครรภ์","name":"ตรวจปัสสาวะทดสอบการตั้งครรภ์","rate":75.0,"unit":"ต่อครั้งไม่เกิน 4 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม","rate":40.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว","rate":80.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาฉีดคุมกำเนิด","rate":60.0,"unit":"ต่อครั้ง ไม่เกิน 5 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ใส่ห่วงอนามัย","rate":800.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ค่าบริการฝังยาคุมกำเนิด","rate":2150.0,"unit":"ต่อครั้ง ทุก 3 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถอดยาฝังคุมกำเนิด","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดฉุกเฉิน","rate":50.0,"unit":"ต่อแผง ไม่เกิน 2 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถุงยางอนามัย(เฉพาะหน่วยที่ไม่ได้เหมาจ่ายรายหัว)","rate":1.0,"unit":"ชิ้น ไม่เกิน 10 ชิ้นต่อคน ไม่เกิน 365 ชิ้นต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  10  บริการป้องกันการยุติการตั้งครรภ์ที่ไม่ปลอดภัย","name":"บริการยุติการตั้งครรภ์","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติทั่วไป (Stock lens)","rate":800.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติที่ต้องสั่งตัดพิเศษ (Lab Leกs)","rate":1000.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ค่าบริการเก็บตัวอย่าง","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิดสองสายพันธุ์","rate":280.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิด14สายพันธุ์","rate":370.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจทางเซลล์วิทยาด้วยวิธี Liquid based cytology","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจติดตามซ้ำด้วยวิธี Pap smear","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"Pap smear หรือวิธี VIA","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"วิธี Colposcopy รวมการตัดชิ้นเนื้อ (Biopsy หรือ LEEP)","rate":900.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  13  บริการคัดกรองรอยโรคเสี่ยงมะเร็งและมะเร็งช่องปาก (CA Oral Screening)","name":"ค่า biopsy และค่าตรวจทางพยาธิวิทยา","rate":600.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Chest-X-ray : CXR","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี สำหรับผู้ต้องขัง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"TB-LAMP","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR (Xpert MTB/RIF)","rate":500.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"วินิจฉัยวัณโรค/ตรวจหาเชื้อ MTB","rate":400.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา Rifarmpicin","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR MTB/MDR","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Line Probe Assay (LPA)","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจพบผลดื้อยา First – line drugs ให้บริการตรวจวินิจฉัยวัณโรคดื้อยา Second – line drugs","rate":700.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธี AFB","rate":20.0,"unit":"ต่อครั้ง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Solid media","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Liquid media","rate":300.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 35 – 59 ปี-Fasting Plasma Glucose: FPG","rate":40.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 45 – 70 ปี-ตรวจวัด Total Cholesterol และ HDL","rate":160.0,"unit":"ต่อครั้ง ทุก 5 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA2","name":"บริการประเมินความเสี่ยง+ให้คำปรึกษา+เก็บตัวอย่าง(เลือด)+จัดส่ง","rate":500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA3","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับผู้ป่วยมะเร็งเต้านมที่มีความเสี่ยงสูง","rate":10000.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA4","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับญาติสายตรง","rate":2500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  17  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการเจาะเลือดและตรวจนับเม็ดเลือด(CBC)","rate":65.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  18  บริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","name":"ค่าบริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","rate":80.0,"unit":"ต่อครั้ง คนละ 1 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  19  บริการเคลือบฟลูออไรด์","name":"ค่าบริการเคลือบฟลออไรด์ชนิดเข้มข้นสูง","rate":100.0,"unit":"ต่อครั้ง คนละไม่เกิน 2 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  20  บริการตรวจคัดกรองมะเร็งลำไส้ใหญ่และลำไส้ตรง (Fit test)","name":"FIT Test","rate":60.0,"unit":"ต่อครั้ง คนละ 1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  21  บริการคัดกรองไวรัสตับอักเสบบี","name":"ค่าบริการตรวจด้วย HBsAg","rate":50.0,"unit":"ผู้ที่เกิดก่อน พ.ศ. 2535 คนละ 1 ครั้ง ตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"บริการตรวจด้วย Anti-HCV","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV core antigen","rate":400.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV RNA (qualitative method wรือ quantitative method)","rate":1690.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  23  บริการตรวจคัดกรองพยาธิใบไม้ตับด้วยการตรวจปัสสาวะ  (เฉพาะหน่วยนวัตกรรม)","name":"Urine OV Rapid Diagnosis Test ; OV-RDT","rate":150.0,"unit":"ต่อครั้ง ต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  24  บริการตรวจคัดกรองมะเร็งเต้านมด้วยเครื่องแมมโมแกรมและอัลตราซาวด์","name":"ค่าบริการตรวจแมมโมแกรมและอัลตราชาวด์","rate":2400.0,"unit":"1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  25  บริการให้วัคซีนป้องกันโรค","name":"ค่าบริการให้วัคชีนป้องกันโรค","rate":20.0,"unit":"ต่อโดส","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าจัดส่ง","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  27  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"ค่าตรวจคัดกรอง","rate":30.0,"unit":"ต่อครั้งต่อช่วงอายุ","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  28  บริการยาน้ำเสริมธาตุเหล็กเพื่อป้องกันโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการให้ยาน้ำเสริมธาตุเหล็ก","rate":50.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"}];
-let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0};
+let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0,claimRefAudit:null};
 const moneyFmt=new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const intFmt=new Intl.NumberFormat('th-TH');
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -2330,7 +2343,7 @@ function extractCode(item){let m=String(item).match(/\(([^)]*)\)/);if(!m)return 
 function splitItems(pp){let s=String(pp??'').trim();if(!s)return [];return s.split(/\s*,\s*(?=PPFS-)/).map(x=>x.trim()).filter(Boolean)}
 function serviceId(s,i){return [s.rep_ref||'',s.seq||'',s.cid||'',s.hn||'',s.date||'',i].join('|')}
 function isMatchedStatus(v){return v==='paid'||v==='partial'||v==='rep-confirmed'}
-function statusBadge(s){if(s.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชย</span>';if(s.matchStatus==='partial')return '<span class="badge b-partial">ชดเชยบางส่วน</span>';if(s.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบชดเชยตาม REP · รอจัดสรร</span>';if(s.matchStatus==='ambiguous')return '<span class="badge b-warn">จับคู่หลายรายการ</span>';return '<span class="badge b-bad">ยังไม่พบชดเชย</span>'}
+function statusBadge(s){if(s.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชย</span>';if(s.matchStatus==='partial')return '<span class="badge b-partial">ชดเชยบางส่วน</span>';if(s.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบ REP · ยังไม่มีหลักฐานพอจัดสรร</span>';if(s.matchStatus==='ambiguous')return '<span class="badge b-warn">จับคู่หลายรายการ</span>';return '<span class="badge b-bad">ยังไม่พบชดเชย</span>'}
 function priceMap(){
  let byCode=new Map(),byName=new Map(),byCategory=new Map();
  function add(m,k,p){k=normText(k);if(!k)return;let a=m.get(k)||[];a.push(p);m.set(k,a)}
@@ -2466,11 +2479,133 @@ function expectedInfoForService(s){
  return pc.complete?{amount:pc.total,source:'ตารางราคา',price:null}:{amount:null,source:'ไม่ทราบราคา',price:null}
 }
 function priceForItems(items){let parts=[],missing=[];let total=0;for(const item of items){let p=getPriceForItem(item);if(p&&num(p.rate)>0){parts.push({item,rate:num(p.rate),source:p.source,code:p.code});total+=num(p.rate)}else missing.push(item)}return {total,parts,missing,complete:missing.length===0}}
-function subsetBreakdown(items,paid){let priced=items.map((item,i)=>{let p=getPriceForItem(item);return p&&num(p.rate)>0?{i,item,rate:num(p.rate),source:p.source}:null}).filter(Boolean);if(!priced.length||paid<=0)return {solutions:[],note:'ไม่มีราคาเพียงพอ'};let target=Math.round(paid*100),solutions=[];function rec(pos,sum,pick){if(solutions.length>12)return;if(sum===target){solutions.push([...pick]);return}if(sum>target||pos>=priced.length)return;rec(pos+1,sum,pick);pick.push(priced[pos]);rec(pos+1,sum+Math.round(priced[pos].rate*100),pick);pick.pop()}rec(0,0,[]);let uniq=[];let seen=new Set();for(const sol of solutions){let k=sol.map(x=>x.i).join(',');if(!seen.has(k)){seen.add(k);uniq.push(sol)}}return {solutions:uniq,note:uniq.length===1?'แยกยอดได้ 1 รูปแบบ':uniq.length>1?'พบหลายรูปแบบที่รวมยอดได้เท่ากัน':'ไม่พบชุดราคาที่รวมได้เท่ายอดจ่าย'}}
+function subsetBreakdown(items,paid){let priced=items.map((item,i)=>{let p=getPriceForItem(item);return p&&num(p.rate)>0?{i,item,rate:num(p.rate),source:p.source}:null}).filter(Boolean);if(!priced.length||paid<=0)return {solutions:[],note:'ยังไม่พบราคาจากรายการย่อย'};let target=Math.round(paid*100),solutions=[];function rec(pos,sum,pick){if(solutions.length>12)return;if(sum===target){solutions.push([...pick]);return}if(sum>target||pos>=priced.length)return;rec(pos+1,sum,pick);pick.push(priced[pos]);rec(pos+1,sum+Math.round(priced[pos].rate*100),pick);pick.pop()}rec(0,0,[]);let uniq=[];let seen=new Set();for(const sol of solutions){let k=sol.map(x=>x.i).join(',');if(!seen.has(k)){seen.add(k);uniq.push(sol)}}return {solutions:uniq,note:uniq.length===1?'ยืนยันยอดได้ 1 รูปแบบ':uniq.length>1?'พบหลายรูปแบบที่รวมยอดได้เท่ากัน':'ไม่พบชุดบริการ/อัตราชดเชยที่รวมเท่ากับยอด PP(AI)'}}
+function serviceBreakdown(s,items,paid,expectedInfo){
+ let bd=subsetBreakdown(items,paid);
+ // If this is a single registered service and the official PPFS expected amount equals
+ // the allocated payment, use that same official price as breakdown evidence.
+ if(num(paid)>0&&items.length===1&&expectedInfo?.price&&num(expectedInfo.amount)>0&&Math.abs(num(paid)-num(expectedInfo.amount))<.01&&bd.solutions.length===0){
+   return {solutions:[[{i:0,item:items[0],rate:num(expectedInfo.amount),source:'official'}]],note:'ยืนยันด้วยอัตราชดเชย PPFS69'}
+ }
+ return bd
+}
 function buildInferredPrices(){let allItems=new Map();state.services.forEach(s=>splitItems(s.ppfs).forEach(it=>allItems.set(normText(it),{name:it,code:extractCode(it)})));let inferred=EMBEDDED.inferredRates||{};let arr=[];for(const [name,meta] of allItems){let r=inferred[name];if(r&&r.n>=3&&r.mode_n/r.n>=.9&&r.mode>0)arr.push({code:meta.code,name,rate:r.mode,source:'inferred',evidence:`${r.mode_n}/${r.n} รายการตรงกับอัตรานี้`});else arr.push({code:meta.code,name,rate:'',source:'missing',evidence:''})}return arr}
 function expectedForService(s){return expectedInfoForService(s).amount}
 function remainingExpectedForService(s){let e=expectedForService(s);if(e==null||e<=0)return null;return Math.max(0,Math.round((e-num(s.paid))*100)/100)}
 function uniqServices(arr){let m=new Map();(arr||[]).forEach(s=>{if(s&&s._id&&!m.has(s._id))m.set(s._id,s)});return [...m.values()]}
+
+function statementReferenceRowKey(x){
+ return [x.file||'',x.sheet||'',x.rep||'',x.seq||'',x.tran||'',x.cid||'',x.hn||'',x.date||'',x.pp_paid||0].join('|')
+}
+function uniqueStatementRows(rows){
+ let seen=new Set(),out=[];
+ (rows||[]).forEach(x=>{let k=statementReferenceRowKey(x);if(!seen.has(k)){seen.add(k);out.push(x)}});
+ return out
+}
+function pushMapArray(map,key,value){
+ if(!key)return;
+ let a=map.get(key)||[];a.push(value);map.set(key,a)
+}
+function buildStatementReferenceIndex(){
+ let idx={cidDate:new Map(),hnDate:new Map(),repCID:new Map(),repHN:new Map(),seq:new Map()};
+ (state.stm||[]).forEach(x=>{
+   if(x.cid&&x.date)pushMapArray(idx.cidDate,x.cid+'|'+x.date,x);
+   if(x.hn&&x.date)pushMapArray(idx.hnDate,x.hn+'|'+x.date,x);
+   if(x.rep&&x.cid)pushMapArray(idx.repCID,String(x.rep)+'|'+x.cid,x);
+   if(x.rep&&x.hn)pushMapArray(idx.repHN,String(x.rep)+'|'+x.hn,x);
+   if(x.seq)pushMapArray(idx.seq,String(x.seq),x)
+ });
+ return idx
+}
+function serviceRegistryREP(s){return normREP(s.registry_rep_ref!==undefined?s.registry_rep_ref:s.rep_ref)}
+function serviceRegistrySEQ(s){return normText(s.registry_seq!==undefined?s.registry_seq:s.seq).replace(/\.0$/,'')}
+function serviceMatchREP(s){return serviceRegistryREP(s)||normREP(s.claim_rep_ref||'')}
+function serviceMatchSEQ(s){return serviceRegistrySEQ(s)||normText(s.claim_seq||'').replace(/\.0$/,'')}
+function statementRefCandidatesForService(s,idx){
+ let rawRep=serviceRegistryREP(s),rawSeq=serviceRegistrySEQ(s),rows=[],method='';
+ if(rawRep){
+   if(s.cid)rows.push(...(idx.repCID.get(rawRep+'|'+s.cid)||[]));
+   if(s.hn)rows.push(...(idx.repHN.get(rawRep+'|'+s.hn)||[]));
+   method='REP ทะเบียน + ผู้รับบริการ'
+ }
+ if(rawSeq){
+   let seqRows=idx.seq.get(rawSeq)||[];
+   rows.push(...seqRows.filter(x=>(!s.cid||!x.cid||x.cid===s.cid)&&(!s.hn||!x.hn||x.hn===s.hn)));
+   method=method?method+' + SEQ ทะเบียน':'SEQ ทะเบียน'
+ }
+ if(!rows.length&&s.cid&&s.date){
+   rows.push(...(idx.cidDate.get(s.cid+'|'+s.date)||[]));
+   method='CID + วันที่'
+ }
+ if(!rows.length&&s.hn&&s.date){
+   rows.push(...(idx.hnDate.get(s.hn+'|'+s.date)||[]));
+   method='HN + วันที่'
+ }
+ rows=uniqueStatementRows(rows);
+ // Require same service date when a date exists; this prevents a reference from another visit being backfilled.
+ if(s.date)rows=rows.filter(x=>!x.date||x.date===s.date);
+ // When both identifiers exist, prefer rows consistent with both.
+ if(s.cid&&s.hn){
+   let both=rows.filter(x=>(!x.cid||x.cid===s.cid)&&(!x.hn||x.hn===s.hn));
+   if(both.length)rows=both
+ }
+ // Paid Statement rows are stronger evidence, but zero-PP rows remain usable if no paid row exists.
+ let paid=rows.filter(x=>num(x.pp_paid)!==0);
+ if(paid.length)rows=paid;
+ return {rows,method}
+}
+function deriveStatementClaimReference(s,idx){
+ let rawRep=serviceRegistryREP(s),rawSeq=serviceRegistrySEQ(s),c=statementRefCandidatesForService(s,idx),rows=c.rows;
+ let reps=[...new Set(rows.map(x=>normREP(x.rep)).filter(Boolean))];
+ let seqs=[...new Set(rows.map(x=>normText(x.seq).replace(/\.0$/,'')).filter(Boolean))];
+ let claimRep=!rawRep&&reps.length===1?reps[0]:'';
+ let claimSeq=!rawSeq&&seqs.length===1?seqs[0]:'';
+ let repAmbiguous=!rawRep&&reps.length>1,seqAmbiguous=!rawSeq&&seqs.length>1;
+ return {
+   rep:claimRep,seq:claimSeq,rows,method:c.method||'',
+   reps,seqs,ambiguous:repAmbiguous||seqAmbiguous,
+   repAmbiguous,seqAmbiguous
+ }
+}
+function enrichAllClaimReferences(){
+ let idx=buildStatementReferenceIndex(),stats={
+   total:state.services.length,registryMissingRep:0,registryMissingSeq:0,
+   recoveredRep:0,recoveredSeq:0,recoveredBoth:0,ambiguous:0,stillMissingBoth:0,
+   statementEvidence:0
+ };
+ state.services.forEach(s=>{
+   if(s.registry_rep_ref===undefined)s.registry_rep_ref=s.rep_ref||'';
+   if(s.registry_seq===undefined)s.registry_seq=s.seq||'';
+   // Clear derived values on every recompute; never mutate the raw registry reference.
+   s.claim_rep_ref='';s.claim_seq='';s.claim_ref_evidence=[];s.claim_ref_source='';s.claim_ref_ambiguous=false;
+   let rawRep=serviceRegistryREP(s),rawSeq=serviceRegistrySEQ(s);
+   if(!rawRep)stats.registryMissingRep++;
+   if(!rawSeq)stats.registryMissingSeq++;
+   let d=deriveStatementClaimReference(s,idx);
+   s.claim_rep_ref=d.rep;s.claim_seq=d.seq;s.claim_ref_evidence=d.rows;
+   s.claim_ref_source=d.method;s.claim_ref_ambiguous=d.ambiguous;
+   s.claim_ref_candidate_reps=d.reps;s.claim_ref_candidate_seqs=d.seqs;
+   if(d.rows.length)stats.statementEvidence++;
+   if(!rawRep&&d.rep)stats.recoveredRep++;
+   if(!rawSeq&&d.seq)stats.recoveredSeq++;
+   if(!rawRep&&!rawSeq&&d.rep&&d.seq)stats.recoveredBoth++;
+   if(d.ambiguous)stats.ambiguous++;
+   if(!serviceMatchREP(s)&&!serviceMatchSEQ(s))stats.stillMissingBoth++
+ });
+ state.claimRefAudit=stats;
+ return stats
+}
+function claimReferenceAuditRows(){
+ return (state.recon?.length?state.recon:state.services).filter(r=>{
+   let rawRep=serviceRegistryREP(r),rawSeq=serviceRegistrySEQ(r);
+   return !rawRep||!rawSeq||r.claim_ref_ambiguous
+ })
+}
+function claimReferenceAuditStats(){
+ if(state.claimRefAudit)return state.claimRefAudit;
+ return enrichAllClaimReferences()
+}
+
 function candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN){
  let rep=[];
  if(x.rep&&x.cid&&idxRepCID.has(String(x.rep)+'|'+x.cid))rep.push(...idxRepCID.get(String(x.rep)+'|'+x.cid));
@@ -2520,7 +2655,7 @@ function solveClaimAllocation(candidates,target,preferredServices=[]){
    pick.push(i);rec(pos+1,sum+cents[i],pick);pick.pop();
  }
  rec(0,0,[]);
- if(!solutions.length)return {allocations:null,reason:'ไม่พบชุดยอดเรียกเก็บที่รวมเท่ากับยอด BQ',solutions:0,priced};
+ if(!solutions.length)return {allocations:null,reason:'ไม่พบชุดบริการ/อัตราชดเชยที่รวมเท่ากับยอด PP(AI)',solutions:0,priced};
  // ให้ความสำคัญกับ solution ที่มีรายการจาก SEQ ก่อน แล้วจึงเลือกจำนวนรายการน้อยกว่า
  let scored=solutions.map(sol=>({sol,preferredCount:sol.filter(i=>preferred.has(priced[i].service._id)).length,count:sol.length}));
  let maxPref=Math.max(...scored.map(x=>x.preferredCount));
@@ -2553,9 +2688,18 @@ function contextualOfficialPrices(candidates,target){
 function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
  let t=num(target),targetC=Math.round(t*100);if(targetC<=0)return null;
  let pool=uniqServices(candidates),preferred=new Set((preferredServices||[]).map(s=>s._id));
- // Actual components use official unit rate where confidently mapped. This prevents a package total
- // such as 5,510 being treated as one indivisible service before trying its components.
- let actual=pool.map(s=>{let p=bestOfficialPriceForService(s),amt=p?num(p.rate):0;return p&&amt>0&&amt<=t+.001?{service:s,p,amount:amt,score:120+(p._matchScore||70)+(preferred.has(s._id)?80:0)}:null}).filter(Boolean);
+ // Actual registered services are first-class evidence.
+ // Use the expected reimbursement logic (official PPFS when known; registered expected value
+ // as a lower-confidence fallback) so a real service row is not replaced by a virtual component.
+ let actual=pool.map(s=>{
+   let ei=expectedInfoForService(s),amt=remainingExpectedForService(s),p=ei?.price||null;
+   if(amt==null||amt<=0||amt>t+.001)return null;
+   let evidenceScore=p
+     ? 190+(p._matchScore||70)
+     : (num(s.claim_expected)>0?125:90);
+   if(preferred.has(s._id))evidenceScore+=90;
+   return {service:s,p,amount:amt,score:evidenceScore,expectedSource:ei?.source||'ทะเบียนบริการ',official:!!p};
+ }).filter(Boolean);
  if(!actual.length)return null;
  if(actual.length>18)actual=actual.sort((a,b)=>b.score-a.score).slice(0,18);
  let ctx=contextualOfficialPrices(pool,t),solutions=[];
@@ -2564,7 +2708,12 @@ function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
    if(!picks.length)return;
    let sum=picks.reduce((a,i)=>a+actual[i].amount,0),res=Math.round((t-sum)*100)/100;if(res<-.001)return;
    let baseScore=picks.reduce((a,i)=>a+actual[i].score,0)+picks.length*250;
-   let actualNames=new Set(picks.map(i=>normalizePriceText(actual[i].p.name)+'|'+Math.round(actual[i].amount*100)));
+   let actualNames=new Set();
+   picks.forEach(i=>{
+     let a=actual[i],c=Math.round(a.amount*100),d=serviceDomain(compositeServiceText(a.service));
+     if(a.p)actualNames.add(normalizePriceText(a.p.name)+'|'+c);
+     if(d)actualNames.add('domain:'+d+'|'+c);
+   });
    const add=(virt)=>{
      let total=sum+virt.reduce((a,x)=>a+num(x.p.rate),0);if(Math.round(total*100)!==targetC)return;
      let vscore=virt.reduce((a,x)=>a+x.score,0)-virt.length*90;
@@ -2574,15 +2723,15 @@ function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
    };
    if(Math.abs(res)<.001){add([]);return}
    for(let i=0;i<ctx.length;i++){
-     let a=ctx[i],ak=normalizePriceText(a.p.name)+'|'+Math.round(num(a.p.rate)*100);if(actualNames.has(ak))continue;
+     let a=ctx[i],c=Math.round(num(a.p.rate)*100),ak=normalizePriceText(a.p.name)+'|'+c,ad=serviceDomain((a.p.category||'')+' '+(a.p.name||'')),dk=ad?'domain:'+ad+'|'+c:'';if(actualNames.has(ak)||(dk&&actualNames.has(dk)))continue;
      if(Math.abs(num(a.p.rate)-res)<.001)add([a]);
    }
    // two virtual prices; allow same rate only when different service names
    for(let i=0;i<ctx.length;i++){
-     let a=ctx[i],ak=normalizePriceText(a.p.name)+'|'+Math.round(num(a.p.rate)*100);if(actualNames.has(ak))continue;
+     let a=ctx[i],c=Math.round(num(a.p.rate)*100),ak=normalizePriceText(a.p.name)+'|'+c,ad=serviceDomain((a.p.category||'')+' '+(a.p.name||'')),dk=ad?'domain:'+ad+'|'+c:'';if(actualNames.has(ak)||(dk&&actualNames.has(dk)))continue;
      let need=Math.round((res-num(a.p.rate))*100)/100;if(need<=0)continue;
      for(let j=i;j<ctx.length;j++){
-       let b=ctx[j],bk=normalizePriceText(b.p.name)+'|'+Math.round(num(b.p.rate)*100);if(actualNames.has(bk))continue;
+       let b=ctx[j],bc=Math.round(num(b.p.rate)*100),bk=normalizePriceText(b.p.name)+'|'+bc,bd=serviceDomain((b.p.category||'')+' '+(b.p.name||'')),bdk=bd?'domain:'+bd+'|'+bc:'';if(actualNames.has(bk)||(bdk&&actualNames.has(bdk)))continue;
        if(i===j&&normalizePriceText(a.p.name)===normalizePriceText(b.p.name))continue;
        if(Math.abs(num(b.p.rate)-need)<.001)add([a,b]);
      }
@@ -2607,6 +2756,57 @@ function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
  let formula=full.map(x=>`${x.label} ${moneyFmt.format(x.amount)}`).join(' + ');
  return {allocations,virtual,full,formula,total:t,score:best.score,alternatives:arr.length,evidence:virtual.length?'ทะเบียนบริการจริง + เติมส่วนที่ขาดจากตารางราคา PPFS69':'ทะเบียนบริการจริงครบองค์ประกอบ'};
 }
+
+function virtualToRegistryScore(service,v){
+ let rem=remainingExpectedForService(service);
+ if(rem==null||Math.abs(num(rem)-num(v.amount))>.001)return -1;
+ let pseudo={name:v.label||'',category:v.category||'',rate:v.amount};
+ let score=servicePriceScore(service,pseudo);
+ let sd=serviceDomain(compositeServiceText(service)),vd=serviceDomain((v.category||'')+' '+(v.label||''));
+ if(sd&&vd&&sd===vd)score+=45;
+ if(num(service.claim_expected)>0&&Math.abs(num(service.claim_expected)-num(v.amount))<.001)score+=30;
+ if(normalizePriceText(compositeServiceText(service)).includes(normalizePriceText(v.label||'')))score+=25;
+ return score
+}
+function materializeVirtualComponents(bundle,candidates){
+ if(!bundle||!Array.isArray(bundle.virtual)||!bundle.virtual.length)return bundle;
+ let allocatedIds=new Set((bundle.allocations||[]).map(a=>a.service?._id).filter(Boolean));
+ let available=uniqServices(candidates).filter(s=>!allocatedIds.has(s._id)&&num(remainingExpectedForService(s))>0);
+ let allocations=[...(bundle.allocations||[])],remainingVirtual=[],materialized=[];
+ for(const v of bundle.virtual){
+   let ranked=available
+     .map(s=>({s,score:virtualToRegistryScore(s,v)}))
+     .filter(x=>x.score>=70)
+     .sort((a,b)=>b.score-a.score);
+   let chosen=null;
+   if(ranked.length===1)chosen=ranked[0];
+   else if(ranked.length>1&&ranked[0].score>=ranked[1].score+25)chosen=ranked[0];
+   if(chosen){
+     allocations.push({service:chosen.s,amount:num(v.amount),label:v.label,materializedFromVirtual:true});
+     materialized.push({label:v.label,amount:num(v.amount),serviceId:chosen.s._id,service:chosen.s.service_type||chosen.s.source_sheet||chosen.s.fund_sub});
+     allocatedIds.add(chosen.s._id);
+     available=available.filter(s=>s._id!==chosen.s._id);
+   }else remainingVirtual.push(v)
+ }
+ let full=[
+   ...allocations.map(a=>({label:a.label||a.service.service_type||a.service.source_sheet||a.service.fund_sub||'บริการ',amount:a.amount,registered:true,serviceId:a.service._id,materialized:!!a.materializedFromVirtual})),
+   ...remainingVirtual.map(v=>({label:v.label,amount:v.amount,registered:false,source:v.source||'ตารางราคา PPFS69'}))
+ ];
+ let formula=full.map(x=>`${x.label} ${moneyFmt.format(x.amount)}`).join(' + ');
+ return {
+   ...bundle,
+   allocations,
+   virtual:remainingVirtual,
+   full,
+   formula,
+   materialized,
+   materializedCount:materialized.length,
+   evidence:materialized.length
+     ? `ทะเบียนบริการจริง + ผูกองค์ประกอบจากสูตรกลับเข้าทะเบียน ${materialized.length} รายการ${remainingVirtual.length?' + ตารางราคา PPFS69 สำหรับองค์ประกอบที่ไม่มีทะเบียน':''}`
+     : bundle.evidence
+ }
+}
+
 function exactRegisteredPackage(candidates,target,preferredServices=[]){
  let t=num(target),pref=new Set((preferredServices||[]).map(s=>s._id));
  let hits=uniqServices(candidates).filter(s=>num(s.claim_expected)>0&&Math.abs(num(s.claim_expected)-t)<.001);
@@ -2662,7 +2862,7 @@ function aggregateEvidenceType(r){
  if(claims.some(c=>c.allocationStatus==='global-bundle'))return 'ทะเบียนบริการจริง + วิเคราะห์ยอดรวมด้วยตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='bundle-split'))return 'ทะเบียนบริการ + ตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='aggregate-split'))return 'ทะเบียนบริการจริงครบองค์ประกอบ';
- if(claims.some(c=>c.allocationStatus==='package-paid'))return 'BQ ตรงยอดเรียกเก็บแพ็กเกจ แต่ยังไม่สามารถแยกองค์ประกอบได้อย่างมั่นใจ';
+ if(claims.some(c=>c.allocationStatus==='package-paid'))return 'PP(AI) ตรงยอดแพ็กเกจ แต่ยังไม่สามารถแยกองค์ประกอบได้อย่างมั่นใจ';
  return '';
 }
 function fundAuditExpectedAmount(r){
@@ -2680,7 +2880,7 @@ function suggestClaimByOfficialPrice(candidates,target){
  for(const k of known){let a=num(k.p.rate),rem=Math.round((num(target)-a)*100)/100;if(rem<=0)continue;for(let i=0;i<ctx.length;i++){let x1=ctx[i],p1=x1.p,r2=rem-num(p1.rate);if(r2<=0)continue;for(let j=i;j<ctx.length;j++){let x2=ctx[j],p2=x2.p;if(Math.abs(num(p2.rate)-r2)<.001)add([{registered:true,service:k.s,p:k.p,label:k.s.service_type||k.s.source_sheet,rate:a,contextScore:k.p._matchScore||70},{registered:false,p:p1,label:p1.name,rate:num(p1.rate),contextScore:x1.score},{registered:false,p:p2,label:p2.name,rate:num(p2.rate),contextScore:x2.score}],[p1,p2])}}}
  let uniq=new Map();suggestions.sort((a,b)=>b.score-a.score).forEach(s=>{if(!uniq.has(s.key))uniq.set(s.key,s)});let arr=[...uniq.values()].sort((a,b)=>b.score-a.score).slice(0,5);if(!arr.length)return null;
  let best=arr[0],formula=best.parts.map(x=>`${x.registered?'✓ ':'? '}${x.label||x.p?.name||'บริการ'} ${moneyFmt.format(x.rate)}`).join(' + '),missingNames=best.missing.map(p=>p.name);
- return {formula,missingNames,alternatives:arr.length,score:best.score,note:`BQ ${moneyFmt.format(target)} บาท มีชุดราคาที่เป็นไปได้ในบริบทกองทุนนี้: ${formula}${arr.length>1?' · มีทางเลือกมากกว่า 1 ชุด จึงยังไม่จัดสรรอัตโนมัติ':''}`}
+ return {formula,missingNames,alternatives:arr.length,score:best.score,note:`PP(AI) ${moneyFmt.format(target)} บาท มีชุดราคาที่เป็นไปได้ในบริบทกองทุนนี้: ${formula}${arr.length>1?' · มีทางเลือกมากกว่า 1 ชุด จึงยังไม่จัดสรรอัตโนมัติ':''}`}
 }
 function applyAllocations(x,allocs,method,status='allocated',meta={}){
  let formula=meta.formula||allocationFormula(allocs),target=num(x.pp_paid),extra={...meta};delete extra.formula;
@@ -2704,14 +2904,25 @@ function strictRepAllocation(repServices,target){
  return {allocations:null,reason:sol.reason||'REP ตรง แต่ยังแยกยอดไม่ได้',repTotal:total};
 }
 function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
- let rows=[];
- if(s.rep_ref&&s.cid&&stmRepCID.has(String(s.rep_ref)+'|'+s.cid))rows.push(...stmRepCID.get(String(s.rep_ref)+'|'+s.cid));
- if(s.rep_ref&&s.hn&&stmRepHN.has(String(s.rep_ref)+'|'+s.hn))rows.push(...stmRepHN.get(String(s.rep_ref)+'|'+s.hn));
- let seen=new Set();return rows.filter(x=>{let k=[x.file||'',x.rep||'',x.tran||'',x.cid||'',x.hn||'',x.pp_paid||0].join('|');if(seen.has(k))return false;seen.add(k);return true});
+ let rows=[...(s.claim_ref_evidence||[])],rep=serviceMatchREP(s);
+ if(rep&&s.cid&&stmRepCID.has(String(rep)+'|'+s.cid))rows.push(...stmRepCID.get(String(rep)+'|'+s.cid));
+ if(rep&&s.hn&&stmRepHN.has(String(rep)+'|'+s.hn))rows.push(...stmRepHN.get(String(rep)+'|'+s.hn));
+ let paid=uniqueStatementRows(rows).filter(x=>num(x.pp_paid)!==0);
+ return paid.length?paid:uniqueStatementRows(rows)
 }
 function recomputeAll(){
  let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;
- state.services.forEach((s,i)=>{s._id=serviceId(s,i);s.claims=[];s.matchStatus='unpaid';s.paid=0;if(s.rep_ref&&s.cid){let k=String(s.rep_ref)+'|'+s.cid,a=idxRepCID.get(k)||[];a.push(s);idxRepCID.set(k,a)}if(s.rep_ref&&s.hn){let k=String(s.rep_ref)+'|'+s.hn,a=idxRepHN.get(k)||[];a.push(s);idxRepHN.set(k,a)}if(s.seq){let a=idxSeq.get(String(s.seq))||[];a.push(s);idxSeq.set(String(s.seq),a)}if(s.cid&&s.date){let k=s.cid+'|'+s.date,a=idxCD.get(k)||[];a.push(s);idxCD.set(k,a)}if(s.hn&&s.date){let k=s.hn+'|'+s.date,a=idxHD.get(k)||[];a.push(s);idxHD.set(k,a)}});
+ // Audit every registry row against Statement and backfill missing claim references when unique.
+ enrichAllClaimReferences();
+ state.services.forEach((s,i)=>{
+   s._id=serviceId(s,i);s.claims=[];s.matchStatus='unpaid';s.paid=0;
+   let matchRep=serviceMatchREP(s),matchSeq=serviceMatchSEQ(s);
+   if(matchRep&&s.cid){let k=String(matchRep)+'|'+s.cid,a=idxRepCID.get(k)||[];a.push(s);idxRepCID.set(k,a)}
+   if(matchRep&&s.hn){let k=String(matchRep)+'|'+s.hn,a=idxRepHN.get(k)||[];a.push(s);idxRepHN.set(k,a)}
+   if(matchSeq){let a=idxSeq.get(String(matchSeq))||[];a.push(s);idxSeq.set(String(matchSeq),a)}
+   if(s.cid&&s.date){let k=s.cid+'|'+s.date,a=idxCD.get(k)||[];a.push(s);idxCD.set(k,a)}
+   if(s.hn&&s.date){let k=s.hn+'|'+s.date,a=idxHD.get(k)||[];a.push(s);idxHD.set(k,a)}
+ });
  state.unmatchedSTM=[];state.ambiguousSTM=[];state.residualSTM=[];state.claimAnalyses=[];state.priceSuggestions=[];state.services.forEach(s=>{s.priceHints=[];s.repPaymentEvidence=[]});
  state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
    if(x.rep&&x.cid){let k=String(x.rep)+'|'+x.cid,a=stmRepCID.get(k)||[];a.push(x);stmRepCID.set(k,a)}
@@ -2746,16 +2957,20 @@ function recomputeAll(){
      let isMulti=sol.allocations.length>1;if(isMulti)state.autoAllocated++;
      let method=(b.method||'ผู้ป่วย+วันที่')+(isMulti?' + Global Aggregate: บริการจริงรวมกันตรง PP(AI)':' + ยอดบริการตรง PP(AI)');
      let formula=applyAllocations(x,sol.allocations,method,isMulti?'aggregate-split':'exact');
-     state.claimAnalyses.push({...x,analysisStatus:isMulti?'split':'exact',allocations:sol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`BQ ${moneyFmt.format(target)} = ${formula}`});return;
+     state.claimAnalyses.push({...x,analysisStatus:isMulti?'split':'exact',allocations:sol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${formula}`});return;
    }
 
    // 2) Global Aggregate ทุกกองทุน: ใช้บริการจริงก่อน แล้วเติม residual ด้วยราคา PPFS69 เฉพาะบริบท
    let globalBundle=solveGlobalAggregateClaim(b.pool,target,b.preferred);
+   if(globalBundle&&!globalBundle.ambiguous){
+     globalBundle=materializeVirtualComponents(globalBundle,b.pool);
+   }
    if(globalBundle&&!globalBundle.ambiguous&&globalBundle.allocations?.length){
      state.autoAllocated++;
-     let virtualNames=globalBundle.virtual.map(v=>v.label);
-     applyAllocations(x,globalBundle.allocations,(b.method||'ผู้ป่วย+วันที่')+' + Global Aggregate Claim Allocation','global-bundle',{formula:globalBundle.formula,bundleTotal:target,virtualComponents:globalBundle.virtual,bundleComponents:globalBundle.full,evidence:globalBundle.evidence});
-     state.claimAnalyses.push({...x,analysisStatus:'global-bundle',analysisFormula:globalBundle.formula,bundleComponents:globalBundle.full,virtualComponents:globalBundle.virtual,allocations:globalBundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`BQ ${moneyFmt.format(target)} = ${globalBundle.formula}${virtualNames.length?' · เติมจากตารางราคา: '+virtualNames.join(', '):''}`});return;
+     let virtualNames=globalBundle.virtual.map(v=>v.label),materializedNames=(globalBundle.materialized||[]).map(v=>v.service||v.label);
+     let method=(b.method||'ผู้ป่วย+วันที่')+' + Global Aggregate Claim Allocation'+(globalBundle.materializedCount?` + Materialized ${globalBundle.materializedCount} บริการจริง`:'');
+     applyAllocations(x,globalBundle.allocations,method,'global-bundle',{formula:globalBundle.formula,bundleTotal:target,virtualComponents:globalBundle.virtual,bundleComponents:globalBundle.full,materializedComponents:globalBundle.materialized||[],evidence:globalBundle.evidence});
+     state.claimAnalyses.push({...x,analysisStatus:'global-bundle',analysisFormula:globalBundle.formula,bundleComponents:globalBundle.full,virtualComponents:globalBundle.virtual,materializedComponents:globalBundle.materialized||[],allocations:globalBundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${globalBundle.formula}${materializedNames.length?' · ผูกกลับทะเบียนจริง: '+materializedNames.join(', '):''}${virtualNames.length?' · ไม่มีทะเบียนแยก: '+virtualNames.join(', '):''}`});return;
    }
 
    // 3) กฎ Composite ที่ยืนยันไว้ (fallback สำหรับกรณีองค์ประกอบบางรายการไม่มีทะเบียนแยก)
@@ -2763,17 +2978,17 @@ function recomputeAll(){
    if(bundle){
      state.autoAllocated++;let virtualNames=bundle.virtual.map(v=>v.label);
      applyAllocations(x,bundle.allocations,(b.method||'ผู้ป่วย+วันที่')+' + Composite Claim จากตารางราคา','bundle-split',{formula:bundle.formula,bundleTotal:target,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,virtualComponents:bundle.virtual,bundleComponents:bundle.full});
-     state.claimAnalyses.push({...x,analysisStatus:'bundle-split',analysisFormula:bundle.formula,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,bundleComponents:bundle.full,virtualComponents:bundle.virtual,allocations:bundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`BQ ${moneyFmt.format(target)} = ${bundle.formula}${virtualNames.length?' · องค์ประกอบจากตารางราคาที่ไม่มีทะเบียนแยก: '+virtualNames.join(', '):''}`});return;
+     state.claimAnalyses.push({...x,analysisStatus:'bundle-split',analysisFormula:bundle.formula,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,bundleComponents:bundle.full,virtualComponents:bundle.virtual,allocations:bundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${bundle.formula}${virtualNames.length?' · องค์ประกอบจากตารางราคาที่ไม่มีทะเบียนแยก: '+virtualNames.join(', '):''}`});return;
    }
 
-   // 4) หาก BQ ตรงยอดเรียกเก็บรวมของแถวทะเบียนพอดี ให้ยืนยันว่า "จ่ายแล้ว" แม้ยังแยก component ไม่ได้
+   // 4) หาก PP(AI) ตรงยอดแพ็กเกจของแถวทะเบียนพอดี ให้ยืนยันว่า "จ่ายแล้ว" แม้ยังแยก component ไม่ได้
    // ดีกว่ารายงานเป็นยังไม่พบชดเชย ทั้งที่ Statement จ่ายยอด package ตรงกัน
    let packageSvc=exactRegisteredPackage(b.pool,target,b.preferred);
    if(packageSvc){
-     let method=(b.method||'ผู้ป่วย+วันที่')+' + BQ ตรงยอดเรียกเก็บแพ็กเกจ';
+     let method=(b.method||'ผู้ป่วย+วันที่')+' + PP(AI) ตรงยอดแพ็กเกจ';
      let formula=`${packageSvc.service_type||packageSvc.source_sheet||packageSvc.fund_sub||'ยอดแพ็กเกจ'} ${moneyFmt.format(target)}`;
      applyAllocations(x,[{service:packageSvc,amount:target}],method,'package-paid',{formula,bundleTotal:target,packageUnsplit:true});
-     state.claimAnalyses.push({...x,analysisStatus:'package-paid',allocations:[{serviceId:packageSvc._id,service:packageSvc.service_type||packageSvc.source_sheet,amount:target}],analysisFormula:formula,analysisNote:`BQ ${moneyFmt.format(target)} ตรงกับยอดเรียกเก็บรวมของทะเบียน แต่ยังไม่พบชุดองค์ประกอบ PPFS69 ที่มีความมั่นใจเพียงพอ จึงยืนยันการจ่ายโดยไม่เดารายการย่อย`});return;
+     state.claimAnalyses.push({...x,analysisStatus:'package-paid',allocations:[{serviceId:packageSvc._id,service:packageSvc.service_type||packageSvc.source_sheet,amount:target}],analysisFormula:formula,analysisNote:`PP(AI) ${moneyFmt.format(target)} ตรงกับยอดแพ็กเกจของทะเบียน แต่ยังไม่พบชุดองค์ประกอบ PPFS69 ที่มีความมั่นใจเพียงพอ จึงยืนยันการจ่ายโดยไม่เดารายการย่อย`});return;
    }
 
    // 5) Partial: มี preferred ชัดเจน จัดสรรเฉพาะส่วนที่พิสูจน์ได้
@@ -2788,6 +3003,8 @@ function recomputeAll(){
    else {let reason=globalBundle?.ambiguous?globalBundle.reason:sol.reason;state.ambiguousSTM.push({...x,candidateCount:b.pool.length,matchMethod:b.method,analysisNote:reason});b.pool.forEach(s=>{if(!isMatchedStatus(s.matchStatus))s.matchStatus='ambiguous'});state.claimAnalyses.push({...x,analysisStatus:'ambiguous',analysisNote:reason,candidateCount:b.pool.length});}
  });
  // Safety net ทุกกองทุน: ถ้า REP+CID/HN มี PP(AI)>0 จริง แต่ solver ยังจัดสรรไม่ได้ ห้ามรายงานว่า 'ยังไม่พบชดเชย'
+ // หลัง v6.1.5.8 บริการที่ปรากฏใน Global formula จะถูก materialize ก่อนมาถึงจุดนี้
+ // จึงเหลือ rep-confirmed เฉพาะรายการที่ยังไม่มีหลักฐานพอสำหรับการจัดสรรจริง
  state.services.forEach(s=>{
    let ev=repEvidenceRowsForService(s,stmRepCID,stmRepHN);s.repPaymentEvidence=ev;
    if(num(s.paid)<=0&&ev.length){
@@ -2795,7 +3012,10 @@ function recomputeAll(){
    }
  });
  state.services.forEach(s=>{if(num(s.paid)>0){let e=expectedForService(s);s.matchStatus=(e!=null&&num(s.paid)+0.009<e)?'partial':'paid'}});
- state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceRule:ei.price?._deterministicRule||'',registeredCharge:ei.registeredCharge??null,reimbursementRule:!!ei.reimbursementRule,priceRuleCanonicalFund:ei.price?._canonicalFund||'',priceRuleCanonicalService:ei.price?._canonicalService||'',priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
+ state.recon=state.services.map(s=>{
+ let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=serviceBreakdown(s,items,s.paid,ei);
+ return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceRule:ei.price?._deterministicRule||'',registeredCharge:ei.registeredCharge??null,reimbursementRule:!!ei.reimbursementRule,priceRuleCanonicalFund:ei.price?._canonicalFund||'',priceRuleCanonicalService:ei.price?._canonicalService||'',priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}
+});
  renderAll();
 }
 
@@ -2810,13 +3030,65 @@ function priorYearUnmatchedSTM(){return (state.unmatchedSTM||[]).filter(x=>isPri
 const EXCEPTION_META={
  'unpaid':{label:'ยังไม่พบ Statement',short:'ยังไม่พบชดเชย',css:'unpaid',base:85,desc:'มีบริการในทะเบียน แต่ยังไม่พบ Statement ที่ยืนยันการชดเชย',action:'ตรวจงวด Statement, REP/SEQ และสถานะการส่งเบิก หากพ้นรอบจ่ายให้ติดตาม Claim'},
  'partial':{label:'ชดเชยบางส่วน',short:'ชดเชยบางส่วน',css:'partial',base:82,desc:'ได้รับ PP(AI) ต่ำกว่ามูลค่าตามสิทธิที่คำนวณได้',action:'ตรวจอัตรา PPFS69 เงื่อนไขการจ่าย และเหตุผลที่ยอดถูกหัก/จ่ายไม่ครบ'},
- 'rep-confirmed':{label:'พบ REP · รอจัดสรร',short:'REP รอจัดสรร',css:'rep',base:70,desc:'Statement ยืนยันว่าจ่ายแล้วตาม REP แต่ระบบยังแยกองค์ประกอบบริการไม่ได้',action:'เปิดหลักฐาน REP และบริการของผู้ป่วยในวัน/REP เดียวกัน แล้วอืนยันองค์ประกอบการจัดสรร'},
+ 'rep-confirmed':{label:'พบ REP · ยังไม่มีหลักฐานพอจัดสรร',short:'REP รอตรวจ',css:'rep',base:68,desc:'Statement มี PP(AI) และ REP ตรง แต่หลังผูกสูตรกลับเข้าทะเบียนแล้ว ยังไม่สามารถระบุยอดของบริการนี้ได้อย่างมีเอกลักษณ์',action:'ตรวจบริการจริง/เวชระเบียนเฉพาะรายการนี้ก่อนยืนยันการจัดสรร'},
  'ambiguous':{label:'ยอดรวมกำกวม',short:'ยอดกำกวม',css:'ambiguous',base:75,desc:'พบ Statement แต่มีมากกว่าหนึ่งชุดบริการที่อธิบายยอด PP(AI) ได้',action:'ตรวจบริการจริงในวันเดียวกัน, เวชระเบียน และ PPFS69 ก่อนยืนยันชุดการจัดสรร'},
- 'data-error':{label:'ข้อมูลไม่สมบูรณ์',short:'Data Quality',css:'data',base:90,desc:'ข้อมูลสำคัญสำหรับการจับคู่หรือการตรวจสอบไม่ครบ/ผิดรูปแบบ',action:'แก้ CID/HN/REP/SEQ หรือข้อมูลอ้างอิงในทะเบียนต้นทางก่อนประมวลผลใหม่'},
+ 'data-error':{label:'ข้อมูลไม่สมบูรณ์และยังจับคู่ไม่ได้',short:'Data Quality',css:'data',base:78,desc:'ข้อมูลสำคัญในทะเบียนไม่ครบ และยังไม่มีหลักฐาน Statement ที่ยืนยันการจับคู่',action:'แก้ CID/HN/REP/SEQ หรือข้อมูลอ้างอิงในทะเบียนต้นทาง แล้วประมวลผลใหม่'},
  'price-mismatch':{label:'ราคา / Rule ต้องตรวจ',short:'Price / Rule',css:'price',base:60,desc:'ไม่มีราคาทางการที่ชัดเจน หรือยอดทะเบียนไม่สอดคล้องกับอัตรา PPFS69',action:'ตรวจ PPFS Rule Master, วันที่มีผลบังคับใช้ และอัตราเรียกเก็บของบริการ'},
  'statement-unmatched':{label:'Statement ผูกบริการไม่ได้',short:'STM Unmatched',css:'stm',base:68,desc:'มี PP(AI) ใน Statement แต่ยังไม่พบบริการต้นทางที่จับคู่ได้',action:'ตรวจช่วงวันที่นำเข้าทะเบียนบริการ, HN/CID/REP และค้นว่าบริการอยู่ในชีตอื่นหรือไม่'},
  'residual':{label:'ยอดคงเหลืออธิบายไม่ได้',short:'Residual',css:'residual',base:80,desc:'ระบบอธิบายยอด PP(AI) ได้บางส่วน แต่ยังเหลือยอดที่ไม่สามารถผูกบริการได้',action:'ตรวจองค์ประกอบบริการที่อาจตกหล่นและ Rule/ราคา PPFS69 ของยอดคงเหลือ'}
 };
+
+function primaryClaimEvidence(r){
+ let claims=Array.isArray(r.claims)?r.claims:[];
+ let paidClaim=claims.find(c=>num(c.allocatedPP??c.pp_paid)>0);
+ if(paidClaim)return paidClaim;
+ if(claims.length)return claims[0];
+ let ref=Array.isArray(r.claim_ref_evidence)?r.claim_ref_evidence:[];
+ let paidRef=ref.find(c=>num(c.pp_paid)!==0);
+ if(paidRef)return paidRef;
+ if(ref.length)return ref[0];
+ let ev=Array.isArray(r.repPaymentEvidence)?r.repPaymentEvidence:[];
+ return ev[0]||null
+}
+function effectiveClaimREP(r){
+ let ev=primaryClaimEvidence(r);
+ return serviceRegistryREP(r)||ev?.rep||r.claim_rep_ref||r.rep||''
+}
+function effectiveClaimSEQ(r){
+ let ev=primaryClaimEvidence(r);
+ return serviceRegistrySEQ(r)||ev?.seq||r.claim_seq||''
+}
+function hasStatementEvidence(r){
+ return !!((Array.isArray(r.claims)&&r.claims.length)||(Array.isArray(r.claim_ref_evidence)&&r.claim_ref_evidence.length)||(Array.isArray(r.repPaymentEvidence)&&r.repPaymentEvidence.length))
+}
+function isFinanciallyResolved(r){
+ let exp=exceptionExpectedAmount(r),paid=num(r.paid);
+ return paid>0 && (exp<=0 || paid+0.009>=exp) && r.matchStatus==='paid'
+}
+function dataQualityProblems(r){
+ let p=[];
+ if(!r.cid)p.push('ไม่มี CID');
+ else if(String(r.cid).replace(/\D/g,'').length!==13)p.push('CID ไม่ครบ 13 หลัก');
+ if(!r.hn)p.push('ไม่มี HN');
+ if(!effectiveClaimREP(r)&&!effectiveClaimSEQ(r))p.push('ไม่มี REP/SEQ ทั้งทะเบียนและ Statement');
+ if(r.claim_ref_ambiguous)p.push('Statement มี Claim Reference มากกว่าหนึ่งชุด');
+ return p
+}
+function dataQualityNote(r){
+ let notes=[],rawRep=serviceRegistryREP(r),rawSeq=serviceRegistrySEQ(r),rep=effectiveClaimREP(r),seq=effectiveClaimSEQ(r);
+ let p=dataQualityProblems(r);
+ if(!rawRep&&rep)notes.push(`REP เติมจาก Statement: ${rep}`);
+ if(!rawSeq&&seq)notes.push(`SEQ เติมจาก Statement: ${seq}`);
+ if(r.claim_ref_source&&( (!rawRep&&rep)||(!rawSeq&&seq) ))notes.push(`หลักฐาน ${r.claim_ref_source}`);
+ if(p.length)notes.push(...p);
+ return notes.join(' · ')
+}
+function displayPriceForServiceItem(r,item,index=0){
+ let p=getPriceForItem(item);
+ if(p&&num(p.rate)>0)return p;
+ if((r.items||[]).length===1&&r.officialPrice&&num(r.officialPrice.rate)>0)return r.officialPrice;
+ return null
+}
 
 function exceptionFundKey(r){
  return r.service_type||r.source_sheet||r.fund_sub||r.item_detail||'ไม่ระบุ'
@@ -2860,7 +3132,7 @@ function addException(arr,type,r,financialRisk=0,reviewAmount=0,reason=''){
    id:`${type}|${r._id||r.rep||r.tran||Math.random()}`,
    type,serviceId:r._id||'',fund:exceptionFundKey(r),
    service:r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', ')||r.ppfs||'-',
-   hn:r.hn||'',cid:r.cid||'',name:r.name||'',date:r.date||'',rep:r.rep_ref||r.rep||'',seq:r.seq||'',
+   hn:r.hn||'',cid:r.cid||'',name:r.name||'',date:r.date||'',rep:effectiveClaimREP(r),seq:effectiveClaimSEQ(r),
    expected:exceptionExpectedAmount(r),paid:num(r.paid),financialRisk:Math.max(0,num(financialRisk)),
    reviewAmount:Math.max(0,num(reviewAmount)),reason:reason||EXCEPTION_META[type]?.desc||'',
    recommendation:EXCEPTION_META[type]?.action||'',priority:p.level,score:p.score,days:p.days,
@@ -2888,12 +3160,12 @@ function buildExceptionItems(){
      addException(arr,'ambiguous',r,0,review||exceptionRepValue(r)||exp)
    }
 
-   let dataProblems=[];
-   if(!r.cid)dataProblems.push('ไม่มี CID');
-   else if(String(r.cid).replace(/\D/g,'').length!==13)dataProblems.push('CID ไม่ครบ 13 หลัก');
-   if(!r.hn)dataProblems.push('ไม่มี HN');
-   if(!r.rep_ref&&!r.seq)dataProblems.push('ไม่มี REP/SEQ อ้างอิง');
-   if(dataProblems.length)addException(arr,'data-error',r,0,exp,dataProblems.join(' · '));
+   let dataProblems=dataQualityProblems(r);
+   // Data quality is still measured in KPI/detail, but it becomes an Action Item only
+   // when the missing data prevents the system from finding Statement evidence.
+   if(dataProblems.length&&!hasStatementEvidence(r)){
+     addException(arr,'data-error',r,0,0,dataProblems.join(' · '))
+   }
 
    if((r.priceMismatch && !r.priceRule)||((r.priceMissing||[]).length>0)){
      let reason=r.priceMismatch
@@ -3243,7 +3515,7 @@ function exportInnovationKPI(){
  downloadCSV(rows,'PP_Claim_Intelligence_Innovation_KPI.csv')
 }
 
-function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderExceptionCenter();renderInnovationKPI();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();}
+function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderExceptionCenter();renderInnovationKPI();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();renderClaimReferenceAudit();}
 function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length,partial=state.recon.filter(x=>x.matchStatus==='partial').length,amb=state.recon.filter(x=>x.matchStatus==='ambiguous').length,unpaid=total-paid-amb;let stmPP=state.stm.reduce((a,x)=>a+num(x.pp_paid),0),matchedPaid=state.recon.reduce((a,x)=>a+num(x.paid),0);let expRows=state.recon.filter(x=>x.expected!=null),expected=expRows.reduce((a,x)=>a+x.expected,0);let pct=total?paid/total*100:0;
  let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(currentYearUnmatchedSTM().length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
  document.getElementById('matchDonut').style.setProperty('--angle',(pct*3.6)+'deg');document.getElementById('matchPct').innerHTML=`${pct.toFixed(1)}%<div class="small muted">จับคู่ได้</div>`;document.getElementById('statusLegend').innerHTML=`<div class="hbars"><div class="hrow"><span>ได้รับชดเชย</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><b class="right">${intFmt.format(paid)}</b></div><div class="hrow"><span>ยังไม่พบชดเชย</span><div class="track"><div class="fill" style="width:${total?unpaid/total*100:0}%;background:#dc2626"></div></div><b class="right">${intFmt.format(unpaid)}</b></div><div class="hrow"><span>จับคู่กำกวม</span><div class="track"><div class="fill" style="width:${total?amb/total*100:0}%;background:#d97706"></div></div><b class="right">${intFmt.format(amb)}</b></div></div>`;
@@ -3258,7 +3530,7 @@ function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x
    true
  );
  let svc={};state.recon.forEach(r=>r.items.forEach(it=>{let key=it.replace(/^PPFS-[^_]*_?/,'').slice(0,80);svc[key]=(svc[key]||0)+1}));let top=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value}));document.getElementById('topServices').innerHTML=hBar(top);
- let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!x.seq).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',currentYearUnmatchedSTM().length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/BQ ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
+ let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!effectiveClaimSEQ(x)).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',currentYearUnmatchedSTM().length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/PP(AI) ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
  let official=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).length;document.getElementById('priceNotice').className='notice '+(official?'':'warning');document.getElementById('priceNotice').innerHTML=official?`มีราคาแบบนำเข้า/ยืนยันแล้ว <b>${intFmt.format(official)}</b> รายการ ระบบจะใช้ราคานี้ก่อนราคาอนุมานในการแยกยอด PP`:'ยังไม่ได้รับ/นำเข้าตารางราคาอย่างเป็นทางการในชุดไฟล์นี้ ระบบจึงใช้เฉพาะอัตราที่อนุมานจากรายการเดี่ยวที่มีความสอดคล้องสูง และจะแสดงแหล่งราคาเป็น “อนุมาน” จนกว่าจะนำเข้าตารางราคาจริง';
 }
 function barChart(data,money=false){if(!data.length)return '<div class="muted small">ไม่มีข้อมูล</div>';let max=Math.max(...data.map(x=>x.value),1);return `<div class="bars">${data.map(x=>`<div class="barcol"><div class="bar" style="height:${Math.max(2,x.value/max*170)}px"><div class="tip">${money?moneyFmt.format(x.value):intFmt.format(x.value)}</div></div><div class="barlabel">${esc(x.label)}</div></div>`).join('')}</div>`}
@@ -3364,7 +3636,7 @@ function renderFund(){
  let kp=[['กองทุน / โปรแกรม',intFmt.format(rows.length),'กองทุน','info'],['บริการ PP',intFmt.format(totalServices),'ครั้ง','info'],['ผู้รับบริการ',intFmt.format(people.size),'คน (ไม่ซ้ำ)','info'],['ยอดเรียกเก็บทะเบียน',moneyFmt.format(registered),'บาท · อาจมียอดแพ็กเกจ','warn'],['มูลค่าตามสิทธิ PPFS69',moneyFmt.format(expected),'บาท หลังแยกรายบริการ','info'],['PP(AI) จัดสรรแล้ว',moneyFmt.format(paid),'บาท','good'],['ยอดคงค้างตามสิทธิ',moneyFmt.format(outstanding),'บาท','bad'],['อัตราชดเชย',recovery.toFixed(1)+'%','PP(AI) ÷ มูลค่าตามสิทธิ',recovery>=99.5?'good':recovery>=80?'warn':'bad']];
  let k=document.getElementById('fundDashKPIs');if(k)k.innerHTML=kp.map(x=>`<div class="card kpi ${x[3]}"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="note">${x[2]}</div></div>`).join('');
  let status={paid:0,partial:0,rep:0,ambiguous:0,unpaid:0};rows.forEach(x=>{status.paid+=x.status.paid;status.partial+=x.status.partial;status.rep+=x.status['rep-confirmed'];status.ambiguous+=x.status.ambiguous;status.unpaid+=x.status.unpaid});
- let strip=document.getElementById('fundDashStatusStrip');if(strip)strip.innerHTML=[['ได้รับชดเชยแล้ว',status.paid,'good'],['ชดเชยบางส่วน',status.partial,'partial'],['พบ REP · รอจัดสรร',status.rep,'info'],['ยอดรวมกำกวม',status.ambiguous,'warn'],['ยังไม่พบชดเชย',status.unpaid,'bad']].map(x=>`<div class="fund-status-card ${x[2]}"><div class="status-name">${x[0]}</div><div class="status-value">${intFmt.format(x[1])}</div></div>`).join('');
+ let strip=document.getElementById('fundDashStatusStrip');if(strip)strip.innerHTML=[['ได้รับชดเชยแล้ว',status.paid,'good'],['ชดเชยบางส่วน',status.partial,'partial'],['พบ REP · ยังไม่มีหลักฐานพอจัดสรร',status.rep,'info'],['ยอดรวมกำกวม',status.ambiguous,'warn'],['ยังไม่พบชดเชย',status.unpaid,'bad']].map(x=>`<div class="fund-status-card ${x[2]}"><div class="status-name">${x[0]}</div><div class="status-value">${intFmt.format(x[1])}</div></div>`).join('');
  renderExecutiveAlerts(all);
  let outBars=rows.filter(x=>x.outstanding>0).sort((a,b)=>b.outstanding-a.outstanding).slice(0,12).map(x=>({label:x.key,value:x.outstanding}));let ob=document.getElementById('fundOutstandingBars');if(ob)ob.innerHTML=outBars.length?hBar(outBars):'<div class="notice"><b>ยอดคงค้างเป็นศูนย์</b> สำหรับกองทุนที่อยู่ในตัวกรองปัจจุบัน</div>';
  let rb=document.getElementById('fundRecoveryBars');if(rb)rb.innerHTML=fundRecoveryHTML(rows);
@@ -3418,7 +3690,7 @@ function fundAuditStatusHTML(r){
  if(hasAggregateClaim(r))return '<span class="badge b-good aggregate-badge">ได้รับชดเชยจากยอดรวม</span>';
  if(r.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชยแล้ว</span>';
  if(r.matchStatus==='partial')return '<span class="badge b-warn">ชดเชยบางส่วน</span>';
- if(r.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบชดเชยตาม REP · รอจัดสรร</span>';
+ if(r.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบ REP · ยังไม่มีหลักฐานพอจัดสรร</span>';
  if(r.matchStatus==='ambiguous')return '<span class="badge b-violet">รอตรวจสอบยอดรวม</span>';
  return '<span class="badge b-bad">ยังไม่พบชดเชย</span>';
 }
@@ -3457,7 +3729,7 @@ function renderFundAudit(){
  let pct=billed>0?paid/billed*100:(rows.length?paidN/rows.length*100:0);
  let ks=[['รายการบริการ',intFmt.format(rows.length),'รายการ','info'],['ผู้รับบริการ',intFmt.format(people.size),'คน','info'],['ยอดเรียกเก็บ',moneyFmt.format(billed),'บาท','warn'],['รับชดเชย',moneyFmt.format(paid),'บาท','good'],['อัตราชดเชย',`${pct.toFixed(1)}%`,`${intFmt.format(unpaidN)} รายการยังไม่พบชดเชย`,pct>=95?'good':pct>=70?'warn':'bad']];
  document.getElementById('fundAuditKPIs').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
- let fund=document.getElementById('fundAuditFund')?.value||'ทุกกองทุน',month=document.getElementById('fundAuditMonth')?.value||'',status=document.getElementById('fundAuditStatus')?.value||'',statusLabel=status==='paid'?'ได้รับชดเชยแล้ว':status==='partial'?'ชดเชยบางส่วน':status==='rep-confirmed'?'พบชดเชยตาม REP · รอจัดสรร':status==='ambiguous'?'รอตรวจสอบยอดรวม':status==='unpaid'?'ยังไม่พบชดเชย':'ทุกสถานะ';document.getElementById('fundAuditCaption').textContent=`${fund}${month?' · '+thMonth(month):' · ทุกเดือน'} · ${statusLabel}`;document.getElementById('fundAuditCount').textContent=`แสดง ${intFmt.format(rows.length)} รายการ`;
+ let fund=document.getElementById('fundAuditFund')?.value||'ทุกกองทุน',month=document.getElementById('fundAuditMonth')?.value||'',status=document.getElementById('fundAuditStatus')?.value||'',statusLabel=status==='paid'?'ได้รับชดเชยแล้ว':status==='partial'?'ชดเชยบางส่วน':status==='rep-confirmed'?'พบ REP · ยังไม่มีหลักฐานพอจัดสรร':status==='ambiguous'?'รอตรวจสอบยอดรวม':status==='unpaid'?'ยังไม่พบชดเชย':'ทุกสถานะ';document.getElementById('fundAuditCaption').textContent=`${fund}${month?' · '+thMonth(month):' · ทุกเดือน'} · ${statusLabel}`;document.getElementById('fundAuditCount').textContent=`แสดง ${intFmt.format(rows.length)} รายการ`;
  document.getElementById('fundAuditBody').innerHTML=rows.length?rows.map(r=>{
    let billedAmt=num(r.claim_expected||r.registeredExpected||r.expected),auditExpected=fundAuditExpectedAmount(r),svc=r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', ')||r.ppfs||'-',rowCls=r.matchStatus==='paid'?'row-paid':r.matchStatus==='partial'?'row-partial':r.matchStatus==='rep-confirmed'?'row-rep-confirmed':r.matchStatus==='ambiguous'?'row-ambiguous':r.matchStatus==='unpaid'?'row-unpaid':'';
    let billedHTML='-';
@@ -3465,19 +3737,19 @@ function renderFundAudit(){
      billedHTML=`<b>${moneyFmt.format(auditExpected)}</b>`;
      if(billedAmt>0&&Math.abs(billedAmt-auditExpected)>.001)billedHTML+=`<div class="audit-package-total">ยอดแพ็กเกจ ${moneyFmt.format(billedAmt)}</div>`;
    }else billedHTML=billedAmt?moneyFmt.format(billedAmt):'-';
-   return `<tr class="${rowCls}"><td>${esc(r.claim_reference||'-')}</td><td class="code">${esc(r.cid||'-')}</td><td class="code">${esc(r.hn||'-')}</td><td>${esc(r.name||'-')}</td><td>${esc(r.date||'-')}</td><td>${esc(r.time||'-')}</td><td class="code">${esc(r.rep_ref||r.seq||'-')}</td><td><b>${esc(svc)}</b><div class="small muted">${esc(fundAuditKey(r))}</div></td><td class="num">${billedHTML}</td><td>${fundAuditStatusHTML(r)}</td><td class="num"><b>${moneyFmt.format(num(r.paid))}</b></td><td><div class="comp-detail">${fundAuditClaimDetail(r)}</div></td></tr>`;
+   return `<tr class="${rowCls}"><td>${esc(r.claim_reference||'-')}</td><td class="code">${esc(r.cid||'-')}</td><td class="code">${esc(r.hn||'-')}</td><td>${esc(r.name||'-')}</td><td>${esc(r.date||'-')}</td><td>${esc(r.time||'-')}</td><td class="code">${esc(effectiveClaimREP(r)||'-')}<div class="small muted">${effectiveClaimSEQ(r)?'SEQ '+esc(effectiveClaimSEQ(r)):''}</div></td><td><b>${esc(svc)}</b><div class="small muted">${esc(fundAuditKey(r))}</div></td><td class="num">${billedHTML}</td><td>${fundAuditStatusHTML(r)}</td><td class="num"><b>${moneyFmt.format(num(r.paid))}</b></td><td><div class="comp-detail">${fundAuditClaimDetail(r)}</div></td></tr>`;
  }).join(''):'<tr><td colspan="12" style="text-align:center;padding:30px" class="muted">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>';
 }
 function exportFundAuditCSV(){
  if(!state.fundAuditLoggedIn)return;let rows=fundAuditRows();if(!rows.length){alert('ไม่มีข้อมูลสำหรับส่งออก');return}
  let head=['VN','CID','HN','ชื่อผู้ป่วย','วันที่ตรวจ','เวลา','เลขที่หนังสือ','กองทุนย่อย','รายการบริการ','เรียกเก็บ','สถานะการชดเชย','รับชดเชย','REP','รายละเอียดการจัดสรร'];
- let csv=[head,...rows.map(r=>{let claims=r.claims||[],reps=[...new Set(claims.map(c=>c.rep).filter(Boolean))].join('|'),detail=[...new Set(claims.map(c=>c.allocationFormula||c.matchMethod).filter(Boolean))].join(' | '),status=hasAggregateClaim(r)?'ได้รับชดเชยจากยอดรวม':r.matchStatus==='paid'?'ได้รับชดเชยแล้ว':r.matchStatus==='partial'?'ชดเชยบางส่วน':r.matchStatus==='rep-confirmed'?'พบชดเชยตาม REP · รอจัดสรร':r.matchStatus==='ambiguous'?'รอตรวจสอบยอดรวม':'ยังไม่พบชดเชย';return [r.claim_reference||'',r.cid||'',r.hn||'',r.name||'',r.date||'',r.time||'',r.rep_ref||r.seq||'',fundAuditKey(r),r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', '),num(r.claim_expected||r.registeredExpected||r.expected),status,num(r.paid),reps,detail]})].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ let csv=[head,...rows.map(r=>{let claims=r.claims||[],reps=[...new Set(claims.map(c=>c.rep).filter(Boolean))].join('|'),detail=[...new Set(claims.map(c=>c.allocationFormula||c.matchMethod).filter(Boolean))].join(' | '),status=hasAggregateClaim(r)?'ได้รับชดเชยจากยอดรวม':r.matchStatus==='paid'?'ได้รับชดเชยแล้ว':r.matchStatus==='partial'?'ชดเชยบางส่วน':r.matchStatus==='rep-confirmed'?'พบ REP · ยังไม่มีหลักฐานพอจัดสรร':r.matchStatus==='ambiguous'?'รอตรวจสอบยอดรวม':'ยังไม่พบชดเชย';return [r.claim_reference||'',r.cid||'',r.hn||'',r.name||'',r.date||'',r.time||'',effectiveClaimREP(r)||effectiveClaimSEQ(r)||'',fundAuditKey(r),r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', '),num(r.claim_expected||r.registeredExpected||r.expected),status,num(r.paid),reps,detail]})].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
  let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),fund=(document.getElementById('fundAuditFund')?.value||'all').replace(/[\\/:*?"<>|]/g,'_'),month=document.getElementById('fundAuditMonth')?.value||'all';a.href=URL.createObjectURL(blob);a.download=`PP_Fund_Audit_${fund}_${month}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 function renderMonth(){let m=new Map();state.recon.forEach(r=>{let k=monthKey(r.date);if(!m.has(k))m.set(k,{key:k,count:0,matched:0,people:new Set(),paid:0,expected:0,expectedN:0});let o=m.get(k);o.count++;if(isMatchedStatus(r.matchStatus))o.matched++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);o.paid+=r.paid;if(r.expected!=null){o.expected+=r.expected;o.expectedN++}});let rows=[...m.values()].sort((a,b)=>a.key.localeCompare(b.key));document.getElementById('monthBars').innerHTML=barChart(rows.map(x=>({label:thMonth(x.key),value:x.paid})),true);document.getElementById('monthTableBody').innerHTML=rows.map(x=>`<tr><td>${thMonth(x.key)}</td><td class="num">${intFmt.format(x.count)}</td><td class="num">${intFmt.format(x.people.size)}</td><td class="num">${intFmt.format(x.matched)}</td><td class="num">${moneyFmt.format(x.paid)}</td><td class="num">${x.expectedN?moneyFmt.format(x.expected):'<span class="muted">ราคาไม่ครบ</span>'}</td><td class="num">${x.expectedN?moneyFmt.format(x.paid-x.expected):'-'}</td></tr>`).join('')}
 
 function excelColumnName(n){let s='';while(n>0){n--;s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26)}return s}
-async function parseSTMFile(file){let sheets=await readAoa(file),out=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/^REP$/i,/TRAN_ID/i,/^HN$/i],30);if(hr<0)continue;let h1=Array.isArray(aoa[hr])?aoa[hr]:[],h2=Array.isArray(aoa[hr+1])?aoa[hr+1]:[];let iREP=headerIndex(h1,[/^REP$/i],0),iTran=headerIndex(h1,[/TRAN_ID/i],2),iHN=headerIndex(h1,[/^HN$/i],3),iCID=headerIndex(h1,[/^PID$/i,/ประชาชน/],5),iName=headerIndex(h1,[/ชื่อ.*สกุล/],6),iDate=headerIndex(h1,[/วันเข้ารักษา/],7),iRight=headerIndex(h1,[/MAININSCL/i],9),iTotal=headerIndex(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),iSource=headerIndex(h1,[/แหล่งข้อมูล/],40),iSeq=headerIndex(h1,[/SEQ NO/i],41);const AI_INDEX=34;let iPP=AI_INDEX,ppSource='AI';let maxCols=Math.max(h1.length,h2.length,...aoa.slice(hr+1,Math.min(aoa.length,hr+8)).map(r=>Array.isArray(r)?r.length:0));if(maxCols<=AI_INDEX){let ppCandidates=[];for(let i=0;i<Math.max(h1.length,h2.length);i++){if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))ppCandidates.push(i)}if(ppCandidates.length){iPP=ppCandidates[ppCandidates.length-1];ppSource='HEADER_PP'}}for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],hn=normHN(row[iHN]),cid=normCID(row[iCID]);if(!hn&&!cid)continue;out.push({file:file.name,sheet:'STM',type:'normal',rep:normREP(row[iREP]),tran:normText(row[iTran]).replace(/\.0$/,''),hn,cid,name:normText(row[iName]),date:thaiDateToISO(row[iDate]),maininscl:normText(row[iRight]),pp_paid:num(row[iPP]),pp_col_index:iPP,pp_col_excel:(iPP===34?'AI':excelColumnName(iPP+1)),pp_source:ppSource,total_paid:num(row[iTotal]),source:normText(row[iSource]),seq:normText(row[iSeq]).replace(/\.0$/,'')})}}if(!out.length)throw new Error('ไม่พบชีตรายละเอียด STM ที่รองรับ');return out}
+async function parseSTMFile(file){let sheets=await readAoa(file),out=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/^REP$/i,/TRAN_ID/i,/^HN$/i],30);if(hr<0)continue;let h1=Array.isArray(aoa[hr])?aoa[hr]:[],h2=Array.isArray(aoa[hr+1])?aoa[hr+1]:[];let iREP=headerIndex(h1,[/^REP$/i],0),iTran=headerIndex(h1,[/TRAN_ID/i],2),iHN=headerIndex(h1,[/^HN$/i],3),iCID=headerIndex(h1,[/^PID$/i,/ประชาชน/],5),iName=headerIndex(h1,[/ชื่อ.*สกุล/],6),iDate=headerIndex(h1,[/วันเข้ารักษา/],7),iRight=headerIndex(h1,[/MAININSCL/i],9),iTotal=headerIndex(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),iSource=headerIndex(h1,[/แหล่งข้อมูล/],-1),iSeq=headerIndex(h1,[/^SEQ(?:\s*NO)?$/i,/NHSO SEQ/i],38);const AI_INDEX=34;let iPP=AI_INDEX,ppSource='AI';let maxCols=Math.max(h1.length,h2.length,...aoa.slice(hr+1,Math.min(aoa.length,hr+8)).map(r=>Array.isArray(r)?r.length:0));if(maxCols<=AI_INDEX){let ppCandidates=[];for(let i=0;i<Math.max(h1.length,h2.length);i++){if(/^PP$/i.test(normText(h1[i]))||/^PP$/i.test(normText(h2[i])))ppCandidates.push(i)}if(ppCandidates.length){iPP=ppCandidates[ppCandidates.length-1];ppSource='HEADER_PP'}}for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],hn=normHN(row[iHN]),cid=normCID(row[iCID]);if(!hn&&!cid)continue;out.push({file:file.name,sheet:'STM',type:'normal',rep:normREP(row[iREP]),tran:normText(row[iTran]).replace(/\.0$/,''),hn,cid,name:normText(row[iName]),date:thaiDateToISO(row[iDate]),maininscl:normText(row[iRight]),pp_paid:num(row[iPP]),pp_col_index:iPP,pp_col_excel:(iPP===34?'AI':excelColumnName(iPP+1)),pp_source:ppSource,total_paid:num(row[iTotal]),source:normText(row[iSource]),seq:normText(row[iSeq]).replace(/\.0$/,'')})}}if(!out.length)throw new Error('ไม่พบชีตรายละเอียด STM ที่รองรับ');return out}
 async function parsePriceFile(file){let sheets=await readAoa(file),all=[];for(const aoa of sheets){let hr=findHeaderRow(aoa,[/ราคา|price|rate|อัตรา/i,/รายการย่อย|รายการ|บริการ|service/i],50);if(hr<0)continue;let h=aoa[hr]||[],iRate=headerIndex(h,[/อัตราจ่าย|อัตรา.*บาท|ราคา|price|rate/i]),iCode=headerIndex(h,[/^รหัส$/i,/code/i],-1),iItem=headerIndex(h,[/^รายการย่อย$/i,/รายการย่อย/i,/ชื่อรายการ/i,/รายละเอียดรายการ/i],-1),iCategory=headerIndex(h,[/^บริการ$/i,/หมวดบริการ/i,/กลุ่มบริการ/i],-1),iUnit=headerIndex(h,[/^หน่วย$/i,/unit/i],-1);if(iRate<0)continue;let rows=[];for(let r=hr+1;r<aoa.length;r++){let row=Array.isArray(aoa[r])?aoa[r]:[],rate=num(row[iRate]),category=iCategory>=0?normText(row[iCategory]):'',name=iItem>=0?normText(row[iItem]):category,code=iCode>=0?normText(row[iCode]):'',unit=iUnit>=0?normText(row[iUnit]):'';if(rate>0&&name)rows.push({code,name,category,unit,rate,source:'official',evidence:'นำเข้าจาก '+file.name})}all.push(...rows)}if(!all.length)throw new Error('ไม่พบคอลัมน์ “รายการย่อย/บริการ” และ “อัตราจ่าย(บาท)” ในไฟล์ราคา');let uniq=new Map();for(const p of all){let k=[p.code,normText(p.category),normText(p.name),Math.round(num(p.rate)*100)].join('|');if(!uniq.has(k))uniq.set(k,p)}return [...uniq.values()]}
 function mergeOfficialPrices(rows){let current=state.prices;for(const p of rows){let exact=current.findIndex(x=>x.source!=='official'&&((p.code&&x.code===p.code)||(p.name&&normText(x.name)===normText(p.name))));if(exact>=0){current[exact]={...current[exact],...p,source:'official'};continue}let k=[p.code,normText(p.category),normText(p.name),Math.round(num(p.rate)*100)].join('|');let exists=current.some(x=>[x.code,normText(x.category),normText(x.name),Math.round(num(x.rate)*100)].join('|')===k);if(!exists)current.push({...p,source:'official'})}state.prices=current}
 
@@ -3857,7 +4129,7 @@ async function loadStatementFromGoogle(){
     hn:headerIdx(h1,[/^HN$/i],3),cid:headerIdx(h1,[/^PID$/i,/ประชาชน/i],5),
     name:headerIdx(h1,[/ชื่อ.*สกุล/i],6),date:headerIdx(h1,[/วันเข้ารักษา/i],7),
     right:headerIdx(h1,[/MAININSCL/i],9),total:headerIdx(h1,[/ยอดชดเชยทั้งสิ้น|ยอดชดเชย$/],37),
-    source:headerIdx(h1,[/แหล่งข้อมูล/i],40),seq:headerIdx(h1,[/SEQ NO/i],41)
+    source:headerIdx(h1,[/แหล่งข้อมูล/i],-1),seq:headerIdx(h1,[/^SEQ(?:\s*NO)?$/i,/NHSO SEQ/i],38)
    };
 
    let ppIndex=34,ppSource='AI';
@@ -3930,11 +4202,90 @@ function renderPrices(){let q=normText(document.getElementById('priceSearch')?.v
 function savePriceEdits(){document.querySelectorAll('[data-price-i]').forEach(el=>{let i=+el.dataset.priceI,f=el.dataset.field;state.prices[i][f]=el.value;if(f==='rate'&&el.value!==''){state.prices[i].source='official';state.prices[i].evidence='แก้ไข/ยืนยันโดยผู้ใช้'}});recomputeAll()}
 function addBlankPrice(){state.prices.unshift({code:'',name:'',rate:'',source:'missing',evidence:''});renderPrices()}
 function deletePrice(i){state.prices.splice(i,1);recomputeAll()}
+
+function renderClaimReferenceAudit(){
+ let box=document.getElementById('claimRefAuditSummary');if(!box)return;
+ let a=claimReferenceAuditStats();
+ box.innerHTML=`<div class="grid three">
+   <div class="kpi"><div class="label">เติม REP จาก Statement</div><div class="value">${intFmt.format(a.recoveredRep||0)}</div><div class="note">ทะเบียนไม่มี REP แต่ Statement ยืนยันได้</div></div>
+   <div class="kpi"><div class="label">เติม SEQ จาก Statement</div><div class="value">${intFmt.format(a.recoveredSeq||0)}</div><div class="note">ทะเบียนไม่มี SEQ แต่ Statement ยืนยันได้</div></div>
+   <div class="kpi"><div class="label">เติม REP + SEQ ครบ</div><div class="value">${intFmt.format(a.recoveredBoth||0)}</div><div class="note">กู้ Claim Reference ได้ครบทั้งคู่</div></div>
+   <div class="kpi"><div class="label">มีหลักฐาน Statement</div><div class="value">${intFmt.format(a.statementEvidence||0)}</div><div class="note">พบ HN/CID + วันที่ตรงกัน</div></div>
+   <div class="kpi"><div class="label">Claim Reference กำกวม</div><div class="value">${intFmt.format(a.ambiguous||0)}</div><div class="note">พบมากกว่า 1 REP/SEQ จึงไม่เดา</div></div>
+   <div class="kpi"><div class="label">ยังไม่มี REP/SEQ จริง</div><div class="value">${intFmt.format(a.stillMissingBoth||0)}</div><div class="note">ไม่พบทั้งทะเบียนและ Statement</div></div>
+ </div>`
+}
+function exportClaimReferenceAuditCSV(){
+ let rows=[['วันที่','HN','CID','ชื่อ','บริการ','ชีต','REP ทะเบียน','SEQ ทะเบียน','REP Statement','SEQ Statement','REP Effective','SEQ Effective','แหล่งหลักฐาน','สถานะ Audit']];
+ claimReferenceAuditRows().forEach(r=>{
+   let rawRep=serviceRegistryREP(r),rawSeq=serviceRegistrySEQ(r),effRep=effectiveClaimREP(r),effSeq=effectiveClaimSEQ(r);
+   let status=r.claim_ref_ambiguous?'AMBIGUOUS':(!rawRep&&r.claim_rep_ref)||(!rawSeq&&r.claim_seq)?'RECOVERED':(!effRep&&!effSeq?'STILL_MISSING':'REGISTRY_PARTIAL');
+   rows.push([r.date,r.hn,r.cid,r.name,r.service_type||r.item_detail||r.source_sheet,r.source_sheet,rawRep,rawSeq,r.claim_rep_ref||'',r.claim_seq||'',effRep,effSeq,r.claim_ref_source||'',status])
+ });
+ let csv=rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ downloadBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'PP_Claim_Reference_Audit.csv')
+}
+
 function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean));document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div></div>`}
 function maskCID(cid){let s=String(cid||'');return s.length>=13?s.slice(0,3)+'-xxxx-xxxxx-'+s.slice(-1):s}
-function personRowHTML(r){let price=priceForItems(r.items);let bd=r.breakdown;let breakdown='';let hints=(r.priceHints||[]).slice(0,3);if(r.paid>0&&bd.solutions.length===1){let paidSet=new Set(bd.solutions[0].map(x=>x.item));breakdown=`<div class="notice"><b>แยกยอดจากราคา:</b><ul class="ppitems">${r.items.map(it=>{let p=getPriceForItem(it);return `<li>${paidSet.has(it)?'✓':'–'} ${esc(it)} ${p&&num(p.rate)>0?`<b>${moneyFmt.format(num(p.rate))} บาท</b>`:'<span class="badge b-warn">ไม่มีราคา</span>'}</li>`}).join('')}</ul></div>`}else if(r.paid>0)breakdown=`<div class="notice warning">${esc(bd.note)}</div>`;return `<div class="person-card"><div class="person-head"><div><div class="person-name">${esc(r.name||'-')}</div><div class="small muted">HN ${esc(r.hn)} · PID ${esc(maskCID(r.cid))} · วันที่ ${esc(r.date)} · REP ${esc(r.rep_ref||'-')} · SEQ ${esc(r.seq||'-')}</div></div>${statusBadge(r)}</div><div class="split" style="margin-top:10px"><div><b>บริการ PP ที่บันทึก</b><ul class="ppitems">${r.items.length?r.items.map(it=>`<li>${esc(it)}</li>`).join(''):'<li class="muted">ไม่พบ PP Fee schedule แต่เข้าเกณฑ์ PP จากคอลัมน์ I</li>'}</ul></div><div><div><b>รายการบริการ:</b> ${esc(r.service_type||r.fund_sub||'-')}</div><div><b>ชีตต้นทาง:</b> ${esc(r.source_sheet||'-')}</div><div><b>กองทุนย่อย:</b> ${esc(r.fund_sub||'-')}</div><div><b>ยอดคาดเรียกเก็บ:</b> ${r.expected!=null?moneyFmt.format(r.expected)+' บาท':'-'}</div>${r.officialPrice?`<div><b>ราคามาตรฐาน PPFS69:</b> ${moneyFmt.format(num(r.officialPrice.rate))} บาท · ${esc(r.officialPrice.name||'')}</div>`:''}${r.priceMismatch?`<div><span class="badge b-warn">ยอดทะเบียนไม่ตรงราคามาตรฐาน</span></div>`:''}<div><b>ยอด PP จ่าย:</b> ${moneyFmt.format(r.paid)} บาท</div><div><b>วิธีวิเคราะห์:</b> ${esc(r.claims[0]?.matchMethod||'-')}</div>${r.claims[0]?.allocationFormula?`<div><b>แตกยอด STM:</b> ${esc(r.claims[0].allocationFormula)}</div>`:''}</div></div>${breakdown}${hints.length?`<div class="notice warning"><b>วิเคราะห์จากตารางราคา PPFS69:</b>${hints.map(h=>`<div style="margin-top:5px">${esc(h.note)}</div>`).join('')}</div>`:''}<button class="btn" onclick="showDetail('${encodeURIComponent(r._id)}')">ดูรายละเอียด STM</button></div>`}
+function personRowHTML(r){
+ let bd=r.breakdown,hints=(r.priceHints||[]).slice(0,3),ev=primaryClaimEvidence(r),dq=dataQualityNote(r);
+ let breakdown='';
+ if(r.paid>0&&bd.solutions.length===1){
+   let paidSet=new Set(bd.solutions[0].map(x=>x.item));
+   breakdown=`<div class="notice"><b>หลักฐานการยืนยันยอด:</b><ul class="ppitems">${r.items.map((it,i)=>{let p=displayPriceForServiceItem(r,it,i);return `<li>${paidSet.has(it)?'✓':'–'} ${esc(it)} ${p&&num(p.rate)>0?`<b>${moneyFmt.format(num(p.rate))} บาท</b> <span class="badge b-good">${p.source==='official'?'PPFS69':'ราคาอ้างอิง'}</span>`:'<span class="badge b-warn">ยังไม่พบราคา</span>'}</li>`}).join('')}</ul></div>`
+ }else if(r.paid>0&&bd.note){
+   breakdown=`<div class="notice warning">${esc(bd.note)}</div>`
+ }
+ let registryCharge=num(r.registeredCharge??r.claim_expected)>0?num(r.registeredCharge??r.claim_expected):null;
+ let stmRep=ev?.rep||'',stmSeq=ev?.seq||'';
+ return `<div class="person-card">
+   <div class="person-head"><div>
+     <div class="person-name">${esc(r.name||'-')}</div>
+     <div class="small muted">HN ${esc(r.hn)} · PID ${esc(maskCID(r.cid))} · วันที่ ${esc(r.date)}</div>
+     <div class="small muted">REP ทะเบียน ${esc(serviceRegistryREP(r)||'-')} · SEQ ทะเบียน ${esc(serviceRegistrySEQ(r)||'-')}</div>
+     <div class="small muted">REP Statement ${esc(stmRep||r.claim_rep_ref||'-')} · SEQ Statement ${esc(stmSeq||r.claim_seq||'-')} ${(!serviceRegistryREP(r)&&effectiveClaimREP(r))||(!serviceRegistrySEQ(r)&&effectiveClaimSEQ(r))?'<span class="badge b-info">เติมจาก Statement</span>':''}</div>
+   </div>${statusBadge(r)}</div>
+   <div class="split" style="margin-top:10px">
+    <div><b>บริการ PP ที่บันทึก</b><ul class="ppitems">${r.items.length?r.items.map(it=>`<li>${esc(it)}</li>`).join(''):'<li class="muted">ไม่พบรายการ PP Fee Schedule</li>'}</ul></div>
+    <div>
+      <div><b>รายการบริการ:</b> ${esc(r.service_type||r.fund_sub||'-')}</div>
+      <div><b>ชีตต้นทาง:</b> ${esc(r.source_sheet||'-')}</div>
+      <div><b>กองทุนย่อย:</b> ${esc(r.fund_sub||'-')}</div>
+      ${registryCharge!=null?`<div><b>ยอดเรียกเก็บในทะเบียน:</b> ${moneyFmt.format(registryCharge)} บาท</div>`:''}
+      <div><b>ยอดคาดชดเชย:</b> ${r.expected!=null?moneyFmt.format(r.expected)+' บาท':'-'}</div>
+      ${r.officialPrice?`<div><b>ราคามาตรฐาน PPFS69:</b> ${moneyFmt.format(num(r.officialPrice.rate))} บาท · ${esc(r.officialPrice.name||'')}</div>`:''}
+      ${r.priceMismatch?`<div><span class="badge b-warn">ยอดทะเบียนไม่ตรงอัตราชดเชย PPFS69</span></div>`:''}
+      <div><b>ยอด PP(AI) จัดสรร:</b> ${moneyFmt.format(r.paid)} บาท</div>
+      <div><b>วิธีวิเคราะห์:</b> ${esc(ev?.matchMethod||'-')}</div>
+      ${ev?.allocationFormula?`<div><b>แตกยอด PP(AI):</b> ${esc(ev.allocationFormula)}</div>`:''}
+    </div>
+   </div>
+   ${dq?`<div class="notice" style="margin-top:10px"><b>Data Quality:</b> ${esc(dq)}</div>`:''}
+   ${breakdown}
+   ${hints.length?`<div class="notice warning"><b>วิเคราะห์จากตารางราคา PPFS69:</b>${hints.map(h=>`<div style="margin-top:5px">${esc(h.note)}</div>`).join('')}</div>`:''}
+   <button class="btn" onclick="showDetail('${encodeURIComponent(r._id)}')">ดูรายละเอียด STM</button>
+  </div>`
+}
 function searchPerson(){if(!state.loggedIn)return;let q=normText(document.getElementById('personQuery').value).toLowerCase();if(!q){document.getElementById('personResults').innerHTML='<div class="muted small">กรอก HN, PID หรือชื่อก่อนค้นหา</div>';return}let qd=digits(q);let rows=state.recon.filter(r=>(qd&&((r.hn||'').includes(qd)||(r.cid||'').includes(qd)))||(r.name||'').toLowerCase().includes(q)).slice(0,100);let orphan=state.unmatchedSTM.filter(r=>(qd&&((r.hn||'').includes(qd)||(r.cid||'').includes(qd)))||(r.name||'').toLowerCase().includes(q)).slice(0,50);document.getElementById('personResults').innerHTML=(rows.length?rows.map(personRowHTML).join(''):'<div class="muted small">ไม่พบบริการ PP ในไฟล์บริการ</div>')+(orphan.length?`<h3 class="section-title" style="margin-top:18px">STM ที่มียอด PP แต่ยังจับคู่ไม่ได้</h3>${orphan.map(x=>`<div class="person-card"><div class="person-name">${esc(x.name)} · HN ${esc(x.hn)}</div><div class="small muted">PID ${esc(maskCID(x.cid))} · ${esc(x.date)} · REP ${esc(x.rep)}</div><div><b>PP จ่าย ${moneyFmt.format(x.pp_paid)} บาท</b></div></div>`).join('')}`:'')}
-function showDetail(idenc){let id=decodeURIComponent(idenc),r=state.recon.find(x=>x._id===id);if(!r)return;document.getElementById('modalContent').innerHTML=`<h2 style="color:var(--navy)">รายละเอียดการตรวจสอบ</h2><p><b>${esc(r.name)}</b> · HN ${esc(r.hn)} · ${esc(r.date)}</p><h3>บริการ PP</h3><ol>${r.items.map(it=>{let p=getPriceForItem(it);return `<li>${esc(it)} ${p&&num(p.rate)>0?`— ${moneyFmt.format(num(p.rate))} บาท <span class="badge ${p.source==='official'?'b-good':'b-warn'}">${p.source==='official'?'ราคาแหล่งนำเข้า':'อนุมาน'}</span>`:''}</li>`}).join('')}</ol><h3>STM ที่จับคู่</h3>${r.claims.length?`<div class="table-wrap"><table class="table"><thead><tr><th>ไฟล์</th><th>REP</th><th>TRAN_ID</th><th>แหล่งข้อมูล</th><th>วิธีวิเคราะห์</th><th>การแตกยอด</th><th class="num">PP(AI) ใน STM</th><th class="num">จัดสรรให้บริการนี้</th></tr></thead><tbody>${r.claims.map(c=>`<tr><td>${esc(c.file)}</td><td>${esc(c.rep)}</td><td>${esc(c.tran)}</td><td>${esc(c.source)}</td><td>${esc(c.matchMethod)}</td><td>${esc(c.allocationFormula||'-')}</td><td class="num">${moneyFmt.format(c.stmPP??c.pp_paid)}</td><td class="num"><b>${moneyFmt.format(c.allocatedPP??c.pp_paid)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="notice danger-note">ยังไม่พบ STM ที่จับคู่</div>'}`;document.getElementById('detailModal').classList.remove('hidden')}
+function showDetail(idenc){
+ let id=decodeURIComponent(idenc),r=state.recon.find(x=>x._id===id);if(!r)return;
+ let ev=primaryClaimEvidence(r),dq=dataQualityNote(r);
+ document.getElementById('modalContent').innerHTML=`
+  <h2 style="color:var(--navy)">รายละเอียดการตรวจสอบ</h2>
+  <p><b>${esc(r.name)}</b> · HN ${esc(r.hn)} · ${esc(r.date)}</p>
+  <div class="notice">
+    <b>Claim Reference:</b>
+    REP ทะเบียน ${esc(serviceRegistryREP(r)||'-')} · SEQ ทะเบียน ${esc(serviceRegistrySEQ(r)||'-')}<br>
+    REP Statement ${esc(ev?.rep||r.claim_rep_ref||'-')} · SEQ Statement ${esc(ev?.seq||r.claim_seq||'-')}
+  </div>
+  ${dq?`<div class="notice" style="margin-top:8px"><b>Data Quality:</b> ${esc(dq)}</div>`:''}
+  <h3>บริการ PP</h3>
+  <ol>${r.items.map((it,i)=>{let p=displayPriceForServiceItem(r,it,i);return `<li>${esc(it)} ${p&&num(p.rate)>0?`— ${moneyFmt.format(num(p.rate))} บาท <span class="badge ${p.source==='official'?'b-good':'b-warn'}">${p.source==='official'?'PPFS69':'ราคาอ้างอิง'}</span>`:''}</li>`}).join('')}</ol>
+  <h3>STM ที่จับคู่</h3>
+  ${r.claims.length?`<div class="table-wrap"><table class="table"><thead><tr><th>ไฟล์</th><th>REP</th><th>TRAN_ID</th><th>แหล่งข้อมูล</th><th>วิธีวิเคราะห์</th><th>การแตกยอด</th><th class="num">PP(AI) ใน STM</th><th class="num">จัดสรรให้บริการนี้</th></tr></thead><tbody>${r.claims.map(c=>`<tr><td>${esc(c.file)}</td><td>${esc(c.rep)}</td><td>${esc(c.tran)}</td><td>${esc(c.source)}</td><td>${esc(c.matchMethod)}</td><td>${esc(c.allocationFormula||'-')}</td><td class="num">${moneyFmt.format(c.stmPP??c.pp_paid)}</td><td class="num"><b>${moneyFmt.format(c.allocatedPP??c.pp_paid)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="notice danger-note">ยังไม่พบ STM ที่จับคู่</div>'}`;
+ document.getElementById('detailModal').classList.remove('hidden')
+}
 function closeModal(){document.getElementById('detailModal').classList.add('hidden')}
 
 async function syncGoogleSheets(force=false){
@@ -3949,7 +4300,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.5.6-ui-polish',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.5.9-claim-reference-backfill',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
@@ -3991,7 +4342,7 @@ function applyLiveGoogleData(payload){
 document.getElementById('serviceFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let el=document.getElementById('serviceFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่านไฟล์บริการ '+esc(f.name));let keepOfficial=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).map(p=>({...p}));state.services=await parseServiceFile(f);state.prices=buildInferredPrices();mergeOfficialPrices(keepOfficial);state.label='ข้อมูลบริการ: '+f.name+' · STM: '+(state.stm.length?'ชุดที่โหลดอยู่':'ยังไม่มี');el.textContent=`อ่านสำเร็จ ${intFmt.format(state.services.length)} บริการ · ${intFmt.format(new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)).size)} ประเภทรายการ · โหมด ${state.serviceMode}`;safeRecompute('นำเข้าไฟล์บริการ')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้าไฟล์บริการไม่สำเร็จ: '+esc(err.message||err),'error')}})
 document.getElementById('stmFiles').addEventListener('change',async e=>{let fs=[...e.target.files];if(!fs.length)return;let el=document.getElementById('stmFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่าน STM '+fs.length+' ไฟล์');let all=[];for(const f of fs){let part=await parseSTMFile(f);all.push(...part)}state.stm=all;state.label='ข้อมูลที่นำเข้าใหม่ · STM '+fs.length+' ไฟล์';let aiPaid=all.filter(x=>num(x.pp_paid)!==0).length,aiSum=all.reduce((s,x)=>s+num(x.pp_paid),0);el.textContent=`อ่านสำเร็จ ${intFmt.format(all.length)} รายการ จาก ${fs.length} ไฟล์ · ใช้ PP คอลัมน์ AI · จ่าย ${intFmt.format(aiPaid)} รายการ รวม ${moneyFmt.format(aiSum)} บาท`;safeRecompute('นำเข้า STM')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้า STM ไม่สำเร็จ: '+esc(err.message||err),'error')}})
 document.getElementById('priceFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let el=document.getElementById('priceFileStatus');try{el.textContent='กำลังอ่าน...';setProcessStatus('กำลังอ่านตารางราคา '+esc(f.name));let rows=await parsePriceFile(f);mergeOfficialPrices(rows);el.textContent=`นำเข้าราคา ${intFmt.format(rows.length)} รายการ จาก ${f.name}`;safeRecompute('นำเข้าตารางราคา')}catch(err){console.error(err);el.textContent='ผิดพลาด: '+err.message;setProcessStatus('นำเข้าตารางราคาไม่สำเร็จ: '+esc(err.message||err),'error')}})
-function exportReconcileCSV(){let rows=[['วันที่','HN','PID','ชื่อ-สกุล','รายการบริการ','ชีตต้นทาง','กองทุนย่อย','สิทธิหลัก','REP/เลขที่หนังสือ','SEQ','PP Fee schedule','สถานะ','ยอด PP จ่าย','ยอดคาดเรียกเก็บ','แหล่งยอดคาด','รายการราคาที่ยังขาด','วิธีจับคู่']];state.recon.forEach(r=>rows.push([r.date,r.hn,r.cid,r.name,r.service_type||'',r.source_sheet||'',r.fund_sub,r.right_main,r.rep_ref||'',r.seq,r.ppfs,r.matchStatus,r.paid,r.expected??'',r.expectedSource||'',r.priceMissing.join(' | '),r.claims.map(c=>c.matchMethod).join('|')]));state.unmatchedSTM.forEach(x=>rows.push([
+function exportReconcileCSV(){let rows=[['วันที่','HN','PID','ชื่อ-สกุล','รายการบริการ','ชีตต้นทาง','กองทุนย่อย','สิทธิหลัก','REP ทะเบียน','SEQ ทะเบียน','REP Statement','SEQ Statement','REP Effective','SEQ Effective','แหล่ง Claim Reference','PP Fee schedule','สถานะ','ยอด PP จ่าย','ยอดคาดเรียกเก็บ','แหล่งยอดคาด','รายการราคาที่ยังขาด','วิธีจับคู่']];state.recon.forEach(r=>rows.push([r.date,r.hn,r.cid,r.name,r.service_type||'',r.source_sheet||'',r.fund_sub,r.right_main,serviceRegistryREP(r),serviceRegistrySEQ(r),r.claim_rep_ref||'',r.claim_seq||'',effectiveClaimREP(r),effectiveClaimSEQ(r),r.claim_ref_source||'',r.ppfs,r.matchStatus,r.paid,r.expected??'',r.expectedSource||'',r.priceMissing.join(' | '),r.claims.map(c=>c.matchMethod).join('|')]));state.unmatchedSTM.forEach(x=>rows.push([
  x.date,x.hn,x.cid,x.name,'','',x.seq,'',
  isPriorFiscalYearDate(x.date)?priorFiscalYearLabel():'STM_PP_UNMATCHED',
  x.pp_paid,'','',''
