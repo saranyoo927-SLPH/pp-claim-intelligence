@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.5.2 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.5.4 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -835,6 +835,15 @@ button,input,select,textarea{font-family:var(--font-ui)}
 /* ===== v6.1.4 Fiscal Year Rule ===== */
 .badge-prior-fy{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#f2f4f7;color:#475467;font-size:9px;font-weight:850}
 
+
+/* ===== v6.1.5.3 Auto Sync on Login ===== */
+.auto-sync-note{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;
+  background:#ecfdf3;color:#067647;font-size:9px;font-weight:850;white-space:nowrap
+}
+.auto-sync-note.wait{background:#fffaeb;color:#b54708}
+.auto-sync-note.error{background:#fef3f2;color:#b42318}
+
 </style>
 <script src="./config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -1206,11 +1215,15 @@ button,input,select,textarea{font-family:var(--font-ui)}
 <section id="data" class="page">
  <div class="page-head">
   <div><h2>แหล่งข้อมูลและการซิงก์</h2><p>เชื่อม Google Sheets ผ่านบัญชี Google ที่ได้รับอนุญาตโดยตรงจาก GitHub Pages · Read-only</p></div>
-  <div class="toolbar"><button class="btn" id="googleAuthBtn" onclick="connectGoogle()">G เชื่อมบัญชี Google</button><button class="btn primary" id="liveSyncBtn" onclick="syncGoogleSheets(true)">↻ ซิงก์ข้อมูลล่าสุด</button></div>
+  <div class="toolbar">
+    <span class="badge b-good" id="autoSyncBadge">⚡ AUTO SYNC ON</span>
+    <button class="btn" id="googleAuthBtn" onclick="connectGoogle()">G เชื่อมบัญชี Google</button>
+    <button class="btn primary" id="liveSyncBtn" onclick="syncGoogleSheets(true)">↻ Force Refresh</button>
+  </div>
  </div>
 
  <div class="sync-strip">
-  <div class="sync-state"><span class="sync-dot" id="liveSyncDot"></span><div><b id="liveSyncTitle">พร้อมเชื่อม Google Sheets</b><div class="small muted" id="liveSyncSub">เชื่อมบัญชี Google ก่อน จากนั้นกดซิงก์ข้อมูลล่าสุด</div></div></div>
+  <div class="sync-state"><span class="sync-dot" id="liveSyncDot"></span><div><b id="liveSyncTitle">พร้อมเชื่อม Google Sheets</b><div class="small muted" id="liveSyncSub">หลัง Login ระบบจะพยายามเชื่อม Google และซิงก์ข้อมูลล่าสุดให้อัตโนมัติ</div></div></div>
   <div class="right"><div class="small muted">Last Sync</div><b id="liveSyncTime">—</b></div>
  </div>
 
@@ -1259,7 +1272,7 @@ button,input,select,textarea{font-family:var(--font-ui)}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.5.2 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
+<div class="footer">PP Claim Intelligence v6.1.5.4 GitHub · Executive Alert · Fund Portfolio Intelligence · Local HTML · Local HTML · โรงพยาบาลเสลภูมิ</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -1412,6 +1425,7 @@ async function handlePPAuthState(user){
  updateRoleMenuVisibility();
  updateProtectedPanels();
  if(isPPAdmin())loadAdminUsers();
+ if(canAutoSyncCurrentUser())scheduleAutoSyncAfterLogin('firebase-auth-state');
 }
 async function ensureAdminProfile(user){
  let ref=ppDB.collection('users').doc(user.uid),snap=await ref.get();
@@ -1543,8 +1557,12 @@ async function sendPasswordResetPP(){
 }
 async function logoutPPUser(){
  try{if(ppAuth)await ppAuth.signOut()}catch(e){}
- try{if(typeof disconnectGoogle==='function')disconnectGoogle()}catch(e){}
- ppCurrentUser=null;ppUserProfile=null;ppAdminUsers=[];syncLegacyAuthState();updateAuthAccountUI();updateUserManagementVisibility();updateRoleMenuVisibility();updateProtectedPanels();
+ // Do not revoke Google OAuth here; keep the browser's Google authorization separate
+ // so a subsequent approved PP Claim login can Auto Sync without another manual Sync click.
+ ppCurrentUser=null;ppUserProfile=null;ppAdminUsers=[];
+ autoSyncInFlight=false;autoSyncScheduled=false;autoSyncCompletedForSession=false;
+ syncLegacyAuthState();updateAuthAccountUI();updateUserManagementVisibility();updateRoleMenuVisibility();updateProtectedPanels();
+ setAutoSyncBadge('on','⚡ AUTO SYNC ON');
  showPageDirect('overview')
 }
 
@@ -1843,8 +1861,38 @@ function bestOfficialPriceForService(s){
 }
 function expectedInfoForService(s){
  let reg=num(s.claim_expected)>0?num(s.claim_expected):null,p=bestOfficialPriceForService(s);
- if(p){let rate=num(p.rate);if(reg!=null){let q=reg/rate,rq=Math.round(q);if(rate>0&&rq>=1&&rq<=50&&Math.abs(q-rq)<.001)return {amount:reg,source:'ทะเบียนบริการ × ราคาทางการ',price:p,qty:rq,unitRate:rate};return {amount:rate,source:'ตารางราคา PPFS69',price:p,registered:reg,mismatch:true}}return {amount:rate,source:'ตารางราคา PPFS69',price:p,qty:1,unitRate:rate}}
- if(reg!=null)return {amount:reg,source:'ทะเบียนบริการ',price:null};let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items);return pc.complete?{amount:pc.total,source:'ตารางราคา',price:null}:{amount:null,source:'ไม่ทราบราคา',price:null}
+ if(p){
+   let rate=num(p.rate);
+
+   // Deterministic PPFS service rules are reimbursement rules.
+   // The registry "เรียกเก็บ/ค่าใช้จ่าย" may be a hospital charge and can legitimately
+   // differ from the PPFS reimbursement rate. Therefore it must NOT create a
+   // Price/Rule exception when the service identity is deterministically known.
+   if(p._deterministicRule){
+     return {
+       amount:rate,
+       source:'อัตราชดเชย PPFS69 (Deterministic Rule)',
+       price:p,
+       qty:1,
+       unitRate:rate,
+       registeredCharge:reg,
+       registered:reg,
+       mismatch:false,
+       reimbursementRule:true
+     }
+   }
+
+   if(reg!=null){
+     let q=reg/rate,rq=Math.round(q);
+     if(rate>0&&rq>=1&&rq<=50&&Math.abs(q-rq)<.001)
+       return {amount:reg,source:'ทะเบียนบริการ × ราคาทางการ',price:p,qty:rq,unitRate:rate};
+     return {amount:rate,source:'ตารางราคา PPFS69',price:p,registered:reg,mismatch:true}
+   }
+   return {amount:rate,source:'ตารางราคา PPFS69',price:p,qty:1,unitRate:rate}
+ }
+ if(reg!=null)return {amount:reg,source:'ทะเบียนบริการ',price:null};
+ let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items);
+ return pc.complete?{amount:pc.total,source:'ตารางราคา',price:null}:{amount:null,source:'ไม่ทราบราคา',price:null}
 }
 function priceForItems(items){let parts=[],missing=[];let total=0;for(const item of items){let p=getPriceForItem(item);if(p&&num(p.rate)>0){parts.push({item,rate:num(p.rate),source:p.source,code:p.code});total+=num(p.rate)}else missing.push(item)}return {total,parts,missing,complete:missing.length===0}}
 function subsetBreakdown(items,paid){let priced=items.map((item,i)=>{let p=getPriceForItem(item);return p&&num(p.rate)>0?{i,item,rate:num(p.rate),source:p.source}:null}).filter(Boolean);if(!priced.length||paid<=0)return {solutions:[],note:'ไม่มีราคาเพียงพอ'};let target=Math.round(paid*100),solutions=[];function rec(pos,sum,pick){if(solutions.length>12)return;if(sum===target){solutions.push([...pick]);return}if(sum>target||pos>=priced.length)return;rec(pos+1,sum,pick);pick.push(priced[pos]);rec(pos+1,sum+Math.round(priced[pos].rate*100),pick);pick.pop()}rec(0,0,[]);let uniq=[];let seen=new Set();for(const sol of solutions){let k=sol.map(x=>x.i).join(',');if(!seen.has(k)){seen.add(k);uniq.push(sol)}}return {solutions:uniq,note:uniq.length===1?'แยกยอดได้ 1 รูปแบบ':uniq.length>1?'พบหลายรูปแบบที่รวมยอดได้เท่ากัน':'ไม่พบชุดราคาที่รวมได้เท่ายอดจ่าย'}}
@@ -2176,7 +2224,7 @@ function recomputeAll(){
    }
  });
  state.services.forEach(s=>{if(num(s.paid)>0){let e=expectedForService(s);s.matchStatus=(e!=null&&num(s.paid)+0.009<e)?'partial':'paid'}});
- state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceRule:ei.price?._deterministicRule||'',priceRuleCanonicalFund:ei.price?._canonicalFund||'',priceRuleCanonicalService:ei.price?._canonicalService||'',priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
+ state.recon=state.services.map(s=>{let items=Array.isArray(s.items)&&s.items.length?s.items:splitItems(s.ppfs),pc=priceForItems(items),ei=expectedInfoForService(s),bd=subsetBreakdown(items,s.paid);return {...s,items,expected:ei.amount,expectedSource:ei.source,officialPrice:ei.price||null,priceRule:ei.price?._deterministicRule||'',registeredCharge:ei.registeredCharge??null,reimbursementRule:!!ei.reimbursementRule,priceRuleCanonicalFund:ei.price?._canonicalFund||'',priceRuleCanonicalService:ei.price?._canonicalService||'',priceMismatch:!!ei.mismatch,registeredExpected:ei.registered??(num(s.claim_expected)>0?num(s.claim_expected):null),priceMissing:ei.amount!=null?[]:pc.missing,breakdown:bd}});
  renderAll();
 }
 
@@ -2276,7 +2324,7 @@ function buildExceptionItems(){
    if(!r.rep_ref&&!r.seq)dataProblems.push('ไม่มี REP/SEQ อ้างอิง');
    if(dataProblems.length)addException(arr,'data-error',r,0,exp,dataProblems.join(' · '));
 
-   if(r.priceMismatch||((r.priceMissing||[]).length>0)){
+   if((r.priceMismatch && !r.priceRule)||((r.priceMissing||[]).length>0)){
      let reason=r.priceMismatch
        ?`ยอดทะเบียน ${moneyFmt.format(num(r.registeredExpected||r.claim_expected))} บาท ไม่สอดคล้องกับอัตรา PPFS69 ${moneyFmt.format(num(r.officialPrice?.rate))} บาท`
        :'ยังไม่มีราคาทางการ: '+(r.priceMissing||[]).join(', ');
@@ -2864,11 +2912,101 @@ let googleAccessToken='';
 let googleTokenExpiresAt=0;
 let pendingSyncAfterAuth=false;
 
+// v6.1.5.3 Auto Sync on Login
+const AUTO_SYNC_ON_LOGIN=true;
+let autoSyncInFlight=false;
+let autoSyncScheduled=false;
+let autoSyncCompletedForSession=false;
+let autoGoogleTokenRequest=false;
+let autoSyncLastReason='';
+
+
 function getGithubConfig(){return window.PP_GITHUB_CONFIG||{}}
 function isOAuthConfigured(){
  let id=normText(getGithubConfig().GOOGLE_CLIENT_ID);
  return !!id && !/PUT_|YOUR_|xxxxxxxx/i.test(id)
 }
+
+function canAutoSyncCurrentUser(){
+ return !!(
+   AUTO_SYNC_ON_LOGIN &&
+   ppCurrentUser &&
+   ppCurrentUser.emailVerified &&
+   ppUserProfile &&
+   ppUserProfile.status==='approved'
+ )
+}
+
+function setAutoSyncBadge(mode='on',text='⚡ AUTO SYNC ON'){
+ let e=document.getElementById('autoSyncBadge');if(!e)return;
+ e.className='badge '+(mode==='error'?'b-bad':mode==='wait'?'b-warn':'b-good');
+ e.textContent=text
+}
+
+function rememberLastAutoSync(meta={}){
+ try{
+   localStorage.setItem('ppClaimAutoSyncMeta',JSON.stringify({
+     at:Date.now(),
+     syncedAt:meta.syncedAt||new Date().toLocaleString('th-TH'),
+     serviceRows:meta.service?.rows||0,
+     statementRows:meta.statement?.rows||0
+   }))
+ }catch(e){}
+}
+
+function scheduleAutoSyncAfterLogin(reason='login'){
+ if(!canAutoSyncCurrentUser()||autoSyncScheduled||autoSyncInFlight||autoSyncCompletedForSession)return;
+ autoSyncScheduled=true;
+ autoSyncLastReason=reason;
+ setAutoSyncBadge('wait','⏳ AUTO SYNC');
+ setLiveSyncUI('loading','เตรียม Auto Sync','กำลังตรวจสิทธิ์ Google Sheets และโหลดข้อมูลล่าสุด');
+ setTimeout(async()=>{
+   autoSyncScheduled=false;
+   await autoSyncAfterLogin(reason)
+ },700)
+}
+
+async function autoSyncAfterLogin(reason='login'){
+ if(!canAutoSyncCurrentUser()||autoSyncInFlight||autoSyncCompletedForSession)return;
+ autoSyncInFlight=true;
+ autoSyncLastReason=reason;
+ try{
+   if(!isOAuthConfigured())throw new Error('ยังไม่ได้ตั้งค่า Google OAuth Client ID');
+   if(!initGoogleOAuth()){
+     // Google Identity Services may still be loading; retry shortly.
+     autoSyncInFlight=false;
+     setTimeout(()=>scheduleAutoSyncAfterLogin('google-sdk-ready'),900);
+     return
+   }
+
+   if(googleAccessToken && Date.now()<googleTokenExpiresAt){
+     setAutoSyncBadge('wait','↻ AUTO SYNC');
+     await syncGoogleSheets(true);
+     return
+   }
+
+   // Try previously-authorized Google access without asking the user to press Sync.
+   // On first use, Google may still require an interactive consent/account popup.
+   pendingSyncAfterAuth=true;
+   autoGoogleTokenRequest=true;
+   setLiveSyncUI('loading','กำลังเชื่อม Google อัตโนมัติ','หากเคยอนุญาตแล้ว ระบบจะซิงก์ต่อทันที');
+   setAutoSyncBadge('wait','G AUTO CONNECT');
+   try{
+     googleTokenClient.requestAccessToken({prompt:''})
+   }catch(e){
+     autoGoogleTokenRequest=false;
+     pendingSyncAfterAuth=false;
+     autoSyncInFlight=false;
+     setAutoSyncBadge('error','⚠ CONNECT GOOGLE');
+     setLiveSyncUI('error','ต้องเชื่อม Google ครั้งแรก','กด “เชื่อมบัญชี Google” 1 ครั้ง หลังจากนั้นระบบจะซิงก์ต่อให้อัตโนมัติ');
+   }
+ }catch(e){
+   autoSyncInFlight=false;
+   setAutoSyncBadge('error','⚠ AUTO SYNC');
+   setLiveSyncUI('error','Auto Sync ไม่สำเร็จ',String(e&&e.message||e))
+ }
+}
+
 function initGoogleOAuth(){
  let btn=document.getElementById('googleAuthBtn');
  if(!isOAuthConfigured()){
@@ -2886,16 +3024,26 @@ function initGoogleOAuth(){
    scope:GOOGLE_SCOPE,
    callback:(resp)=>{
      if(resp.error){
+       let wasAuto=autoGoogleTokenRequest;
+       autoGoogleTokenRequest=false;
        pendingSyncAfterAuth=false;
-       setLiveSyncUI('error','เชื่อม Google ไม่สำเร็จ',resp.error_description||resp.error);
+       autoSyncInFlight=false;
+       if(wasAuto){
+         setAutoSyncBadge('error','⚠ CONNECT GOOGLE');
+         setLiveSyncUI('error','ต้องเชื่อม Google ครั้งแรก','กด “เชื่อมบัญชี Google” 1 ครั้ง แล้วระบบจะซิงก์ข้อมูลต่อให้อัตโนมัติ');
+       }else{
+         setLiveSyncUI('error','เชื่อม Google ไม่สำเร็จ',resp.error_description||resp.error);
+       }
        return
      }
      googleAccessToken=resp.access_token||'';
      googleTokenExpiresAt=Date.now()+Math.max(60,Number(resp.expires_in||3600)-60)*1000;
+     autoGoogleTokenRequest=false;
      if(btn){btn.className='btn dark';btn.textContent='✓ เชื่อม Google แล้ว'}
-     setLiveSyncUI('ok','เชื่อมบัญชี Google สำเร็จ','พร้อมอ่าน Google Sheets แบบ read-only');
+     setLiveSyncUI('ok','เชื่อมบัญชี Google สำเร็จ','กำลังเตรียมอ่าน Google Sheets แบบ read-only');
      if(pendingSyncAfterAuth){
        pendingSyncAfterAuth=false;
+       setAutoSyncBadge('wait','↻ AUTO SYNC');
        syncGoogleSheets(true)
      }
    }
@@ -2904,7 +3052,10 @@ function initGoogleOAuth(){
 }
 function connectGoogle(){
  if(!initGoogleOAuth())return;
- pendingSyncAfterAuth=false;
+ // A manual Google connection is considered consent to continue directly to Sync.
+ pendingSyncAfterAuth=true;
+ autoGoogleTokenRequest=false;
+ setAutoSyncBadge('wait','G CONNECTING');
  googleTokenClient.requestAccessToken({prompt:googleAccessToken?'':'consent'})
 }
 function disconnectGoogle(){
@@ -3218,13 +3369,16 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.5.2-login-stable-fix',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.5.4-dental-reimbursement-fix',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
      warnings:[...(svc.warnings||[]),...(stm.warnings||[])]}
    })
  }catch(err){
+   autoSyncInFlight=false;
+   autoSyncCompletedForSession=false;
+   setAutoSyncBadge('error','⚠ SYNC ERROR');
    console.error(err);setLiveSyncUI('error','ซิงก์ไม่สำเร็จ',String(err&&err.message||err));
    setProcessStatus('ซิงก์ Google Sheets ไม่สำเร็จ: '+esc(err&&err.message||err),'error')
  }
@@ -3246,7 +3400,11 @@ function applyLiveGoogleData(payload){
  if(w)w.innerHTML=warnings.length?`<div class="notice warning"><b>หมายเหตุการซิงก์:</b><br>${warnings.map(esc).join('<br>')}</div>`:'';
  let a=document.getElementById('serviceLiveBadge'),b=document.getElementById('stmLiveBadge');
  if(a){a.className='badge b-good';a.textContent='LIVE'}if(b){b.className='badge b-good';b.textContent='LIVE · AI(PP)'}
- setLiveSyncUI('ok','ซิงก์สำเร็จ','GitHub Pages → Google OAuth → Sheets API → Reconciliation Engine');
+ setLiveSyncUI('ok','ซิงก์สำเร็จ','Auto Sync → Google OAuth → Sheets API → Reconciliation Engine');
+ rememberLastAutoSync(meta);
+ autoSyncCompletedForSession=true;
+ autoSyncInFlight=false;
+ setAutoSyncBadge('on','✓ AUTO SYNCED');
  safeRecompute('ซิงก์ Google Sheets')
 }
 
@@ -3265,7 +3423,8 @@ setTimeout(()=>{
   initGoogleOAuth();
   initPPFirebase();
   if(isOAuthConfigured()){
-    setLiveSyncUI('error','รอเชื่อมบัญชี Google','กด “เชื่อมบัญชี Google” เพื่ออนุญาต read-only Google Sheets')
+    setLiveSyncUI('loading','Auto Sync พร้อมทำงาน','Login สำเร็จแล้วระบบจะโหลด Google Sheets ล่าสุดให้อัตโนมัติ')
+    setAutoSyncBadge('on','⚡ AUTO SYNC ON')
   }
 },500);
 </script>
