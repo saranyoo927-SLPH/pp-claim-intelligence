@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.1 GitHub | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.2 GitHub | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1856,7 +1856,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.1 · PPFS Rule Guard & Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.2 · ANC Package Guard & PPFS Rule Guard & Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2534,6 +2534,7 @@ function servicePriceScore(s,p){
  let sf=[s.service_type,s.source_sheet,s.fund_sub,s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean),pn=normalizePriceText(p.name),pc=normalizePriceText(p.category),score=0;
  for(const f0 of sf){let f=normalizePriceText(f0);if(!f)continue;if(f===pn)score=Math.max(score,120);else if((f.includes(pn)||pn.includes(f))&&Math.min(f.length,pn.length)>=5)score=Math.max(score,95);if(pc&&(f.includes(pc)||pc.includes(f))&&Math.min(f.length,pc.length)>=5)score=Math.max(score,score+20)}
  let joined=normText(sf.join(' | ')).toLowerCase(),name=normText(p.name).toLowerCase();
+ let itemJoined=normText([s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean).join(' | ')).toLowerCase();
  if(/เคลือบ.*ฟล[ูอ]ออไรด์|ฟล[ูอ]ออไรด์/.test(joined)&&/ฟล[ูอ]ออไรด์/.test(name))score=Math.max(score,118);
  if(/ขูด|ขัด.*ฟัน|ทำความสะอาดฟัน|สุขภาพช่องปาก/.test(joined)&&/ทำความสะอาดฟัน/.test(name))score=Math.max(score,116);
  if(/ทดสอบ.*ตั้งครรภ์|ตรวจครรภ์/.test(joined)&&/ทดสอบ.*ตั้งครรภ์/.test(name))score=Math.max(score,118);
@@ -2543,7 +2544,10 @@ function servicePriceScore(s,p){
  if(/ยาเม็ดเสริมธาตุเหล็ก/i.test(joined)&&/ยาเม็ดเสริมธาตุเหล็ก|ธาตุเหล็ก.*กรดโฟลิค/i.test(name))score=Math.max(score,116);
  if(/ยุติการตั้งครรภ์|termination/i.test(joined)&&/ยุติการตั้งครรภ์|termination/i.test(name))score=Math.max(score,122);
  if(/ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant|fp002/i.test(joined)&&/ฝังยาคุม|ยาฝังคุม|คุมกำเนิด.*ฝัง/i.test(name))score=Math.max(score,122);
- if(/ฝากครรภ์|\banc\b|30011/i.test(joined)&&/ฝากครรภ์|ดูแลการฝากครรภ์/i.test(name))score=Math.max(score,122);
+ if(/(^|\D)30014(\D|$)|ทดสอบ.*ตั้งครรภ์|pregnancy\s*test/i.test(itemJoined)&&/ทดสอบ.*ตั้งครรภ์/i.test(name))score=Math.max(score,152);
+ if(/(^|\D)30012(\D|$)|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i.test(itemJoined)&&/^แล็บ\s*1$/i.test(name))score=Math.max(score,155);
+ if(/(^|\D)30010(\D|$)|อัลตราซาวน์|ultrasound/i.test(itemJoined)&&/อัลตราซาวน์/i.test(name))score=Math.max(score,155);
+ if(/(^|\D)30011(\D|$)|ค่าบริการดูแลการฝากครรภ์|^ฝากครรภ์$/i.test(itemJoined)&&/^ฝากครรภ์$/i.test(name))score=Math.max(score,155);
  if(/30015|ค่าบริการตรวจหลังคลอด/i.test(joined)&&/ค่าบริการตรวจหลังคลอด/i.test(name))score=Math.max(score,150);
  if(/30016|triferdine|ยาเสริมหลังคลอด/i.test(joined)&&/ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน/i.test(name))score=Math.max(score,155);
  let d1=serviceDomain(joined),d2=serviceDomain((p.category||'')+' '+(p.name||''));if(d1&&d1===d2)score+=18;
@@ -2551,6 +2555,38 @@ function servicePriceScore(s,p){
 }
 
 const OFFICIAL_SERVICE_ALIAS_RULES=[
+ {
+  id:'ANC_PREG_TEST_30014_75',
+  fundPatterns:[/ทดสอบการตั้งครรภ์/i,/pregnancy/i,/anc[-\s]?prt/i],
+  itemPatterns:[/(^|\D)30014(\D|$)/i,/ค่าบริการทดสอบการตั้งครรภ์/i,/ตรวจปัสสาวะทดสอบการตั้งครรภ์/i,/ทดสอบการตั้งครรภ์/i,/pregnancy\s*test/i],
+  officialName:/ตรวจปัสสาวะทดสอบการตั้งครรภ์/i,
+  rate:75,requireItemMatch:true,
+  canonicalFund:'ทดสอบการตั้งครรภ์',canonicalService:'ตรวจปัสสาวะทดสอบการตั้งครรภ์'
+ },
+ {
+  id:'ANC_LAB1_30012_600',
+  fundPatterns:[/ฝากครรภ์/i,/\banc\b/i],
+  itemPatterns:[/(^|\D)30012(\D|$)/i,/ค่าตรวจทางห้องปฏิบัติการ/i,/แล็บ\s*1/i,/lab\s*1/i],
+  officialName:/^แล็บ\s*1$/i,
+  rate:600,requireItemMatch:true,
+  canonicalFund:'ฝากครรภ์',canonicalService:'แล็บ1'
+ },
+ {
+  id:'ANC_ULTRASOUND_30010_400',
+  fundPatterns:[/ฝากครรภ์/i,/\banc\b/i],
+  itemPatterns:[/(^|\D)30010(\D|$)/i,/อัลตราซาวน์/i,/ultrasound/i],
+  officialName:/อัลตราซาวน์/i,
+  rate:400,requireItemMatch:true,
+  canonicalFund:'ฝากครรภ์',canonicalService:'อัลตราซาวน์'
+ },
+ {
+  id:'ANC_CARE_30011_360',
+  fundPatterns:[/ฝากครรภ์/i,/\banc\b/i],
+  itemPatterns:[/(^|\D)30011(\D|$)/i,/ค่าบริการดูแลการฝากครรภ์/i,/^ฝากครรภ์$/i],
+  officialName:/^ฝากครรภ์$/i,
+  rate:360,
+  canonicalFund:'ฝากครรภ์',canonicalService:'ฝากครรภ์'
+ },
  {
   id:'POSTNATAL_EXAM_30015_150',
   fundPatterns:[/ตรวจหลังคลอด/i,/postnatal/i],
@@ -2999,9 +3035,21 @@ function exactRegisteredPackage(candidates,target,preferredServices=[]){
  if(hits.length>1&&!pref.has(hits[0]._id))return null;
  return hits[0];
 }
+/* ===== v6.1.6.2 ANC / Multi-component Package Guard =====
+   กรณี Statement จ่ายยอดรวม แต่ทะเบียนเบิกมีเพียงบางองค์ประกอบ
+   กฎที่ยืนยันแล้วต้องมาก่อนการตีความ residual เพื่อไม่ให้แสดงยอดที่อธิบายได้เป็น "รอตรวจ"
+*/
 // Composite Claim Rules: ยอด PP(AI) หนึ่งก้อนอาจประกอบด้วยหลายบริการ
 // กฎนี้ใช้เมื่อมีหลักฐานจากทะเบียนบริการ + ตารางราคา PPFS69 และยอดรวมตรงกันพอดี
 const COMPOSITE_CLAIM_RULES=[
+ {id:'ANC_CORE_1435',label:'แพ็กเกจ ANC 1,435 บาท (30014 + 30012 + 30010 + 30011)',total:1435,
+  anchor:/30014|ทดสอบการตั้งครรภ์|pregnancy\s*test|30011|ฝากครรภ์|\banc\b/i,
+  components:[
+   {label:'ตรวจปัสสาวะทดสอบการตั้งครรภ์',rate:75,match:/30014|ทดสอบ.*ตั้งครรภ์|pregnancy\s*test/i,allowVirtual:true},
+   {label:'แล็บ1',rate:600,match:/30012|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i,allowVirtual:true},
+   {label:'อัลตราซาวน์',rate:400,match:/30010|อัลตราซาวน์|ultrasound/i,allowVirtual:true},
+   {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:true}
+  ]},
  {id:'POSTNATAL_285',label:'บริการหลังคลอด 285 บาท (30015 + 30016)',total:285,
   anchor:/หลังคลอด|postnatal|triferdine|30015|30016/i,
   components:[
@@ -3030,7 +3078,7 @@ function solveKnownCompositeClaim(candidates,target){
   for(const comp of rule.components){
    let svc=pool.find(s=>!used.has(s._id)&&comp.match.test(compositeServiceText(s)));
    if(svc){used.add(svc._id);allocations.push({service:svc,amount:comp.rate,label:comp.label});continue}
-   if(comp.allowVirtual&&compositePriceExists(comp)){virtual.push({label:comp.label,amount:comp.rate,source:'ตารางราคา PPFS69'});continue}
+   if(comp.allowVirtual&&compositePriceExists(comp)){virtual.push({label:comp.label,amount:comp.rate,source:'ตารางราคา PPFS69',component:comp});continue}
    if(comp.required){ok=false;break}
    ok=false;break;
   }
@@ -3043,6 +3091,62 @@ function solveKnownCompositeClaim(candidates,target){
  }
  return null;
 }
+
+function compositeDerivedSheet(label){
+ let t=normText(label).toLowerCase();
+ if(/ทดสอบ.*ตั้งครรภ์|pregnancy/.test(t))return 'ทดสอบการตั้งครรภ์';
+ if(/แล็บ\s*1|อัลตราซาวน์|ฝากครรภ์/.test(t))return 'ฝากครรภ์(30011)';
+ if(/ตรวจหลังคลอด/.test(t))return 'หลังคลอด(30015)';
+ if(/ยาเสริมธาตุเหล็ก.*ไอโอดีน|triferdine/.test(t))return 'Triferdine(30016)';
+ if(/ฝังยาคุม|ยาฝังคุม/.test(t))return 'วางแผนครอบครัว';
+ if(/ยุติการตั้งครรภ์/.test(t))return 'การยุติการตั้งครรภ์';
+ return 'PPFS69 Derived'
+}
+function compositeDerivedCode(label){
+ let t=normText(label).toLowerCase();
+ if(/ทดสอบ.*ตั้งครรภ์|pregnancy/.test(t))return '30014';
+ if(/แล็บ\s*1/.test(t))return '30012';
+ if(/อัลตราซาวน์/.test(t))return '30010';
+ if(/^ฝากครรภ์$|ดูแลการฝากครรภ์/.test(t))return '30011';
+ if(/ตรวจหลังคลอด/.test(t))return '30015';
+ if(/ยาเสริมธาตุเหล็ก.*ไอโอดีน|triferdine/.test(t))return '30016';
+ return ''
+}
+function materializeKnownCompositeVirtualServices(bundle,stm){
+ if(!bundle||!Array.isArray(bundle.virtual)||!bundle.virtual.length)return bundle;
+ let anchor=bundle.allocations?.[0]?.service||{},derived=[],allocations=[...(bundle.allocations||[])];
+ bundle.virtual.forEach((v,idx)=>{
+   let code=compositeDerivedCode(v.label),sheet=compositeDerivedSheet(v.label);
+   let id=['DERIVED_COMPOSITE',statementNaturalKey(stm),bundle.rule?.id||'RULE',code||normText(v.label),idx].join('|');
+   let s={
+     row:'DERIVED-'+(bundle.rule?.id||'RULE')+'-'+(code||idx+1),
+     date:anchor.date||stm.date||'',time:anchor.time||'',
+     hn:anchor.hn||stm.hn||'',cid:anchor.cid||stm.cid||'',name:anchor.name||stm.name||'',
+     fund_sub:sheet,right_main:anchor.right_main||stm.maininscl||'',right_sub:anchor.right_sub||'',
+     rep_ref:'',seq:'',registry_rep_ref:'',registry_seq:'',
+     claim_rep_ref:normREP(stm.rep||''),claim_seq:normText(stm.seq||'').replace(/\.0$/,''),
+     claim_ref_source:'Statement + Validated Composite '+(bundle.rule?.id||''),
+     claim_ref_evidence:[stm],claim_ref_ambiguous:false,
+     claim_reference:anchor.claim_reference||stm.tran||'',
+     source_sheet:sheet,service_type:v.label,item_detail:(code?code+' ':'')+v.label,
+     ppfs:(code?code+' ':'')+v.label,items:[(code?code+' ':'')+v.label],
+     claim_expected:num(v.amount),
+     _derivedFromCompositeClaim:true,_serviceRule:bundle.rule?.id||'',
+     _canonicalServiceLabel:v.label,_officialServiceCode:code,
+     _derivedEvidence:'PP(AI) ตรงกฎ Composite ที่ยืนยันแล้ว และองค์ประกอบมีอยู่ในตารางราคา PPFS69',
+     _id:id,claims:[],paid:0,matchStatus:'unpaid',priceHints:[],repPaymentEvidence:[stm]
+   };
+   derived.push(s);allocations.push({service:s,amount:num(v.amount),label:v.label,derived:true})
+ });
+ return {
+   ...bundle,
+   allocations,
+   derivedServices:derived,
+   materializedComponents:[...(bundle.materializedComponents||[]),...derived.map(s=>({label:s._canonicalServiceLabel,amount:num(s.claim_expected),serviceId:s._id,service:s.service_type,derived:true}))],
+   virtual:[]
+ }
+}
+
 function hasCompositeClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>c.allocationStatus==='bundle-split'||c.allocationStatus==='global-bundle')}
 function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate'].includes(c.allocationStatus))}
 function aggregateEvidenceType(r){
@@ -3101,6 +3205,9 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
 }
 function recomputeAll(){
  let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;
+ // Claim-derived logical rows are regenerated from validated composite rules on every recompute.
+ // Never feed the previous derived rows back into matching, otherwise they would duplicate themselves.
+ state.services=(state.services||[]).filter(s=>!s._derivedFromCompositeClaim);
  // Source-level duplicate guard MUST run before Claim Reference backfill/matching.
  // Otherwise one duplicated registry row can be paid while its twin is left as REP-confirmed.
  applySourceDuplicateGuard();
@@ -3168,9 +3275,17 @@ function recomputeAll(){
    // 3) กฎ Composite ที่ยืนยันไว้ (fallback สำหรับกรณีองค์ประกอบบางรายการไม่มีทะเบียนแยก)
    let bundle=solveKnownCompositeClaim(b.pool,target);
    if(bundle){
-     state.autoAllocated++;let virtualNames=bundle.virtual.map(v=>v.label);
-     applyAllocations(x,bundle.allocations,(b.method||'ผู้ป่วย+วันที่')+' + Composite Claim จากตารางราคา','bundle-split',{formula:bundle.formula,bundleTotal:target,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,virtualComponents:bundle.virtual,bundleComponents:bundle.full});
-     state.claimAnalyses.push({...x,analysisStatus:'bundle-split',analysisFormula:bundle.formula,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,bundleComponents:bundle.full,virtualComponents:bundle.virtual,allocations:bundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${bundle.formula}${virtualNames.length?' · องค์ประกอบจากตารางราคาที่ไม่มีทะเบียนแยก: '+virtualNames.join(', '):''}`});return;
+     let originalVirtual=[...(bundle.virtual||[])];
+     bundle=materializeKnownCompositeVirtualServices(bundle,x);
+     if(bundle.derivedServices?.length)state.services.push(...bundle.derivedServices);
+     state.autoAllocated++;
+     let derivedNames=(bundle.derivedServices||[]).map(s=>s._canonicalServiceLabel||s.service_type);
+     applyAllocations(x,bundle.allocations,(b.method||'ผู้ป่วย+วันที่')+' + Validated Composite PPFS69','bundle-split',{
+       formula:bundle.formula,bundleTotal:target,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,
+       virtualComponents:[],bundleComponents:bundle.full,materializedComponents:bundle.materializedComponents||[],
+       evidence:'กฎ Composite ที่ยืนยันแล้ว + ตารางราคา PPFS69'
+     });
+     state.claimAnalyses.push({...x,analysisStatus:'bundle-split',analysisFormula:bundle.formula,bundleRule:bundle.rule.id,bundleLabel:bundle.rule.label,bundleComponents:bundle.full,virtualComponents:[],materializedComponents:bundle.materializedComponents||[],allocations:bundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${bundle.formula}${derivedNames.length?' · สร้าง Logical Service จากกฎที่ยืนยันแล้ว: '+derivedNames.join(', '):''}`});return;
    }
 
    // 4) หาก PP(AI) ตรงยอดแพ็กเกจของแถวทะเบียนพอดี ให้ยืนยันว่า "จ่ายแล้ว" แม้ยังแยก component ไม่ได้
@@ -3283,9 +3398,10 @@ function displayPriceForServiceItem(r,item,index=0){
 }
 
 function exceptionFundKey(r){
- return r.service_type||r.source_sheet||r.fund_sub||r.item_detail||'ไม่ระบุ'
+ return r._exceptionFund||r.service_type||r.source_sheet||r.fund_sub||r.item_detail||'ไม่ระบุ'
 }
 function exceptionExpectedAmount(r){
+ if(r._exceptionExpected!=null&&Number.isFinite(Number(r._exceptionExpected)))return Math.max(0,num(r._exceptionExpected));
  let vals=[r.expected,r.registeredExpected,r.claim_expected];
  for(let v of vals){if(v!=null&&Number.isFinite(Number(v))&&num(v)>0)return num(v)}
  return 0
@@ -3320,12 +3436,13 @@ function exceptionPriority(type,financialRisk,reviewAmount,date){
 }
 function addException(arr,type,r,financialRisk=0,reviewAmount=0,reason=''){
  let p=exceptionPriority(type,financialRisk,reviewAmount,r.date);
+ let paidValue=r._exceptionPaid!=null?Math.max(0,num(r._exceptionPaid)):num(r.paid);
  arr.push({
    id:`${type}|${r._id||r.rep||r.tran||Math.random()}`,
    type,serviceId:r._id||'',fund:exceptionFundKey(r),
-   service:r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', ')||r.ppfs||'-',
+   service:r._exceptionService||r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', ')||r.ppfs||'-',
    hn:r.hn||'',cid:r.cid||'',name:r.name||'',date:r.date||'',rep:effectiveClaimREP(r),seq:effectiveClaimSEQ(r),
-   expected:exceptionExpectedAmount(r),paid:num(r.paid),financialRisk:Math.max(0,num(financialRisk)),
+   expected:exceptionExpectedAmount(r),paid:paidValue,financialRisk:Math.max(0,num(financialRisk)),
    reviewAmount:Math.max(0,num(reviewAmount)),reason:reason||EXCEPTION_META[type]?.desc||'',
    recommendation:EXCEPTION_META[type]?.action||'',priority:p.level,score:p.score,days:p.days,
    source:r
@@ -3378,8 +3495,17 @@ function buildExceptionItems(){
  // Residual amount from an otherwise partially explained statement
  for(let x of state.residualSTM||[]){
    let svc=(state.recon||[]).find(r=>(r.claims||[]).some(c=>c.rep===x.rep&&c.tran===x.tran))||{};
-   let pseudo={...svc,...x,_id:'res-'+[x.rep,x.tran,x.hn,x.cid,x.date].join('-'),rep_ref:x.rep,paid:num(x.explained)};
-   addException(arr,'residual',pseudo,0,num(x.residual),x.analysisNote||'มี PP(AI) ที่ยังอธิบายองค์ประกอบไม่ได้')
+   let explained=Math.max(0,num(x.explained)),residual=Math.max(0,num(x.residual));
+   let stmTotal=Math.max(0,num(x.pp_paid))||Math.round((explained+residual)*100)/100;
+   let pseudo={...svc,...x,
+     _id:'res-'+[x.rep,x.tran,x.hn,x.cid,x.date].join('-'),
+     rep_ref:x.rep,paid:explained,
+     _exceptionFund:exceptionFundKey(svc)||'Statement',
+     _exceptionService:'ยอดคงเหลือจาก Statement ที่ยังไม่สามารถผูกบริการได้',
+     _exceptionExpected:stmTotal,
+     _exceptionPaid:explained
+   };
+   addException(arr,'residual',pseudo,0,residual,x.analysisNote||'มี PP(AI) ที่ยังอธิบายองค์ประกอบไม่ได้')
  }
  return arr
 }
@@ -4494,7 +4620,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.6.1-postnatal-rule-guard',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.6.2-anc-package-guard',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
