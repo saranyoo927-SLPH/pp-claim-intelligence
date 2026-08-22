@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.8 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.10 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1399,10 +1399,10 @@ body{font-size:13px;line-height:1.62}
   </div>
   <div class="nav-section-label">EXECUTIVE</div>
   <button class="navbtn active" data-page="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span class="nav-label">ภาพรวม</span></button>
-  <button class="navbtn" data-protected="true" data-page="exceptions"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="nav-label">ศูนย์งานที่ต้องดำเนินการ</span><span id="exceptionNavCount" class="exception-nav-count">0</span></button>
-  <div class="nav-section-label">ANALYTICS & RECONCILIATION</div>
-  <button class="navbtn" data-page="serviceReport"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></span><span class="nav-label">รายงานรายบริการ</span></button>
   <button class="navbtn" data-page="fund"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg></span><span class="nav-label">แดชบอร์ดรายกองทุน</span></button>
+  <div class="nav-section-label">ANALYTICS & RECONCILIATION</div>
+  <button class="navbtn" data-protected="true" data-page="exceptions"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="nav-label">ศูนย์งานที่ต้องดำเนินการ</span><span id="exceptionNavCount" class="exception-nav-count">0</span></button>
+  <button class="navbtn" data-page="serviceReport"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></span><span class="nav-label">รายงานรายบริการ</span></button>
   <button class="navbtn" data-protected="true" data-page="fundAudit"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="m14 17 2 2 4-4"/></svg></span><span class="nav-label">ตรวจสอบรายกองทุน</span></button>
   <button class="navbtn" data-page="month"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 10h18"/></svg></span><span class="nav-label">รายงานจำแนกเดือน</span></button>
   <div class="nav-section-label">CONTROL & GOVERNANCE</div>
@@ -1856,7 +1856,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.8 · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.10 · Validated Statement Basket Guard · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2265,7 +2265,7 @@ async function changePPUserRole(uid){
 }
 
 const OFFICIAL_PPFS69=[{"category":"บริการ  1  บริการฝากครรภ์","name":"ฝากครรภ์","rate":360.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ1","rate":600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ2","rate":190.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"อัลตราซาวน์","rate":400.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"ตรวจและทำความสะอาดฟัน","rate":500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Alpha-thalassemia 1 (PCR)","rate":800.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Beta-thalassemia (Mutation analysis)","rate":3000.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"หัตถการเพื่อตรวจวินิจฉัยทารกในครรภ์","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"DNA Based Analysis","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์","rate":120.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบย้อนทาง Treponemal test (TT)ด้วยวิธี Chemiluminescent immunoassay (CIA/CLIA)หรือ Enzyme immunoassay (EIA) หรือ RapidDiagnostic Test (RDT)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบตั้งเดิม Nontreponemal test (NTT)ด้วยวิธี Rapid Plasma Reagin (RPR) หรือVenereal Disease Research Laboratory (VDRL)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจ Treponemal test (TT) ด้วยวิธี Treponema pallidum particle agglutination test (TPPA) หรือ Treponema pallidum hemagglutination test(TPHA)","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษาพร้อมจัดส่งเลือด","rate":200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Non-Invasive Prenatal Test : NIPT","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจNon-Invasive Prenatal Test : NIPT","rate":2600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Quadruple test","rate":1200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจQuadruple test","rate":1300.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Prenatal Diagnosis: PND","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"ตรวจโครโมโชม","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าตรวจTSHรวมค่าส่งสิ่งส่งตรวจ","rate":135.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าติดตามและค่าตรวจTSH","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  6  บริการตรวจคัดกรองผู้ป่วยโรคพันธุกรรมเมตาบอลิกด้วยเครื่อง Tandem mass spectrometry (TMS)","name":"ค่าตรวจด้วยเครื่อง TMS","rate":500.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ค่าบริการตรวจหลังคลอด","rate":150.0,"unit":"ไม่เกิน 2 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน","rate":135.0,"unit":"ไม่เกิน 3 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  8  บริการทดสอบการตั้งครรภ์","name":"ตรวจปัสสาวะทดสอบการตั้งครรภ์","rate":75.0,"unit":"ต่อครั้งไม่เกิน 4 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม","rate":40.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว","rate":80.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาฉีดคุมกำเนิด","rate":60.0,"unit":"ต่อครั้ง ไม่เกิน 5 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ใส่ห่วงอนามัย","rate":800.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ค่าบริการฝังยาคุมกำเนิด","rate":2150.0,"unit":"ต่อครั้ง ทุก 3 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถอดยาฝังคุมกำเนิด","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดฉุกเฉิน","rate":50.0,"unit":"ต่อแผง ไม่เกิน 2 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถุงยางอนามัย(เฉพาะหน่วยที่ไม่ได้เหมาจ่ายรายหัว)","rate":1.0,"unit":"ชิ้น ไม่เกิน 10 ชิ้นต่อคน ไม่เกิน 365 ชิ้นต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  10  บริการป้องกันการยุติการตั้งครรภ์ที่ไม่ปลอดภัย","name":"บริการยุติการตั้งครรภ์","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติทั่วไป (Stock lens)","rate":800.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติที่ต้องสั่งตัดพิเศษ (Lab Leกs)","rate":1000.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ค่าบริการเก็บตัวอย่าง","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิดสองสายพันธุ์","rate":280.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิด14สายพันธุ์","rate":370.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจทางเซลล์วิทยาด้วยวิธี Liquid based cytology","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจติดตามซ้ำด้วยวิธี Pap smear","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"Pap smear หรือวิธี VIA","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"วิธี Colposcopy รวมการตัดชิ้นเนื้อ (Biopsy หรือ LEEP)","rate":900.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  13  บริการคัดกรองรอยโรคเสี่ยงมะเร็งและมะเร็งช่องปาก (CA Oral Screening)","name":"ค่า biopsy และค่าตรวจทางพยาธิวิทยา","rate":600.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Chest-X-ray : CXR","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี สำหรับผู้ต้องขัง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"TB-LAMP","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR (Xpert MTB/RIF)","rate":500.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"วินิจฉัยวัณโรค/ตรวจหาเชื้อ MTB","rate":400.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา Rifarmpicin","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR MTB/MDR","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Line Probe Assay (LPA)","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจพบผลดื้อยา First – line drugs ให้บริการตรวจวินิจฉัยวัณโรคดื้อยา Second – line drugs","rate":700.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธี AFB","rate":20.0,"unit":"ต่อครั้ง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Solid media","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Liquid media","rate":300.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 35 – 59 ปี-Fasting Plasma Glucose: FPG","rate":40.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 45 – 70 ปี-ตรวจวัด Total Cholesterol และ HDL","rate":160.0,"unit":"ต่อครั้ง ทุก 5 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA2","name":"บริการประเมินความเสี่ยง+ให้คำปรึกษา+เก็บตัวอย่าง(เลือด)+จัดส่ง","rate":500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA3","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับผู้ป่วยมะเร็งเต้านมที่มีความเสี่ยงสูง","rate":10000.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA4","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับญาติสายตรง","rate":2500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  17  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการเจาะเลือดและตรวจนับเม็ดเลือด(CBC)","rate":65.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  18  บริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","name":"ค่าบริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","rate":80.0,"unit":"ต่อครั้ง คนละ 1 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  19  บริการเคลือบฟลูออไรด์","name":"ค่าบริการเคลือบฟลออไรด์ชนิดเข้มข้นสูง","rate":100.0,"unit":"ต่อครั้ง คนละไม่เกิน 2 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  20  บริการตรวจคัดกรองมะเร็งลำไส้ใหญ่และลำไส้ตรง (Fit test)","name":"FIT Test","rate":60.0,"unit":"ต่อครั้ง คนละ 1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  21  บริการคัดกรองไวรัสตับอักเสบบี","name":"ค่าบริการตรวจด้วย HBsAg","rate":50.0,"unit":"ผู้ที่เกิดก่อน พ.ศ. 2535 คนละ 1 ครั้ง ตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"บริการตรวจด้วย Anti-HCV","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV core antigen","rate":400.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV RNA (qualitative method wรือ quantitative method)","rate":1690.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  23  บริการตรวจคัดกรองพยาธิใบไม้ตับด้วยการตรวจปัสสาวะ  (เฉพาะหน่วยนวัตกรรม)","name":"Urine OV Rapid Diagnosis Test ; OV-RDT","rate":150.0,"unit":"ต่อครั้ง ต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  24  บริการตรวจคัดกรองมะเร็งเต้านมด้วยเครื่องแมมโมแกรมและอัลตราซาวด์","name":"ค่าบริการตรวจแมมโมแกรมและอัลตราชาวด์","rate":2400.0,"unit":"1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  25  บริการให้วัคซีนป้องกันโรค","name":"ค่าบริการให้วัคชีนป้องกันโรค","rate":20.0,"unit":"ต่อโดส","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าจัดส่ง","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  27  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"ค่าตรวจคัดกรอง","rate":30.0,"unit":"ต่อครั้งต่อช่วงอายุ","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  28  บริการยาน้ำเสริมธาตุเหล็กเพื่อป้องกันโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการให้ยาน้ำเสริมธาตุเหล็ก","rate":50.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"}];
-let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0,auxMaterialized:0,claimRefAudit:null,serviceNormalization:null,serviceDedup:null,stmDedup:null};
+let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0,auxMaterialized:0,validatedBasketMaterialized:0,validatedBasketAnalyses:0,claimRefAudit:null,serviceNormalization:null,serviceDedup:null,stmDedup:null};
 const moneyFmt=new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const intFmt=new Intl.NumberFormat('th-TH');
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -2735,6 +2735,199 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   canonicalService:'เคลือบฟลูออไรด์'
  }
 ];
+
+
+/* ===== v6.1.6.10 Validated Statement Basket Guard =====
+   เป้าหมาย: แก้ false Residual ที่ Statement PP(AI) เป็น "ยอดรวมหลายบริการ"
+   แต่ทะเบียนส่งเบิกมีเพียงบางองค์ประกอบหรือจำนวนหน่วยไม่ครบ
+
+   หลักความปลอดภัย:
+   - ใช้เฉพาะสูตรที่ตรวจยืนยันจากข้อมูลจริง/HIS แล้ว
+   - ต้องมี anchor service จริงของผู้รับบริการก่อนเสมอ
+   - ถ้ามีบริการจริงขององค์ประกอบที่หายอยู่แล้ว ระบบใช้แถวนั้น ไม่สร้าง logical ซ้ำ
+   - บริการแบบคิดต่อหน่วย ใช้ quantity เฉพาะ rule ที่ประกาศ repeatableQty
+   - สูตรข้าม domain ใช้เฉพาะ validated rule ที่ระบุไว้ ไม่ทำ amount-only inference ทั่วระบบ
+*/
+const VALIDATED_STATEMENT_BASKET_RULES=[
+ {id:'BASKET_FP_IMPLANT_REMOVE_2500',label:'ฝังยาคุม + ถอดยาฝัง 2,500',
+  total:2500,anchors:['FP_IMPLANT_INSERT_2150'],
+  components:[{rule:'FP_IMPLANT_INSERT_2150',qty:1},{rule:'FP_IMPLANT_REMOVE_350',qty:1}]},
+ {id:'BASKET_FP_DMPA_REMOVE_410',label:'ยาฉีดคุม + ถอดยาฝัง 410',
+  total:410,anchors:['FP_DMPA_INJECTION_60'],
+  components:[{rule:'FP_DMPA_INJECTION_60',qty:1},{rule:'FP_IMPLANT_REMOVE_350',qty:1}]},
+ {id:'BASKET_FP_COC3_REMOVE_470',label:'ยาเม็ดฮอร์โมนรวม 3 แผง + ถอดยาฝัง 470',
+  total:470,anchors:['FP_COMBINED_PILL_40'],
+  components:[{rule:'FP_COMBINED_PILL_40',qty:3},{rule:'FP_IMPLANT_REMOVE_350',qty:1}]},
+ {id:'BASKET_DENTAL_FLUORIDE_CLEANING_600',label:'เคลือบฟลูออไรด์ + ตรวจและทำความสะอาดฟัน 600',
+  total:600,anchors:['FLUORIDE_100'],
+  components:[{rule:'FLUORIDE_100',qty:1},{rule:'DENTAL_CLEANING_500',qty:1}]},
+ {id:'BASKET_ANC_CARE_US_760',label:'ฝากครรภ์ + อัลตราซาวด์ 760',
+  total:760,anchors:['ANC_CARE_30011_360'],
+  components:[{rule:'ANC_CARE_30011_360',qty:1},{rule:'ANC_ULTRASOUND_30010_400',qty:1}]},
+ {id:'BASKET_ANC_PREGTEST_CARE_435',label:'ทดสอบการตั้งครรภ์ + ฝากครรภ์ 435',
+  total:435,anchors:['ANC_PREG_TEST_30014_75'],
+  components:[{rule:'ANC_PREG_TEST_30014_75',qty:1},{rule:'ANC_CARE_30011_360',qty:1}]},
+ {id:'BASKET_FLUORIDE_ANC_CARE_460',label:'เคลือบฟลูออไรด์ + ฝากครรภ์ 460',
+  total:460,anchors:['FLUORIDE_100'],
+  components:[{rule:'FLUORIDE_100',qty:1},{rule:'ANC_CARE_30011_360',qty:1}]},
+ {id:'BASKET_DMPA_FERROFOLIC_140',label:'ยาฉีดคุมกำเนิด + Ferrofolic 140',
+  total:140,anchors:['FP_DMPA_INJECTION_60'],
+  disallowActualRules:['FP_SINGLE_PILL_80'],
+  components:[{rule:'FP_DMPA_INJECTION_60',qty:1},{rule:'FERROFOLIC_14001_80',qty:1}]}
+];
+
+function serviceDeterministicRuleId(s){
+ let p=deterministicOfficialPriceForService(s);
+ return p?._deterministicRule||''
+}
+function aliasRuleById(id){return OFFICIAL_SERVICE_ALIAS_RULES.find(r=>r.id===id)||null}
+function aliasRuleOfficialPrice(rule){
+ if(!rule)return null;
+ return officialPriceRows().find(p=>Math.abs(num(p.rate)-num(rule.rate))<.001&&rule.officialName.test(normText(p.name)))||
+   {category:rule.canonicalFund,name:rule.canonicalService,rate:rule.rate,unit:'ต่อครั้ง',source:'official',evidence:'Validated Statement Basket Guard'}
+}
+function basketServiceScore(s,x,b,ruleId){
+ if(!s||serviceDeterministicRuleId(s)!==ruleId)return -1e9;
+ let score=0,rep=normREP(x?.rep||''),seq=normText(x?.seq||'').replace(/\.0$/,'');
+ if((b?.preferred||[]).some(z=>z._id===s._id))score+=120;
+ if(rep&&serviceMatchREPs(s).includes(rep))score+=110;
+ if(seq&&serviceMatchSEQ(s)===seq)score+=90;
+ if(x?.date&&s.date===x.date)score+=80;
+ if(num(s.paid)<=.009)score+=40; else score-=200;
+ return score
+}
+function chooseBasketService(b,x,ruleId,usedIds=new Set()){
+ let arr=uniqServices([...(b?.preferred||[]),...(b?.pool||[])])
+   .filter(s=>!usedIds.has(s._id)&&serviceDeterministicRuleId(s)===ruleId&&num(s.paid)<=.009)
+   .map(s=>({s,score:basketServiceScore(s,x,b,ruleId)}))
+   .sort((a,b)=>b.score-a.score);
+ if(!arr.length)return null;
+ if(arr.length>1&&arr[0].score===arr[1].score)return null;
+ return arr[0].s
+}
+function basketLogicalService(rule,x,anchor,qty,basketRule,idx){
+ let price=aliasRuleOfficialPrice(rule),rate=num(price?.rate||rule.rate),amount=Math.round(rate*qty*100)/100;
+ let base=anchor||{};
+ let service={
+   row:`BASKET-${basketRule.id}-${idx+1}`,
+   date:x?.date||base.date||'',time:base.time||'',
+   hn:x?.hn||base.hn||'',cid:x?.cid||base.cid||'',name:x?.name||base.name||'',
+   fund_sub:rule.canonicalFund||base.fund_sub||'',
+   right_main:base.right_main||'',right_sub:base.right_sub||'',
+   rep_ref:'',seq:'',
+   claim_rep_ref:normREP(x?.rep)||effectiveClaimREP(base)||'',
+   claim_seq:normText(x?.seq||effectiveClaimSEQ(base)||'').replace(/\.0$/,''),
+   claim_ref_source:'Validated Statement Basket + Statement',
+   claim_ref_evidence:x?[x]:[],
+   ppfs:rule.canonicalService||price?.name||rule.id,
+   items:[rule.canonicalService||price?.name||rule.id],
+   service_type:rule.canonicalService||price?.name||rule.id,
+   source_sheet:rule.canonicalFund||'Statement Basket Recovery',
+   claim_expected:amount,
+   claim_reference:x?.tran||base.claim_reference||'',
+   item_detail:rule.canonicalService||price?.name||rule.id,
+   aux_service_text:'',
+   _derivedFromValidatedBasket:true,
+   _serviceRule:basketRule.id,
+   _basketRule:basketRule.id,
+   _canonicalServiceLabel:rule.canonicalService||price?.name||rule.id,
+   _validatedQuantityExpected:amount,
+   _validatedQuantity:qty,
+   _validatedQuantityRule:rule.id,
+   _sourceRows:Array.isArray(base._sourceRows)?[...base._sourceRows]:[],
+   claims:[],paid:0,matchStatus:'unpaid',priceHints:[],repPaymentEvidence:x?[x]:[]
+ };
+ service._id=['BASKET',statementNaturalKey(x||{}),rule.id,idx,servicePatientKey(service),service.date].join('|');
+ return service
+}
+function applyRepeatableQuantityBasket(x,b){
+ let target=num(x?.pp_paid);if(target<=0)return false;
+ let candidates=uniqServices([...(b?.preferred||[]),...(b?.pool||[])])
+   .filter(s=>num(s.paid)<=.009)
+   .map(s=>{
+     let meta=repeatableQuantityRuleForService(s);if(!meta||meta.rate<=0)return null;
+     let q=target/meta.rate,rq=Math.round(q);
+     if(rq<2||rq>meta.maxQty||Math.abs(q-rq)>.001)return null;
+     return {s,meta,qty:rq,score:basketServiceScore(s,x,b,meta.rule.id)}
+   }).filter(Boolean).sort((a,b)=>b.score-a.score);
+ if(!candidates.length)return false;
+ if(candidates.length>1&&candidates[0].score===candidates[1].score)return false;
+ let c=candidates[0],amount=Math.round(c.meta.rate*c.qty*100)/100;
+ c.s._validatedQuantityExpected=amount;c.s._validatedQuantity=c.qty;c.s._validatedQuantityRule=c.meta.rule.id;
+ let formula=`${c.meta.rule.canonicalService||allocationServiceLabel(c.s)} ${moneyFmt.format(c.meta.rate)} × ${c.qty} = ${moneyFmt.format(amount)}`;
+ applyAllocations(x,[{service:c.s,amount}],(b.method||'REP/SEQ')+' + Validated Quantity Basket Guard','validated-basket',
+   {formula,basketRule:'REPEATABLE_QTY',qty:c.qty,unitRate:c.meta.rate,evidence:'PPFS69 repeatable quantity × Statement PP(AI)'});
+ state.claimAnalyses.push({...x,analysisStatus:'validated-basket',bundleRule:'REPEATABLE_QTY',analysisFormula:formula,
+   allocations:[{serviceId:c.s._id,service:c.meta.rule.canonicalService||allocationServiceLabel(c.s),amount}],
+   analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${formula} · Quantity Guard`});
+ state.validatedBasketAnalyses=(state.validatedBasketAnalyses||0)+1;
+ return true
+}
+function applyValidatedStatementBasket(x,b){
+ let target=num(x?.pp_paid);if(target<=0)return false;
+
+ // Quantity-only patterns เช่น COC 40 × 2 = 80, 40 × 3 = 120
+ if(applyRepeatableQuantityBasket(x,b))return true;
+
+ for(const br of VALIDATED_STATEMENT_BASKET_RULES){
+   if(Math.abs(target-num(br.total))>.001)continue;
+
+   // ถ้ามีบริการจริงที่ขัดกับ validated recovery ให้ปล่อย exact solver ปกติทำงานก่อน
+   let actualRuleIds=new Set(uniqServices(b?.pool||[]).map(serviceDeterministicRuleId).filter(Boolean));
+   if((br.disallowActualRules||[]).some(id=>actualRuleIds.has(id)))continue;
+
+   let used=new Set(),anchors=[];
+   let ok=true;
+   for(const anchorId of br.anchors||[]){
+     let s=chooseBasketService(b,x,anchorId,used);
+     if(!s){ok=false;break}
+     used.add(s._id);anchors.push(s)
+   }
+   if(!ok||!anchors.length)continue;
+
+   let allocs=[],derived=[],formulaParts=[],componentIndex=0;
+   for(const comp of br.components||[]){
+     let rule=aliasRuleById(comp.rule);if(!rule){ok=false;break}
+     let qty=Math.max(1,Math.round(num(comp.qty)||1)),amount=Math.round(num(rule.rate)*qty*100)/100;
+     let s=chooseBasketService(b,x,comp.rule,used);
+     if(!s&&anchors.some(a=>serviceDeterministicRuleId(a)===comp.rule)){
+       s=anchors.find(a=>serviceDeterministicRuleId(a)===comp.rule&&!used.has(a._id))||anchors.find(a=>serviceDeterministicRuleId(a)===comp.rule)
+     }
+     if(s){
+       used.add(s._id);
+       if(qty>1){
+         let meta=repeatableQuantityRuleForService(s);
+         if(!meta||qty>meta.maxQty){ok=false;break}
+         s._validatedQuantityExpected=amount;s._validatedQuantity=qty;s._validatedQuantityRule=comp.rule
+       }
+     }else{
+       s=basketLogicalService(rule,x,anchors[0],qty,br,componentIndex);
+       derived.push(s)
+     }
+     allocs.push({service:s,amount,label:rule.canonicalService||aliasRuleOfficialPrice(rule)?.name||rule.id});
+     formulaParts.push(`${rule.canonicalService||aliasRuleOfficialPrice(rule)?.name||rule.id} ${moneyFmt.format(num(rule.rate))}${qty>1?` × ${qty}`:''}`);
+     componentIndex++
+   }
+   if(!ok)continue;
+   let sum=Math.round(allocs.reduce((a,z)=>a+num(z.amount),0)*100)/100;
+   if(Math.abs(sum-target)>.001)continue;
+
+   if(derived.length){
+     state.services.push(...derived);
+     state.validatedBasketMaterialized=(state.validatedBasketMaterialized||0)+derived.length
+   }
+   let formula=formulaParts.join(' + ');
+   applyAllocations(x,allocs,(b.method||'REP/SEQ')+' + Validated Statement Basket Guard','validated-basket',
+     {formula,basketRule:br.id,bundleTotal:target,evidence:'Validated HIS/Statement pattern + PPFS69 deterministic rates'});
+   state.autoAllocated++;
+   state.validatedBasketAnalyses=(state.validatedBasketAnalyses||0)+1;
+   state.claimAnalyses.push({...x,analysisStatus:'validated-basket',bundleRule:br.id,analysisFormula:formula,
+     allocations:allocs.map(a=>({serviceId:a.service._id,service:a.label||allocationServiceLabel(a.service),amount:a.amount})),
+     analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${formula} · ${br.label}`});
+   return true
+ }
+ return false
+}
 
 function deterministicOfficialPriceForService(s){
  let fundText=normText([s.source_sheet,s.fund_sub,s.service_type].filter(Boolean).join(' | '));
@@ -3548,10 +3741,11 @@ function materializeKnownCompositeVirtualServices(bundle,stm){
 }
 
 function hasCompositeClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>c.allocationStatus==='bundle-split'||c.allocationStatus==='global-bundle')}
-function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate','statement-quantity'].includes(c.allocationStatus))}
+function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate','statement-quantity','validated-basket'].includes(c.allocationStatus))}
 function aggregateEvidenceType(r){
  let claims=Array.isArray(r.claims)?r.claims:[];
  if(claims.some(c=>c.allocationStatus==='rep-aggregate'))return 'REP+CID/HN ตรง Statement และบริการใน REP รวมราคาทางการตรง PP(AI)';
+ if(claims.some(c=>c.allocationStatus==='validated-basket'))return 'Validated Statement Basket Guard: สูตรบริการ/จำนวนหน่วยที่ยืนยันแล้ว + อัตรา PPFS69 ตรง PP(AI)';
  if(claims.some(c=>c.allocationStatus==='global-bundle'))return 'ทะเบียนบริการจริง + วิเคราะห์ยอดรวมด้วยตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='bundle-split'))return 'ทะเบียนบริการ + ตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='aggregate-split'))return 'ทะเบียนบริการจริงครบองค์ประกอบ';
@@ -3733,10 +3927,10 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  return paid.length?paid:uniqueStatementRows(rows)
 }
 function recomputeAll(){
- let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.sourceConflicts=[];
+ let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.sourceConflicts=[];
  // Claim-derived logical rows are regenerated from validated rules on every recompute.
  // Never feed the previous derived rows back into matching, otherwise they would duplicate themselves.
- state.services=(state.services||[]).filter(s=>!s._derivedFromCompositeClaim&&!s._derivedFromAuxEvidence&&!s._derivedFromStatementComponent);
+ state.services=(state.services||[]).filter(s=>!s._derivedFromCompositeClaim&&!s._derivedFromAuxEvidence&&!s._derivedFromStatementComponent&&!s._derivedFromValidatedBasket);
  state.services.forEach(s=>{delete s._supersededByCompositeClaim;delete s._supersededReason;delete s._validatedQuantityExpected;delete s._validatedQuantity;delete s._validatedQuantityRule});
  // Source-level duplicate guard MUST run before Claim Reference backfill/matching.
  // Otherwise one duplicated registry row can be paid while its twin is left as REP-confirmed.
@@ -3772,6 +3966,10 @@ function recomputeAll(){
      state.claimAnalyses.push({...annotated,analysisStatus:priorFY?'prior-fiscal-year':'unmatched'});
      return
    }
+
+   // -0.5) Validated Statement Basket Guard: สูตรยอดรวมที่ยืนยันจาก HIS/Statement แล้ว
+   // ต้องทำก่อน REP-first/partial เพื่อไม่ให้ anchor service กินยอดเพียงบางส่วนและสร้าง Residual เท็จ
+   if(applyValidatedStatementBasket(x,b))return;
 
    // 0) REP-FIRST สำหรับทุกกองทุน · Fund Portfolio Dashboard: ถ้า REP+CID/HN ตรง ให้จัดสรรจากบริการใน REP นั้นก่อน
    // ป้องกัน false unpaid จาก candidate อื่นในวันเดียวกันที่ทำให้ชุดราคากำกวม
@@ -5102,7 +5300,7 @@ function exportClaimReferenceAuditCSV(){
  downloadBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'PP_Claim_Reference_Audit.csv')
 }
 
-function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.recon.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)),dupS=state.serviceDedup?.removed||0,dupT=state.stmDedup?.removed||0,normP=state.serviceNormalization?.normalized||0,expandP=state.serviceNormalization?.expanded||0,stmComp=state.statementComponentMaterialized||0,srcConflict=(state.sourceConflicts||[]).length,exactFix=state.exactStatementCorrections?.count||0,exactAmt=state.exactStatementCorrections?.amountCorrected||0,anc960=(state.claimAnalyses||[]).filter(x=>x.bundleRule==='ANC_LAB1_CARE_960').length;document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div><div><b>Duplicate Guard</b><div class="kpi value">${intFmt.format(dupS)} / ${intFmt.format(dupT)}</div><div class="small muted">รวมบริการซ้ำ / STM ซ้ำ · Rule Guard หลังคลอด ${intFmt.format(normP)} แถว → เพิ่ม 30015 ${intFmt.format(expandP)} รายการ · Evidence Guard FP ${intFmt.format(state.auxMaterialized||0)} รายการ · Statement Component ${intFmt.format(stmComp)} · Exact Statement Guard ${intFmt.format(exactFix)} รายการ (${moneyFmt.format(exactAmt)} บาท) · ANC 960 Guard ${intFmt.format(anc960)} รายการ · PDPA Display Guard เปิดใช้งาน · Source Conflict ${intFmt.format(srcConflict)}</div></div></div>`}
+function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.recon.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)),dupS=state.serviceDedup?.removed||0,dupT=state.stmDedup?.removed||0,normP=state.serviceNormalization?.normalized||0,expandP=state.serviceNormalization?.expanded||0,stmComp=state.statementComponentMaterialized||0,srcConflict=(state.sourceConflicts||[]).length,exactFix=state.exactStatementCorrections?.count||0,exactAmt=state.exactStatementCorrections?.amountCorrected||0,anc960=(state.claimAnalyses||[]).filter(x=>x.bundleRule==='ANC_LAB1_CARE_960').length;document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div><div><b>Duplicate Guard</b><div class="kpi value">${intFmt.format(dupS)} / ${intFmt.format(dupT)}</div><div class="small muted">รวมบริการซ้ำ / STM ซ้ำ · Rule Guard หลังคลอด ${intFmt.format(normP)} แถว → เพิ่ม 30015 ${intFmt.format(expandP)} รายการ · Evidence Guard FP ${intFmt.format(state.auxMaterialized||0)} รายการ · Statement Component ${intFmt.format(stmComp)} · Exact Statement Guard ${intFmt.format(exactFix)} รายการ (${moneyFmt.format(exactAmt)} บาท) · ANC 960 Guard ${intFmt.format(anc960)} รายการ · Statement Basket Guard ${intFmt.format(state.validatedBasketAnalyses||0)} เคส / Logical ${intFmt.format(state.validatedBasketMaterialized||0)} รายการ · PDPA Display Guard เปิดใช้งาน · Source Conflict ${intFmt.format(srcConflict)}</div></div></div>`}
 /* ===== v6.1.6.6 PDPA Display Guard =====
    - เก็บข้อมูลดิบไว้ใช้ Matching/Search ภายในเหมือนเดิม
    - ปกปิดเฉพาะชั้น Presentation/Export: ชื่อสกุล + CID
