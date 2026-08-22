@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.11 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.12 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1858,7 +1858,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.11 · Validated Statement Basket Guard · ANC 1,360/1,035 & TOP 5,510 Guard · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.12 · Validated Statement Basket Guard · TOP 5,510/5,910 Guard · ANC 1,360/1,035 · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2747,7 +2747,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
 ];
 
 
-/* ===== v6.1.6.11 Validated Statement Basket Guard =====
+/* ===== v6.1.6.12 Validated Statement Basket Guard =====
    เป้าหมาย: แก้ false Residual ที่ Statement PP(AI) เป็น "ยอดรวมหลายบริการ"
    แต่ทะเบียนส่งเบิกมีเพียงบางองค์ประกอบหรือจำนวนหน่วยไม่ครบ
 
@@ -2794,11 +2794,21 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
    {rule:'ANC_LAB1_30012_600',qty:1},
    {rule:'ANC_PREG_TEST_30014_75',qty:1}
   ]},
- {id:'BASKET_TOP_5510_FROM_IMPLANT',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ฝังยาคุม = 5,510',
-  total:5510,anchors:['FP_IMPLANT_INSERT_2150'],
+ {id:'BASKET_TOP_5510',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ฝังยาคุม = 5,510',
+  total:5510,
+  anchors:['FP_IMPLANT_INSERT_2150','ABORTION_3000'],
   components:[
    {rule:'ABORTION_3000',qty:1},
    {rule:'ANC_CARE_30011_360',qty:1},
+   {rule:'FP_IMPLANT_INSERT_2150',qty:1}
+  ]},
+ {id:'BASKET_TOP_ANC_US_IMPLANT_5910',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + Ultrasound + ฝังยาคุม = 5,910',
+  total:5910,
+  anchors:['FP_IMPLANT_INSERT_2150','ABORTION_3000','ANC_CARE_30011_360'],
+  components:[
+   {rule:'ABORTION_3000',qty:1},
+   {rule:'ANC_CARE_30011_360',qty:1},
+   {rule:'ANC_ULTRASOUND_30010_400',qty:1},
    {rule:'FP_IMPLANT_INSERT_2150',qty:1}
   ]},
  {id:'BASKET_DMPA_FERROFOLIC_140',label:'ยาฉีดคุมกำเนิด + Ferrofolic 140',
@@ -3776,7 +3786,12 @@ function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>[
 function aggregateEvidenceType(r){
  let claims=Array.isArray(r.claims)?r.claims:[];
  if(claims.some(c=>c.allocationStatus==='rep-aggregate'))return 'REP+CID/HN ตรง Statement และบริการใน REP รวมราคาทางการตรง PP(AI)';
- if(claims.some(c=>c.allocationStatus==='validated-basket'))return 'Validated Statement Basket Guard: สูตรบริการ/จำนวนหน่วยที่ยืนยันแล้ว + อัตรา PPFS69 ตรง PP(AI)';
+ if(claims.some(c=>c.allocationStatus==='validated-basket')){
+   let rules=[...new Set(claims.map(c=>c.bundleRule||c.basketRule).filter(Boolean))];
+   if(rules.some(r=>String(r).includes('5910')))return 'TOP 5,910 Guard: พบยุติการตั้งครรภ์ 3,000 + ฝากครรภ์ 360 + ฝังยาคุม 2,150 ในผู้ป่วย/REP เดียวกัน และ PP(AI)=5,910 จึงกู้คืน Ultrasound 400';
+   if(rules.some(r=>String(r).includes('5510')))return 'TOP 5,510 Guard: พบยุติการตั้งครรภ์ 3,000 + ฝังยาคุม 2,150 ในผู้ป่วย/REP เดียวกัน และ PP(AI)=5,510 จึงกระทบยอดตามสูตรที่ยืนยันแล้ว';
+   return 'Validated Statement Basket Guard: สูตรบริการ/จำนวนหน่วยที่ยืนยันแล้ว + อัตรา PPFS69 ตรง PP(AI)';
+ }
  if(claims.some(c=>c.allocationStatus==='global-bundle'))return 'ทะเบียนบริการจริง + วิเคราะห์ยอดรวมด้วยตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='bundle-split'))return 'ทะเบียนบริการ + ตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='aggregate-split'))return 'ทะเบียนบริการจริงครบองค์ประกอบ';
