@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.6 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.8 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1856,7 +1856,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.6 · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.8 · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2577,6 +2577,8 @@ function servicePriceScore(s,p){
  if(/(^|\D)30012(\D|$)|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i.test(itemJoined)&&/^แล็บ\s*1$/i.test(name))score=Math.max(score,155);
  if(/(^|\D)30010(\D|$)|อัลตราซาวน์|ultrasound/i.test(itemJoined)&&/อัลตราซาวน์/i.test(name))score=Math.max(score,155);
  if(/(^|\D)30011(\D|$)|ค่าบริการดูแลการฝากครรภ์|^ฝากครรภ์$/i.test(itemJoined)&&/^ฝากครรภ์$/i.test(name))score=Math.max(score,155);
+ if(/(^|\D)30013(\D|$)|ใกล้ครบกำหนด|lab.*term/i.test(itemJoined)&&/ใกล้ครบกำหนด|lab.*term/i.test(name))score=Math.max(score,155);
+ if(/(^|\D)14001(\D|$)|ferrofolic|ferofolic|ยาเม็ดเสริมธาตุเหล็ก/i.test(itemJoined)&&/ยาเม็ดเสริมธาตุเหล็ก|ferrofolic|ferofolic/i.test(name))score=Math.max(score,158);
  if(/30015|ค่าบริการตรวจหลังคลอด/i.test(joined)&&/ค่าบริการตรวจหลังคลอด/i.test(name))score=Math.max(score,150);
  if(/30016|triferdine|ยาเสริมหลังคลอด/i.test(joined)&&/ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน/i.test(name))score=Math.max(score,155);
  let d1=serviceDomain(joined),d2=serviceDomain((p.category||'')+' '+(p.name||''));if(d1&&d1===d2)score+=18;
@@ -2596,9 +2598,18 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   id:'ANC_LAB1_30012_600',
   fundPatterns:[/ฝากครรภ์/i,/\banc\b/i],
   itemPatterns:[/(^|\D)30012(\D|$)/i,/ค่าตรวจทางห้องปฏิบัติการ/i,/แล็บ\s*1/i,/lab\s*1/i],
+  excludeItemPatterns:[/(^|\D)30013(\D|$)/i,/ใกล้ครบกำหนด/i],
   officialName:/^แล็บ\s*1$/i,
   rate:600,requireItemMatch:true,
   canonicalFund:'ฝากครรภ์',canonicalService:'แล็บ1'
+ },
+ {
+  id:'ANC_LAB_TERM_30013_190',
+  fundPatterns:[/ฝากครรภ์/i,/\banc\b/i],
+  itemPatterns:[/(^|\D)30013(\D|$)/i,/ตรวจทางห้องปฏิบัติการ.*อายุครรภ์.*ใกล้ครบกำหนด/i,/lab.*term/i],
+  officialName:/30013|ใกล้ครบกำหนด|lab.*term/i,
+  rate:190,requireItemMatch:true,
+  canonicalFund:'ฝากครรภ์',canonicalService:'ค่าตรวจทางห้องปฏิบัติการเมื่ออายุครรภ์ใกล้ครบกำหนด'
  },
  {
   id:'ANC_ULTRASOUND_30010_400',
@@ -2637,7 +2648,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   fundPatterns:[/วางแผนครอบครัว/i,/คุมกำเนิด/i],
   itemPatterns:[/FP003_1/i,/PILL\s*ANNA/i,/ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม/i],
   officialName:/^ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม$/i,
-  rate:40,requireItemMatch:true,
+  rate:40,requireItemMatch:true,repeatableQty:true,maxQty:12,
   canonicalFund:'วางแผนครอบครัว',canonicalService:'ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม'
  },
  {
@@ -2645,7 +2656,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   fundPatterns:[/วางแผนครอบครัว/i,/คุมกำเนิด/i],
   itemPatterns:[/FP003_2/i,/EXLUTON/i,/ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว/i],
   officialName:/^ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว$/i,
-  rate:80,requireItemMatch:true,
+  rate:80,requireItemMatch:true,repeatableQty:true,maxQty:12,
   canonicalFund:'วางแผนครอบครัว',canonicalService:'ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว'
  },
  {
@@ -2696,6 +2707,14 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   officialName:/^ค่าบริการฝังยาคุมกำเนิด$/i,
   rate:2150,requireItemMatch:true,
   canonicalFund:'วางแผนครอบครัว',canonicalService:'ค่าบริการฝังยาคุมกำเนิด'
+ },
+ {
+  id:'FERROFOLIC_14001_80',
+  fundPatterns:[/ferrofolic/i,/ferofolic/i,/ยาเม็ดเสริมธาตุเหล็ก/i,/ธาตุเหล็ก/i],
+  itemPatterns:[/(^|\D)14001(\D|$)/i,/ferrofolic/i,/ferofolic/i,/ยาเม็ดเสริมธาตุเหล็ก/i],
+  officialName:/ยาเม็ดเสริมธาตุเหล็ก|ferrofolic|ferofolic/i,
+  rate:80,requireItemMatch:true,
+  canonicalFund:'ยาเม็ดเสริมธาตุเหล็ก',canonicalService:'ยาเม็ดเสริมธาตุเหล็ก (Ferrofolic)'
  },
  {
   id:'DENTAL_CLEANING_500',
@@ -2762,16 +2781,28 @@ function expectedInfoForService(s){
    // differ from the PPFS reimbursement rate. Therefore it must NOT create a
    // Price/Rule exception when the service identity is deterministically known.
    if(p._deterministicRule){
+     let rule=OFFICIAL_SERVICE_ALIAS_RULES.find(r=>r.id===p._deterministicRule)||null;
+     let qty=1,amount=rate,qtySource='';
+     // v6.1.6.8 Quantity Guard: บางบริการคิดราคาต่อหน่วยและ Statement จ่ายหลายหน่วย
+     // เช่น COC 40 บาท x 3 = 120 บาท. ใช้เฉพาะบริการที่ประกาศ repeatableQty เท่านั้น
+     // เพื่อไม่ทำให้ DMPA 40 (ทะเบียน) / 60 (PPFS69) ถูกตีความเป็นจำนวนเศษส่วนผิด ๆ
+     if(rule?.repeatableQty&&num(s._validatedQuantityExpected)>0&&Number.isInteger(num(s._validatedQuantity))){
+       qty=num(s._validatedQuantity);amount=num(s._validatedQuantityExpected);qtySource='Statement Quantity Guard';
+     }else if(rule?.repeatableQty&&reg!=null&&rate>0&&reg>=rate){
+       let q=reg/rate,rq=Math.round(q),maxQty=num(rule.maxQty)||12;
+       if(rq>=1&&rq<=maxQty&&Math.abs(q-rq)<.001){qty=rq;amount=rate*rq;qtySource='ทะเบียนบริการ × อัตราต่อหน่วย'}
+     }
      return {
-       amount:rate,
-       source:'อัตราชดเชย PPFS69 (Deterministic Rule)',
+       amount,
+       source:qtySource||'อัตราชดเชย PPFS69 (Deterministic Rule)',
        price:p,
-       qty:1,
+       qty,
        unitRate:rate,
        registeredCharge:reg,
        registered:reg,
        mismatch:false,
-       reimbursementRule:true
+       reimbursementRule:true,
+       quantityValidated:!!qtySource
      }
    }
 
@@ -3367,9 +3398,33 @@ function exactRegisteredPackage(candidates,target,preferredServices=[]){
    กรณี Statement จ่ายยอดรวม แต่ทะเบียนเบิกมีเพียงบางองค์ประกอบ
    กฎที่ยืนยันแล้วต้องมาก่อนการตีความ residual เพื่อไม่ให้แสดงยอดที่อธิบายได้เป็น "รอตรวจ"
 */
+/* ===== v6.1.6.7 ANC 960 Composite Guard =====
+   Validated production pattern from HIS + Statement:
+   30012 Lab 1 = 600 + 30011 ANC care = 360 => PP(AI) 960.
+   Apply only when an ANC/30011 registry anchor exists; never recover amount-only 960.
+   This prevents false Residual 600 / Action List items when Statement already paid the full ANC pair.
+*/
 // Composite Claim Rules: ยอด PP(AI) หนึ่งก้อนอาจประกอบด้วยหลายบริการ
 // กฎนี้ใช้เมื่อมีหลักฐานจากทะเบียนบริการ + ตารางราคา PPFS69 และยอดรวมตรงกันพอดี
 const COMPOSITE_CLAIM_RULES=[
+ {id:'ANC_LAB_TERM_CARE_550',label:'แพ็กเกจ ANC 550 บาท (30013 + 30011)',total:550,
+  anchor:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,
+  components:[
+   {label:'ค่าตรวจทางห้องปฏิบัติการเมื่ออายุครรภ์ใกล้ครบกำหนด',rate:190,match:/30013|ใกล้ครบกำหนด|lab.*term/i,allowVirtual:true},
+   {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:true}
+  ]},
+ {id:'FP_IMPLANT_INSERT_REMOVE_2500',label:'วางแผนครอบครัว 2,500 บาท (ฝังยาคุม + ถอดยาฝัง)',total:2500,
+  anchor:/FP002_1|FP002_2|ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant|ถอดยาฝัง|off\s*(?:norplan|implanon|ฝัง)/i,
+  components:[
+   {label:'ค่าบริการฝังยาคุมกำเนิด',rate:2150,match:/FP002_1|(?:^|\D)FP002(?:\D|$)|ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant/i,allowVirtual:true},
+   {label:'ถอดยาฝังคุมกำเนิด',rate:350,match:/FP002_2|ถอดยาฝัง|ถอดยาคุม|off\s*(?:norplan|implanon|ฝัง)/i,allowVirtual:true}
+  ]},
+ {id:'ANC_LAB1_CARE_960',label:'แพ็กเกจ ANC 960 บาท (30012 + 30011)',total:960,
+  anchor:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,
+  components:[
+   {label:'แล็บ1',rate:600,match:/30012|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i,allowVirtual:true},
+   {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:true}
+  ]},
  {id:'ANC_CORE_1435',label:'แพ็กเกจ ANC 1,435 บาท (30014 + 30012 + 30010 + 30011)',total:1435,
   anchor:/30014|ทดสอบการตั้งครรภ์|pregnancy\s*test|30011|ฝากครรภ์|\banc\b/i,
   components:[
@@ -3395,7 +3450,14 @@ const COMPOSITE_CLAIM_RULES=[
 function compositeServiceText(s){return normText([s.service_type,s.source_sheet,s.fund_sub,s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean).join(' | ')).toLowerCase()}
 function compositePriceExists(comp){
  let rows=officialPriceRows().filter(p=>Math.abs(num(p.rate)-num(comp.rate))<.001&&comp.match.test(normText((p.category||'')+' '+(p.name||'')).toLowerCase()));
- return rows.length>0;
+ if(rows.length)return true;
+ // v6.1.6.8: บางรหัส PPFS69 มี deterministic alias ในระบบแม้ price row ต้นทางไม่มีชื่อที่ตรง regex
+ // อนุญาต virtual component เฉพาะเมื่อ rate + alias identity ตรงกันอย่างชัดเจน
+ return OFFICIAL_SERVICE_ALIAS_RULES.some(r=>{
+   if(Math.abs(num(r.rate)-num(comp.rate))>.001)return false;
+   let txt=normText([r.id,r.canonicalFund,r.canonicalService].filter(Boolean).join(' ')).toLowerCase();
+   return comp.match.test(txt)
+ });
 }
 function solveKnownCompositeClaim(candidates,target){
  let t=Math.round(num(target)*100)/100,pool=uniqServices(candidates);
@@ -3430,10 +3492,10 @@ function solveKnownCompositeClaim(candidates,target){
 function compositeDerivedSheet(label){
  let t=normText(label).toLowerCase();
  if(/ทดสอบ.*ตั้งครรภ์|pregnancy/.test(t))return 'ทดสอบการตั้งครรภ์';
- if(/แล็บ\s*1|อัลตราซาวน์|ฝากครรภ์/.test(t))return 'ฝากครรภ์(30011)';
+ if(/แล็บ\s*1|อัลตราซาวน์|ฝากครรภ์|ใกล้ครบกำหนด/.test(t))return 'ฝากครรภ์(30011)';
  if(/ตรวจหลังคลอด/.test(t))return 'หลังคลอด(30015)';
  if(/ยาเสริมธาตุเหล็ก.*ไอโอดีน|triferdine/.test(t))return 'Triferdine(30016)';
- if(/ฝังยาคุม|ยาฝังคุม/.test(t))return 'วางแผนครอบครัว';
+ if(/ฝังยาคุม|ยาฝังคุม|ถอดยาฝัง|ถอดยาคุม/.test(t))return 'วางแผนครอบครัว';
  if(/ยุติการตั้งครรภ์/.test(t))return 'การยุติการตั้งครรภ์';
  return 'PPFS69 Derived'
 }
@@ -3441,10 +3503,13 @@ function compositeDerivedCode(label){
  let t=normText(label).toLowerCase();
  if(/ทดสอบ.*ตั้งครรภ์|pregnancy/.test(t))return '30014';
  if(/แล็บ\s*1/.test(t))return '30012';
+ if(/ใกล้ครบกำหนด|30013/.test(t))return '30013';
  if(/อัลตราซาวน์/.test(t))return '30010';
  if(/^ฝากครรภ์$|ดูแลการฝากครรภ์/.test(t))return '30011';
  if(/ตรวจหลังคลอด/.test(t))return '30015';
  if(/ยาเสริมธาตุเหล็ก.*ไอโอดีน|triferdine/.test(t))return '30016';
+ if(/ถอดยาฝัง|ถอดยาคุม/.test(t))return 'FP002_2';
+ if(/ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant/.test(t))return 'FP002_1';
  return ''
 }
 function materializeKnownCompositeVirtualServices(bundle,stm){
@@ -3483,7 +3548,7 @@ function materializeKnownCompositeVirtualServices(bundle,stm){
 }
 
 function hasCompositeClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>c.allocationStatus==='bundle-split'||c.allocationStatus==='global-bundle')}
-function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate'].includes(c.allocationStatus))}
+function hasAggregateClaim(r){return Array.isArray(r.claims)&&r.claims.some(c=>['aggregate-split','bundle-split','global-bundle','package-paid','rep-aggregate','statement-quantity'].includes(c.allocationStatus))}
 function aggregateEvidenceType(r){
  let claims=Array.isArray(r.claims)?r.claims:[];
  if(claims.some(c=>c.allocationStatus==='rep-aggregate'))return 'REP+CID/HN ตรง Statement และบริการใน REP รวมราคาทางการตรง PP(AI)';
@@ -3491,6 +3556,7 @@ function aggregateEvidenceType(r){
  if(claims.some(c=>c.allocationStatus==='bundle-split'))return 'ทะเบียนบริการ + ตารางราคา PPFS69';
  if(claims.some(c=>c.allocationStatus==='aggregate-split'))return 'ทะเบียนบริการจริงครบองค์ประกอบ';
  if(claims.some(c=>c.allocationStatus==='package-paid'))return 'PP(AI) ตรงยอดแพ็กเกจ แต่ยังไม่สามารถแยกองค์ประกอบได้อย่างมั่นใจ';
+ if(claims.some(c=>c.allocationStatus==='statement-quantity'))return 'อัตรา PPFS69 ต่อหน่วย × จำนวนหน่วยที่ยืนยันจาก Statement';
  return '';
 }
 function fundAuditExpectedAmount(r){
@@ -3600,6 +3666,49 @@ function exactStatementReconciliationGuard(){
  return state.exactStatementCorrections
 }
 
+/* ===== v6.1.6.8 Statement Date Reservation + Repeatable Quantity Guard =====
+   - REP เดียวกันอาจมีผู้ป่วยคนเดิมหลายวัน: Statement ของวันอื่นห้ามกินบริการที่มี Statement ตรงวันอยู่แล้ว
+   - บริการแบบคิดต่อหน่วย (เช่น COC 40 บาท/แผง) สามารถจ่ายหลายหน่วยใน Statement เดียว
+*/
+function statementRowsForRepPatient(x,stmRepCID,stmRepHN){
+ let rows=[];
+ if(x?.rep&&x?.cid)rows.push(...(stmRepCID.get(String(x.rep)+'|'+x.cid)||[]));
+ if(x?.rep&&x?.hn)rows.push(...(stmRepHN.get(String(x.rep)+'|'+x.hn)||[]));
+ return uniqueStatementRows(rows).filter(z=>num(z.pp_paid)>0)
+}
+function reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN){
+ if(!x?.rep||!x?.date||!b)return b;
+ let stmtRows=statementRowsForRepPatient(x,stmRepCID,stmRepHN);
+ if(stmtRows.length<2)return b;
+ let stmtDates=new Set(stmtRows.map(z=>z.date).filter(Boolean));
+ if(stmtDates.size<2)return b;
+ let reserved=s=>!!(s?.date&&s.date!==x.date&&stmtDates.has(s.date));
+ let filter=arr=>uniqServices((arr||[]).filter(s=>!reserved(s)));
+ let next={...b,rep:filter(b.rep),seq:filter(b.seq),pd:filter(b.pd),repDatePool:filter(b.repDatePool),preferred:filter(b.preferred),pool:filter(b.pool)};
+ if(next.pool.length!==b.pool.length){
+   next.method=(b.method?b.method+' + ':'')+'Statement Date Reservation Guard';
+   next.dateReservedCount=b.pool.length-next.pool.length
+ }
+ return next
+}
+function repeatableQuantityRuleForService(s){
+ let p=deterministicOfficialPriceForService(s);
+ if(!p?._deterministicRule)return null;
+ let rule=OFFICIAL_SERVICE_ALIAS_RULES.find(r=>r.id===p._deterministicRule);
+ if(!rule?.repeatableQty)return null;
+ return {price:p,rule,rate:num(p.rate),maxQty:num(rule.maxQty)||12}
+}
+function solveRepeatableQuantityClaim(preferredServices,target){
+ let pool=uniqServices(preferredServices||[]).filter(s=>num(s.paid)<=0.009);
+ if(pool.length!==1)return null;
+ let s=pool[0],meta=repeatableQuantityRuleForService(s),t=num(target);
+ if(!meta||meta.rate<=0||t<=0)return null;
+ let q=t/meta.rate,rq=Math.round(q);
+ if(rq<2||rq>meta.maxQty||Math.abs(q-rq)>.001)return null;
+ return {service:s,amount:t,qty:rq,unitRate:meta.rate,price:meta.price,rule:meta.rule,
+   formula:`${meta.rule.canonicalService||allocationServiceLabel(s)} ${moneyFmt.format(meta.rate)} × ${rq} = ${moneyFmt.format(t)}`}
+}
+
 function strictRepAllocation(repServices,target){
  let pool=uniqServices(repServices),active=pool.map(s=>({service:s,amount:remainingExpectedForService(s)})).filter(x=>x.amount!=null&&x.amount>0);
  if(!active.length)return {allocations:null,reason:'REP ตรง แต่ยังไม่มีราคามาตรฐานสำหรับบริการ'};
@@ -3620,6 +3729,7 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
    if(s.hn&&stmRepHN.has(String(rep)+'|'+s.hn))rows.push(...stmRepHN.get(String(rep)+'|'+s.hn));
  }
  let paid=uniqueStatementRows(rows).filter(x=>num(x.pp_paid)!==0);
+ if(s.date&&paid.length){let same=paid.filter(x=>!x.date||x.date===s.date);if(same.length)paid=same}
  return paid.length?paid:uniqueStatementRows(rows)
 }
 function recomputeAll(){
@@ -3627,7 +3737,7 @@ function recomputeAll(){
  // Claim-derived logical rows are regenerated from validated rules on every recompute.
  // Never feed the previous derived rows back into matching, otherwise they would duplicate themselves.
  state.services=(state.services||[]).filter(s=>!s._derivedFromCompositeClaim&&!s._derivedFromAuxEvidence&&!s._derivedFromStatementComponent);
- state.services.forEach(s=>{delete s._supersededByCompositeClaim;delete s._supersededReason});
+ state.services.forEach(s=>{delete s._supersededByCompositeClaim;delete s._supersededReason;delete s._validatedQuantityExpected;delete s._validatedQuantity;delete s._validatedQuantityRule});
  // Source-level duplicate guard MUST run before Claim Reference backfill/matching.
  // Otherwise one duplicated registry row can be paid while its twin is left as REP-confirmed.
  applySourceDuplicateGuard();
@@ -3651,6 +3761,7 @@ function recomputeAll(){
  });
  state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
+   b=reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN);
    if(!b.pool.length){
      let amountBundle=solveKnownCompositeClaim([],target);
      if(amountBundle?.amountOnlyRecovery){applyValidatedCompositeBundle(x,amountBundle,b);return}
@@ -3700,6 +3811,18 @@ function recomputeAll(){
    // 3) กฎ Composite ที่ยืนยันไว้ (fallback สำหรับกรณีองค์ประกอบบางรายการไม่มีทะเบียนแยก)
    let bundle=solveKnownCompositeClaim(b.pool,target);
    if(bundle){applyValidatedCompositeBundle(x,bundle,b);return}
+
+   // 3.5) Repeatable Quantity Guard: rate ต่อหน่วย × จำนวน = PP(AI)
+   let qtyClaim=solveRepeatableQuantityClaim(b.preferred,target);
+   if(qtyClaim){
+     qtyClaim.service._validatedQuantityExpected=qtyClaim.amount;
+     qtyClaim.service._validatedQuantity=qtyClaim.qty;
+     qtyClaim.service._validatedQuantityRule=qtyClaim.rule.id;
+     let method=(b.method||'REP/SEQ')+' + Statement Quantity Guard';
+     applyAllocations(x,[{service:qtyClaim.service,amount:qtyClaim.amount}],method,'statement-quantity',{formula:qtyClaim.formula,qty:qtyClaim.qty,unitRate:qtyClaim.unitRate,evidence:'PPFS69 unit rate × จำนวนหน่วยจาก Statement'});
+     state.claimAnalyses.push({...x,analysisStatus:'statement-quantity',analysisFormula:qtyClaim.formula,allocations:[{serviceId:qtyClaim.service._id,service:qtyClaim.rule.canonicalService||allocationServiceLabel(qtyClaim.service),amount:qtyClaim.amount}],analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${moneyFmt.format(qtyClaim.unitRate)} × ${qtyClaim.qty} หน่วย · ยืนยันเฉพาะบริการ repeatableQty`});
+     return
+   }
 
    // 4) หาก PP(AI) ตรงยอดแพ็กเกจของแถวทะเบียนพอดี ให้ยืนยันว่า "จ่ายแล้ว" แม้ยังแยก component ไม่ได้
    // ดีกว่ารายงานเป็นยังไม่พบชดเชย ทั้งที่ Statement จ่ายยอด package ตรงกัน
@@ -4979,7 +5102,7 @@ function exportClaimReferenceAuditCSV(){
  downloadBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'PP_Claim_Reference_Audit.csv')
 }
 
-function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.recon.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)),dupS=state.serviceDedup?.removed||0,dupT=state.stmDedup?.removed||0,normP=state.serviceNormalization?.normalized||0,expandP=state.serviceNormalization?.expanded||0,stmComp=state.statementComponentMaterialized||0,srcConflict=(state.sourceConflicts||[]).length,exactFix=state.exactStatementCorrections?.count||0,exactAmt=state.exactStatementCorrections?.amountCorrected||0;document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div><div><b>Duplicate Guard</b><div class="kpi value">${intFmt.format(dupS)} / ${intFmt.format(dupT)}</div><div class="small muted">รวมบริการซ้ำ / STM ซ้ำ · Rule Guard หลังคลอด ${intFmt.format(normP)} แถว → เพิ่ม 30015 ${intFmt.format(expandP)} รายการ · Evidence Guard FP ${intFmt.format(state.auxMaterialized||0)} รายการ · Statement Component ${intFmt.format(stmComp)} · Exact Statement Guard ${intFmt.format(exactFix)} รายการ (${moneyFmt.format(exactAmt)} บาท) · PDPA Display Guard เปิดใช้งาน · Source Conflict ${intFmt.format(srcConflict)}</div></div></div>`}
+function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.recon.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)),dupS=state.serviceDedup?.removed||0,dupT=state.stmDedup?.removed||0,normP=state.serviceNormalization?.normalized||0,expandP=state.serviceNormalization?.expanded||0,stmComp=state.statementComponentMaterialized||0,srcConflict=(state.sourceConflicts||[]).length,exactFix=state.exactStatementCorrections?.count||0,exactAmt=state.exactStatementCorrections?.amountCorrected||0,anc960=(state.claimAnalyses||[]).filter(x=>x.bundleRule==='ANC_LAB1_CARE_960').length;document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div><div><b>Duplicate Guard</b><div class="kpi value">${intFmt.format(dupS)} / ${intFmt.format(dupT)}</div><div class="small muted">รวมบริการซ้ำ / STM ซ้ำ · Rule Guard หลังคลอด ${intFmt.format(normP)} แถว → เพิ่ม 30015 ${intFmt.format(expandP)} รายการ · Evidence Guard FP ${intFmt.format(state.auxMaterialized||0)} รายการ · Statement Component ${intFmt.format(stmComp)} · Exact Statement Guard ${intFmt.format(exactFix)} รายการ (${moneyFmt.format(exactAmt)} บาท) · ANC 960 Guard ${intFmt.format(anc960)} รายการ · PDPA Display Guard เปิดใช้งาน · Source Conflict ${intFmt.format(srcConflict)}</div></div></div>`}
 /* ===== v6.1.6.6 PDPA Display Guard =====
    - เก็บข้อมูลดิบไว้ใช้ Matching/Search ภายในเหมือนเดิม
    - ปกปิดเฉพาะชั้น Presentation/Export: ชื่อสกุล + CID
@@ -5074,7 +5197,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.6.6-pdpa-display-guard',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.1.6.8-composite-quantity-date-guard',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
