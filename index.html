@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.12 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.13 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1858,7 +1858,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.12 · Validated Statement Basket Guard · TOP 5,510/5,910 Guard · ANC 1,360/1,035 · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.13 · Regression Guard · TOP 5,510/5,910 · Validated Statement Basket · ANC 1,360/1,035 · Composite, Quantity & Date Reservation Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2747,7 +2747,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
 ];
 
 
-/* ===== v6.1.6.12 Validated Statement Basket Guard =====
+/* ===== v6.1.6.13 Validated Statement Basket Guard =====
    เป้าหมาย: แก้ false Residual ที่ Statement PP(AI) เป็น "ยอดรวมหลายบริการ"
    แต่ทะเบียนส่งเบิกมีเพียงบางองค์ประกอบหรือจำนวนหน่วยไม่ครบ
 
@@ -2796,7 +2796,15 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
   ]},
  {id:'BASKET_TOP_5510',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ฝังยาคุม = 5,510',
   total:5510,
-  anchors:['FP_IMPLANT_INSERT_2150','ABORTION_3000'],
+  // v6.1.6.13 Regression Guard:
+  // ยอมรับหลักฐานจริงอย่างน้อย 2 ใน 3 องค์ประกอบที่ยืนยันแล้ว โดยต้องมี Implant 2,150 เสมอ
+  // Path A: Implant + TOP 3,000 -> recover ANC 360
+  // Path B: Implant + ANC 360 -> recover TOP 3,000 (รองรับ HN 000048312 และ pattern เดียวกัน)
+  // ไม่อนุญาต Implant เพียงรายการเดียว เพื่อป้องกัน amount-only inference
+  anchorSets:[
+   ['FP_IMPLANT_INSERT_2150','ABORTION_3000'],
+   ['FP_IMPLANT_INSERT_2150','ANC_CARE_30011_360']
+  ],
   components:[
    {rule:'ABORTION_3000',qty:1},
    {rule:'ANC_CARE_30011_360',qty:1},
@@ -2917,12 +2925,22 @@ function applyValidatedStatementBasket(x,b){
    let actualRuleIds=new Set(uniqServices(b?.pool||[]).map(serviceDeterministicRuleId).filter(Boolean));
    if((br.disallowActualRules||[]).some(id=>actualRuleIds.has(id)))continue;
 
-   let used=new Set(),anchors=[];
-   let ok=true;
-   for(const anchorId of br.anchors||[]){
-     let s=chooseBasketService(b,x,anchorId,used);
-     if(!s){ok=false;break}
-     used.add(s._id);anchors.push(s)
+   // รองรับทั้ง anchors เดิม (AND) และ anchorSets ใหม่ (OR of AND sets)
+   // เช่น TOP 5,510 ใช้ได้ทั้ง [Implant+TOP] หรือ [Implant+ANC]
+   let anchorOptions=(Array.isArray(br.anchorSets)&&br.anchorSets.length)
+     ? br.anchorSets
+     : [br.anchors||[]];
+   let used=new Set(),anchors=[],ok=false,matchedAnchorSet=[];
+   for(const anchorSet of anchorOptions){
+     let localUsed=new Set(),localAnchors=[],localOk=true;
+     for(const anchorId of anchorSet||[]){
+       let s=chooseBasketService(b,x,anchorId,localUsed);
+       if(!s){localOk=false;break}
+       localUsed.add(s._id);localAnchors.push(s)
+     }
+     if(localOk&&localAnchors.length){
+       used=localUsed;anchors=localAnchors;matchedAnchorSet=[...(anchorSet||[])];ok=true;break
+     }
    }
    if(!ok||!anchors.length)continue;
 
@@ -2959,12 +2977,13 @@ function applyValidatedStatementBasket(x,b){
    }
    let formula=formulaParts.join(' + ');
    applyAllocations(x,allocs,(b.method||'REP/SEQ')+' + Validated Statement Basket Guard','validated-basket',
-     {formula,basketRule:br.id,bundleTotal:target,evidence:'Validated HIS/Statement pattern + PPFS69 deterministic rates'});
+     {formula,basketRule:br.id,bundleTotal:target,matchedAnchorSet,
+      evidence:'Validated HIS/Statement pattern + PPFS69 deterministic rates'});
    state.autoAllocated++;
    state.validatedBasketAnalyses=(state.validatedBasketAnalyses||0)+1;
    state.claimAnalyses.push({...x,analysisStatus:'validated-basket',bundleRule:br.id,analysisFormula:formula,
      allocations:allocs.map(a=>({serviceId:a.service._id,service:a.label||allocationServiceLabel(a.service),amount:a.amount})),
-     analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${formula} · ${br.label}`});
+     analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${formula} · ${br.label} · Anchor ${matchedAnchorSet.join(' + ')}`});
    return true
  }
  return false
@@ -3789,7 +3808,7 @@ function aggregateEvidenceType(r){
  if(claims.some(c=>c.allocationStatus==='validated-basket')){
    let rules=[...new Set(claims.map(c=>c.bundleRule||c.basketRule).filter(Boolean))];
    if(rules.some(r=>String(r).includes('5910')))return 'TOP 5,910 Guard: พบยุติการตั้งครรภ์ 3,000 + ฝากครรภ์ 360 + ฝังยาคุม 2,150 ในผู้ป่วย/REP เดียวกัน และ PP(AI)=5,910 จึงกู้คืน Ultrasound 400';
-   if(rules.some(r=>String(r).includes('5510')))return 'TOP 5,510 Guard: พบยุติการตั้งครรภ์ 3,000 + ฝังยาคุม 2,150 ในผู้ป่วย/REP เดียวกัน และ PP(AI)=5,510 จึงกระทบยอดตามสูตรที่ยืนยันแล้ว';
+   if(rules.some(r=>String(r).includes('5510')))return 'TOP 5,510 Regression Guard: PP(AI)=5,510 และพบหลักฐานจริงอย่างน้อย Implant 2,150 + (TOP 3,000 หรือ ANC 360) ในผู้ป่วย/REP เดียวกัน จึงกู้คืนองค์ประกอบที่ขาดตามสูตร 3,000+360+2,150';
    return 'Validated Statement Basket Guard: สูตรบริการ/จำนวนหน่วยที่ยืนยันแล้ว + อัตรา PPFS69 ตรง PP(AI)';
  }
  if(claims.some(c=>c.allocationStatus==='global-bundle'))return 'ทะเบียนบริการจริง + วิเคราะห์ยอดรวมด้วยตารางราคา PPFS69';
