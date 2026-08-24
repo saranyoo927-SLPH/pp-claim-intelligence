@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.14 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.17 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1858,7 +1858,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.14 · Registry-Missing Recovery · TOP 5,510/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP & Statement Component Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.17 · Evidence-First Allocation · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2524,8 +2524,8 @@ function serviceId(s,i){
  let rawRep=serviceRegistryREP(s),rawSeq=normText(s?.registry_seq!==undefined?s.registry_seq:s?.seq).replace(/\.0$/,'');
  return [serviceBaseKey(s),normText(s?.claim_reference||''),normText(s?.time||''),rawRep,rawSeq,normText(s?.source_sheet||''),s?.row??i].join('|')
 }
-function isMatchedStatus(v){return v==='paid'||v==='partial'||v==='rep-confirmed'}
-function statusBadge(s){if(s.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชย</span>';if(s.matchStatus==='partial')return '<span class="badge b-partial">ชดเชยบางส่วน</span>';if(s.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบ REP · ยังไม่มีหลักฐานพอจัดสรร</span>';if(s.matchStatus==='ambiguous')return '<span class="badge b-warn">จับคู่หลายรายการ</span>';return '<span class="badge b-bad">ยังไม่พบชดเชย</span>'}
+function isMatchedStatus(v){return v==='paid'||v==='partial'||v==='rep-confirmed'||v==='evidence-only'}
+function statusBadge(s){if(s.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชย</span>';if(s.matchStatus==='partial')return '<span class="badge b-partial">ชดเชยบางส่วน</span>';if(s.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบ REP · ยังไม่มีหลักฐานพอจัดสรร</span>';if(s.matchStatus==='evidence-only')return '<span class="badge b-gray">ข้อมูลประกอบ · ไม่มีมูลค่าชดเชย</span>';if(s.matchStatus==='ambiguous')return '<span class="badge b-warn">จับคู่หลายรายการ</span>';return '<span class="badge b-bad">ยังไม่พบชดเชย</span>'}
 function priceMap(){
  let byCode=new Map(),byName=new Map(),byCategory=new Map();
  function add(m,k,p){k=normText(k);if(!k)return;let a=m.get(k)||[];a.push(p);m.set(k,a)}
@@ -2747,7 +2747,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
 ];
 
 
-/* ===== v6.1.6.14 Validated Statement Basket Guard =====
+/* ===== v6.1.6.17 Validated Statement Basket Guard =====
    เป้าหมาย: แก้ false Residual ที่ Statement PP(AI) เป็น "ยอดรวมหลายบริการ"
    แต่ทะเบียนส่งเบิกมีเพียงบางองค์ประกอบหรือจำนวนหน่วยไม่ครบ
 
@@ -2794,9 +2794,34 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
    {rule:'ANC_LAB1_30012_600',qty:1},
    {rule:'ANC_PREG_TEST_30014_75',qty:1}
   ]},
+ {id:'BASKET_ANC_CORE_FLUORIDE_1535',label:'ANC core + Fluoride = 1,535',
+  total:1535,crossDate:true,maxSpanDays:60,requireAllActual:true,requireStatementDateAnchor:true,
+  // v6.1.6.17 Evidence-First cross-date rule:
+  // ใช้เฉพาะเมื่อพบบริการจริงครบ 5 องค์ประกอบและแต่ละองค์ประกอบมี deterministic service identity
+  // Amount 1,535 ใช้เป็น final checksum เท่านั้น ไม่ใช้ค้น/เดาบริการจากราคา
+  components:[
+   {rule:'ANC_ULTRASOUND_30010_400',qty:1},
+   {rule:'FLUORIDE_100',qty:1},
+   {rule:'ANC_LAB1_30012_600',qty:1},
+   {rule:'ANC_PREG_TEST_30014_75',qty:1},
+   {rule:'ANC_CARE_30011_360',qty:1}
+  ]},
+ {id:'BASKET_TOP_ANC_PREGTEST_IMPLANT_5585',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ทดสอบการตั้งครรภ์ + ฝังยาคุม = 5,585',
+   total:5585,
+   // v6.1.6.15 Verified 5,585 Basket Recovery
+   // รูปแบบที่ยืนยันจาก HIS/Statement: TOP 3,000 + ANC 360 + Pregnancy test 75 + Implant 2,150 = 5,585
+   // ใช้ 3 anchor จริงที่มีความจำเพาะสูง (Implant + TOP + ANC) แล้ว materialize Pregnancy test 75
+   // เฉพาะเมื่อ Statement PP(AI) ตรง 5,585 พอดี จึงไม่ใช้ amount-only inference ทั่วระบบ
+   anchors:['FP_IMPLANT_INSERT_2150','ABORTION_3000','ANC_CARE_30011_360'],
+   components:[
+    {rule:'ABORTION_3000',qty:1},
+    {rule:'ANC_CARE_30011_360',qty:1},
+    {rule:'ANC_PREG_TEST_30014_75',qty:1},
+    {rule:'FP_IMPLANT_INSERT_2150',qty:1}
+   ]},
  {id:'BASKET_TOP_5510',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ฝังยาคุม = 5,510',
   total:5510,
-  // v6.1.6.14 Registry-Missing Component Recovery
+  // v6.1.6.15 Registry-Missing Component Recovery
   // Production พบว่าบางเคส (เช่น HN 000048312) ทะเบียน PP มีเพียง Implant 2,150
   // แต่ HIS ยืนยัน TOP 3,000 + ANC 360 และ Statement PP(AI)=5,510 ครบสูตร
   // จึงรองรับ 3 Evidence Paths โดยยังบังคับให้ต้องมี Implant จริงเสมอ:
@@ -2870,8 +2895,9 @@ function basketLogicalService(rule,x,anchor,qty,basketRule,idx){
  let base=anchor||{};
  let service={
    row:`BASKET-${basketRule.id}-${idx+1}`,
-   date:x?.date||base.date||'',time:base.time||'',
-   hn:x?.hn||base.hn||'',cid:x?.cid||base.cid||'',name:x?.name||base.name||'',
+   // v6.1.6.15: logical component belongs to the registry visit; Statement date may be settlement date.
+   date:base.date||x?.date||'',time:base.time||'',
+   hn:base.hn||x?.hn||'',cid:base.cid||x?.cid||'',name:base.name||x?.name||'',
    fund_sub:rule.canonicalFund||base.fund_sub||'',
    right_main:base.right_main||'',right_sub:base.right_sub||'',
    rep_ref:'',seq:'',
@@ -2998,6 +3024,138 @@ function applyValidatedStatementBasket(x,b){
    return true
  }
  return false
+}
+
+/* v6.1.6.16 Non-financial evidence row guard
+   30008 ตรวจสุขภาพช่องปากเป็นข้อมูลประกอบบริการ ไม่มีอัตราชดเชยแยกรายการ
+   จึงห้ามสร้าง false REP-confirmed / Revenue at Risk เมื่อ Statement ถูกจัดสรรให้รายการที่มีมูลค่าแล้ว
+*/
+function isKnownNonFinancialService(s){
+ let t=normText([s?.item_detail,s?.ppfs,...(s?.items||[]),s?.service_type,s?.source_sheet].filter(Boolean).join(' | '));
+ return /(^|\D)30008(\D|$)/i.test(t)&&/ตรวจสุขภาพช่องปาก|สุขภาพช่องปาก/i.test(t)
+}
+
+
+/* ===== v6.1.6.17 Evidence-First Allocation Policy =====
+   Auto-allocation hierarchy:
+   A) direct registry REP/SEQ + patient
+   B) unique same-day actual registry evidence
+   C) explicit VALIDATED_STATEMENT_BASKET_RULES with real anchor(s)
+   D) repeatable quantity on a real service anchor
+   E) amount/rate patterns are suggestions only
+
+   Cross-date recovery is NOT a generic subset-sum search anymore.
+   It is allowed only for a declared crossDate validated basket, and every required component
+   must be present as a real deterministic registry service. PP(AI) is only the checksum.
+*/
+function statementPatientMatchesService(x,s){
+ let xc=normCID(x?.cid||''),xh=normHN(x?.hn||''),sc=normCID(s?.cid||''),sh=normHN(s?.hn||'');
+ if(xc&&sc&&xc!==sc)return false;
+ if(xh&&sh&&xh!==sh)return false;
+ if(xc&&sc)return true;
+ if(xh&&sh)return true;
+ return false
+}
+function serviceHasConflictingRawREP(s,statementRep){
+ let raw=serviceRegistryREPs(s),rep=normREP(statementRep||'');
+ return !!(raw.length&&rep&&!raw.includes(rep))
+}
+function serviceDateHasOtherPaidStatement(s,x){
+ if(!s?.date)return false;
+ let self=statementNaturalKey(x||{});
+ return (state.stm||[]).some(y=>{
+   if(num(y.pp_paid)===0||statementNaturalKey(y)===self||y.date!==s.date)return false;
+   return statementPatientMatchesService(y,s)
+ })
+}
+function validatedCrossDateComponentCandidates(x,br,comp){
+ let stmtDay=isoDayNumber(x?.date||''),span=Math.max(1,num(br?.maxSpanDays)||60),rep=normREP(x?.rep||'');
+ if(stmtDay==null)return [];
+ return uniqServices(state.services||[]).filter(s=>{
+   if(!s||s._supersededByCompositeClaim||num(s.paid)>.009||!s.date)return false;
+   if(!statementPatientMatchesService(x,s))return false;
+   if(serviceDeterministicRuleId(s)!==comp.rule)return false;
+   if(serviceHasConflictingRawREP(s,rep))return false;
+   let sd=isoDayNumber(s.date);if(sd==null)return false;
+   let age=stmtDay-sd;if(age<0||age>span)return false;
+   // Do not steal a service date that already has another paid Statement for the patient.
+   if(s.date!==x.date&&serviceDateHasOtherPaidStatement(s,x))return false;
+   return num(remainingExpectedForService(s))>0
+ })
+}
+function applyValidatedCrossDateStatementBasket(x,b){
+ let target=num(x?.pp_paid),rep=normREP(x?.rep||'');
+ if(target<=0||!rep||!(x?.cid||x?.hn)||!x?.date)return false;
+ for(const br of VALIDATED_STATEMENT_BASKET_RULES){
+   if(!br.crossDate||Math.abs(target-num(br.total))>.001)continue;
+   let used=new Set(),allocs=[],selected=[],ok=true;
+   for(const comp of br.components||[]){
+     let qty=Math.max(1,Math.round(num(comp.qty)||1));
+     if(qty!==1){ok=false;break} // cross-date multi-qty needs an explicit future rule
+     let hits=validatedCrossDateComponentCandidates(x,br,comp).filter(s=>!used.has(s._id));
+     // Evidence-first: service identity must be unique BEFORE amount is considered.
+     if(hits.length!==1){ok=false;break}
+     let svc=hits[0],rule=aliasRuleById(comp.rule);if(!rule){ok=false;break}
+     used.add(svc._id);selected.push(svc);
+     allocs.push({service:svc,amount:num(rule.rate),label:rule.canonicalService||allocationServiceLabel(svc)})
+   }
+   if(!ok||!allocs.length)continue;
+   let dates=[...new Set(selected.map(s=>s.date).filter(Boolean))].sort();
+   if(dates.length<2)continue; // same-day flow is handled elsewhere
+   if(br.requireStatementDateAnchor&&!selected.some(s=>s.date===x.date||serviceRegistryREPs(s).includes(rep)))continue;
+   let sum=Math.round(allocs.reduce((a,z)=>a+num(z.amount),0)*100)/100;
+   if(Math.abs(sum-target)>.001)continue; // checksum only
+   selected.forEach(s=>{
+     if(!serviceRegistryREPs(s).length){
+       s.claim_rep_ref=rep;
+       if(!serviceRegistrySEQ(s)&&x.seq)s.claim_seq=normText(x.seq).replace(/\.0$/,'');
+       s.claim_ref_source='Validated Cross-Date Basket + real service anchors';
+       s.claim_ref_evidence=uniqueStatementRows([...(s.claim_ref_evidence||[]),x]);
+       s.claim_ref_ambiguous=false
+     }
+   });
+   let formula=allocationFormula(allocs),method='Evidence-First + Validated Cross-Date Basket';
+   applyAllocations(x,allocs,method,'validated-cross-date-basket',{
+     formula,basketRule:br.id,bundleTotal:target,crossDate:true,serviceDates:dates,
+     evidence:'real deterministic registry services + declared validated basket; PP(AI) checksum only'
+   });
+   state.autoAllocated++;state.crossDateRepAnalyses=(state.crossDateRepAnalyses||0)+1;
+   state.claimAnalyses.push({...x,analysisStatus:'validated-cross-date-basket',bundleRule:br.id,analysisFormula:formula,
+     allocations:allocs.map(a=>({serviceId:a.service._id,service:a.label,amount:a.amount})),
+     analysisNote:`Evidence-First: พบบริการจริงครบตาม ${br.label} · PP(AI) ${moneyFmt.format(target)} ใช้ตรวจผลรวม = ${formula} · ${dates.join(', ')}`});
+   return true
+ }
+ return false
+}
+function solveEvidenceFirstActualClaim(b,target){
+ let t=num(target),preferred=uniqServices(b?.preferred||[]).filter(s=>num(remainingExpectedForService(s))>0);
+ if(preferred.length){
+   let sol=solveClaimAllocation(b?.pool||[],t,preferred);
+   if(!sol?.allocations?.length)return sol||{allocations:null,reason:'direct reference ยังรวมยอดไม่ลงตัว'};
+   let chosen=new Set(sol.allocations.map(a=>a.service._id));
+   let prefTotal=Math.round(preferred.reduce((a,s)=>a+num(remainingExpectedForService(s)),0)*100)/100;
+   // If all direct-reference services could fit within the Statement, every one of them must be selected.
+   if(prefTotal<=t+.001&&preferred.some(s=>!chosen.has(s._id)))
+     return {allocations:null,reason:'พบ exact amount แต่ต้องตัดบริการที่มี REP/SEQ ตรงออก จึงไม่ auto-allocate'};
+   return {...sol,evidenceMode:'direct-reference'}
+ }
+ // No REP/SEQ anchor: never cherry-pick a subset by money. Only accept the entire same-day actual set.
+ let sameDay=uniqServices(b?.pd||[]).filter(s=>num(remainingExpectedForService(s))>0);
+ if(!sameDay.length)return {allocations:null,reason:'ไม่มี REP/SEQ anchor และไม่มีบริการจริงวันเดียวกับ Statement'};
+ let rows=sameDay.map(s=>({service:s,amount:remainingExpectedForService(s)}));
+ if(rows.some(z=>z.amount==null||z.amount<=0))return {allocations:null,reason:'บริการวันเดียวกันมีราคาที่ยังยืนยันไม่ได้'};
+ let total=Math.round(rows.reduce((a,z)=>a+num(z.amount),0)*100)/100;
+ if(Math.abs(total-t)>.001)return {allocations:null,reason:'ไม่มี REP/SEQ anchor และยอดบริการจริงทั้งวันไม่ตรง PP(AI); ไม่เลือก subset จากยอดเงิน'};
+ return {allocations:rows,reason:'บริการจริงทั้งวันรวมตรง PP(AI)',solutions:1,evidenceMode:'same-day-all-actual'}
+}
+function uniqueAliasRuleForVirtual(v){
+ let rate=Math.round(num(v?.amount)*100),label=normText(v?.label||'');
+ let hits=OFFICIAL_SERVICE_ALIAS_RULES.filter(r=>{
+   if(Math.round(num(r.rate)*100)!==rate)return false;
+   let canon=normText(r.canonicalService||'');
+   return normalizePriceText(canon)===normalizePriceText(label)||r.officialName?.test(label)
+ });
+ return hits.length===1?hits[0]:null
 }
 
 function deterministicOfficialPriceForService(s){
@@ -3440,13 +3598,13 @@ function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
 }
 
 function virtualToRegistryScore(service,v){
+ // v6.1.6.17: amount/domain similarity is not enough to identify a service.
+ // A virtual PPFS component may bind back only to a REAL row with the same deterministic service rule.
+ let vr=uniqueAliasRuleForVirtual(v);if(!vr)return -1;
+ if(serviceDeterministicRuleId(service)!==vr.id)return -1;
  let rem=remainingExpectedForService(service);
  if(rem==null||Math.abs(num(rem)-num(v.amount))>.001)return -1;
- let pseudo={name:v.label||'',category:v.category||'',rate:v.amount};
- let score=servicePriceScore(service,pseudo);
- let sd=serviceDomain(compositeServiceText(service)),vd=serviceDomain((v.category||'')+' '+(v.label||''));
- if(sd&&vd&&sd===vd)score+=45;
- if(num(service.claim_expected)>0&&Math.abs(num(service.claim_expected)-num(v.amount))<.001)score+=30;
+ let score=300;
  if(normalizePriceText(compositeServiceText(service)).includes(normalizePriceText(v.label||'')))score+=25;
  return score
 }
@@ -3728,13 +3886,9 @@ function solveKnownCompositeClaim(candidates,target){
  for(const rule of COMPOSITE_CLAIM_RULES){
   if(Math.abs(t-rule.total)>.001)continue;
   let anchor=pool.find(s=>rule.anchor.test(compositeServiceText(s))),amountOnlyRecovery=false;
-  if(!anchor){
-   if(!rule.allowAmountOnly)continue;
-   // Exact Package Recovery ใช้เฉพาะยอดที่ไม่มีอัตรา PPFS69 เดี่ยวเท่ากัน เพื่อไม่ให้เดาจากยอดเงินที่กำกวม
-   let single=officialPriceRows().some(p=>Math.abs(num(p.rate)-t)<.001);
-   if(single)continue;
-   amountOnlyRecovery=true
-  }
+  // v6.1.6.17 Evidence-First: composite rules MUST have a real registry anchor.
+  // A matching PP(AI) total without an anchor is never sufficient for auto-recovery.
+  if(!anchor)continue;
   let used=new Set(),allocations=[],virtual=[],ok=true;
   for(const comp of rule.components){
    let svc=pool.find(s=>!used.has(s._id)&&comp.match.test(compositeServiceText(s)));
@@ -3962,6 +4116,87 @@ function reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN){
  }
  return next
 }
+/* ===== v6.1.6.16 Unique Cross-Date REP Aggregate Guard =====
+   ปัญหาจริง: วันที่ใน Statement อาจเป็นวัน settlement/ประมวลผล ไม่ใช่วันรับบริการทุกองค์ประกอบ
+   ทำให้บริการของผู้ป่วยคนเดียวกันที่อยู่คนละวัน (เช่น ANC 14/08 + Fluoride 02/10)
+   ไม่ถูกดึงเข้าชุด REP เดียวกัน แม้ PP(AI) จะเท่ากับผลรวมอัตรา PPFS69 พอดี
+
+   หลักความปลอดภัย:
+   1) ใช้เฉพาะบริการที่มี deterministic PPFS69 rule เท่านั้น
+   2) ต้องเป็นผู้รับบริการคนเดียวกัน และอยู่ย้อนหลังไม่เกิน 120 วันจาก Statement
+   3) ถ้าทะเบียนมี REP อยู่แล้ว ต้องเป็น REP เดียวกับ Statement เท่านั้น
+   4) ไม่ดึงบริการที่ตรงกับวันที่ของ Statement แถวอื่นภายใต้ REP+ผู้ป่วยเดียวกัน
+   5) ผลรวมต้องตรง PP(AI) และต้องมี exact subset เพียงชุดเดียวจริง ๆ
+   6) ชุดที่เลือกต้องมี anchor อย่างน้อยหนึ่งรายการจาก candidate เดิม/วัน Statement/REP จริง
+   7) ผูก REP/SEQ กลับเฉพาะแถวทะเบียนที่ได้รับการพิสูจน์จากสูตรชุดเดียวนี้
+*/
+const CROSS_DATE_REP_LOOKBACK_DAYS=120;
+function isoDayNumber(d){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(d||''))return null;
+ let [y,m,day]=String(d).split('-').map(Number),t=Date.UTC(y,m-1,day);
+ return Number.isFinite(t)?Math.floor(t/86400000):null
+}
+function sameStatementPatient(s,x){
+ let xc=normCID(x?.cid||''),xh=normHN(x?.hn||''),sc=normCID(s?.cid||''),sh=normHN(s?.hn||'');
+ if(xc&&sc)return xc===sc;
+ if(xh&&sh)return xh===sh;
+ if(xc&&xh){
+   if(sc&&sc!==xc)return false;
+   if(sh&&sh!==xh)return false;
+   return !!(sc||sh)
+ }
+ return false
+}
+function uniqueDeterministicSubset(candidates,target){
+ let targetC=Math.round(num(target)*100);if(targetC<=0)return null;
+ let rows=uniqServices(candidates||[]).map(s=>{
+   if(!s||s._supersededByCompositeClaim)return null;
+   let ei=expectedInfoForService(s),amount=remainingExpectedForService(s);
+   if(!ei?.price?._deterministicRule||amount==null||amount<=0)return null;
+   let cents=Math.round(num(amount)*100);if(cents<=0||cents>targetC)return null;
+   return {service:s,amount:num(amount),cents,rule:ei.price._deterministicRule}
+ }).filter(Boolean);
+ if(!rows.length)return null;
+ // sparse subset-sum DP; count is capped at 2 because we only need to know uniqueness
+ let dp=new Map([[0,{count:1,picks:[]}]]);
+ for(let i=0;i<rows.length;i++){
+   let snap=[...dp.entries()].map(([sum,node])=>[sum,{count:node.count,picks:Array.isArray(node.picks)?[...node.picks]:null}]);
+   for(const [sum,node] of snap){
+     let ns=sum+rows[i].cents;if(ns>targetC)continue;
+     let existing=dp.get(ns),newCount=Math.min(2,(existing?.count||0)+node.count);
+     if(!existing){
+       dp.set(ns,{count:newCount,picks:node.count===1?[...node.picks,i]:null})
+     }else{
+       existing.count=newCount;existing.picks=null
+     }
+   }
+ }
+ let hit=dp.get(targetC);if(!hit||hit.count!==1||!Array.isArray(hit.picks))return null;
+ let chosen=hit.picks.map(i=>rows[i]);
+ return {rows:chosen,allocations:chosen.map(z=>({service:z.service,amount:z.amount})),candidateCount:rows.length}
+}
+function crossDateRepCandidatePool(x,b,stmRepCID,stmRepHN){
+ let rep=normREP(x?.rep||''),stmtDay=isoDayNumber(x?.date||'');
+ if(!rep||stmtDay==null||!(x?.cid||x?.hn))return [];
+ let stmtRows=statementRowsForRepPatient(x,stmRepCID,stmRepHN),curKey=statementNaturalKey(x);
+ let otherStmtDates=new Set(stmtRows.filter(z=>statementNaturalKey(z)!==curKey&&z.date).map(z=>z.date));
+ return uniqServices(state.services||[]).filter(s=>{
+   if(!sameStatementPatient(s,x)||num(s.paid)>.009||!s.date)return false;
+   let sd=isoDayNumber(s.date);if(sd==null)return false;
+   let age=stmtDay-sd;if(age<0||age>CROSS_DATE_REP_LOOKBACK_DAYS)return false;
+   if(otherStmtDates.has(s.date)&&s.date!==x.date)return false;
+   let raw=serviceRegistryREPs(s);if(raw.length&&!raw.includes(rep))return false;
+   let derived=normREPList(s.claim_rep_ref||'');if(!raw.length&&derived.length&&!derived.includes(rep))return false;
+   let ei=expectedInfoForService(s);return !!ei?.price?._deterministicRule&&num(remainingExpectedForService(s))>0
+ })
+}
+function applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN){
+ // v6.1.6.17: generic patient-window subset-sum recovery is disabled.
+ // Cross-date auto-allocation is permitted only by an explicit validated basket
+ // whose component identities are all present as real deterministic registry services.
+ return applyValidatedCrossDateStatementBasket(x,b)
+}
+
 function repeatableQuantityRuleForService(s){
  let p=deterministicOfficialPriceForService(s);
  if(!p?._deterministicRule)return null;
@@ -4004,11 +4239,11 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  return paid.length?paid:uniqueStatementRows(rows)
 }
 function recomputeAll(){
- let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.sourceConflicts=[];
+ let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.crossDateRepAnalyses=0;state.sourceConflicts=[];
  // Claim-derived logical rows are regenerated from validated rules on every recompute.
  // Never feed the previous derived rows back into matching, otherwise they would duplicate themselves.
  state.services=(state.services||[]).filter(s=>!s._derivedFromCompositeClaim&&!s._derivedFromAuxEvidence&&!s._derivedFromStatementComponent&&!s._derivedFromValidatedBasket);
- state.services.forEach(s=>{delete s._supersededByCompositeClaim;delete s._supersededReason;delete s._validatedQuantityExpected;delete s._validatedQuantity;delete s._validatedQuantityRule});
+ state.services.forEach(s=>{delete s._supersededByCompositeClaim;delete s._supersededReason;delete s._validatedQuantityExpected;delete s._validatedQuantity;delete s._validatedQuantityRule;delete s._nonFinancialEvidenceOnly});
  // Source-level duplicate guard MUST run before Claim Reference backfill/matching.
  // Otherwise one duplicated registry row can be paid while its twin is left as REP-confirmed.
  applySourceDuplicateGuard();
@@ -4033,9 +4268,13 @@ function recomputeAll(){
  state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
    b=reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN);
+
+   // v6.1.6.17 Evidence-First cross-date: only explicit validated basket + real deterministic services.
+   // Generic recent-service subset-sum by PP(AI) is disabled.
+   if(applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN))return;
+
    if(!b.pool.length){
-     let amountBundle=solveKnownCompositeClaim([],target);
-     if(amountBundle?.amountOnlyRecovery){applyValidatedCompositeBundle(x,amountBundle,b);return}
+     // v6.1.6.17 Evidence-First: no registry candidate/anchor => never infer a service from PP(AI) amount.
      let priorFY=isPriorFiscalYearDate(x.date);
      let annotated={...x,fiscalStatus:priorFY?'prior-fiscal-year':'current-fiscal-year',
        analysisNote:priorFY?priorFiscalYearLabel():'ไม่พบบริการจาก REP+ผู้รับบริการ, SEQ หรือผู้รับบริการ/วันที่เดียวกัน'};
@@ -4060,17 +4299,20 @@ function recomputeAll(){
      }
    }
 
-   // 1) บริการจริงล้วน: exact subset ของอัตรารายบริการ
-   let sol=solveClaimAllocation(b.pool,target,b.preferred);
+   // 1) Evidence-First actual registry allocation.
+   // ถ้ามี REP/SEQ ให้ exact subset ได้เฉพาะชุดที่รักษา direct-reference evidence;
+   // ถ้าไม่มี REP/SEQ จะรับเฉพาะบริการจริง "ทั้งวัน" ที่รวมตรง PP(AI) — ไม่ cherry-pick จากยอดเงิน
+   let sol=solveEvidenceFirstActualClaim(b,target);
    if(sol.allocations){
      let isMulti=sol.allocations.length>1;if(isMulti)state.autoAllocated++;
-     let method=(b.method||'ผู้ป่วย+วันที่')+(isMulti?' + Global Aggregate: บริการจริงรวมกันตรง PP(AI)':' + ยอดบริการตรง PP(AI)');
-     let formula=applyAllocations(x,sol.allocations,method,isMulti?'aggregate-split':'exact');
-     state.claimAnalyses.push({...x,analysisStatus:isMulti?'split':'exact',allocations:sol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${formula}`});return;
+     let method=(b.method||'ผู้ป่วย+วันที่')+' + Evidence-First '+(sol.evidenceMode||'actual-registry');
+     let formula=applyAllocations(x,sol.allocations,method,isMulti?'evidence-aggregate':'evidence-exact',{evidenceMode:sol.evidenceMode||'actual-registry'});
+     state.claimAnalyses.push({...x,analysisStatus:isMulti?'evidence-aggregate':'evidence-exact',allocations:sol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`Evidence-First · PP(AI) ${moneyFmt.format(target)} = ${formula}`});return;
    }
 
-   // 2) Global Aggregate ทุกกองทุน: ใช้บริการจริงก่อน แล้วเติม residual ด้วยราคา PPFS69 เฉพาะบริบท
-   let globalBundle=solveGlobalAggregateClaim(b.pool,target,b.preferred);
+   // 2) Global Aggregate: allowed only when there is a direct REP/SEQ anchor.
+   // Virtual residuals may bind only to an actual deterministic service row or explicit auxiliary evidence.
+   let globalBundle=(b.preferred&&b.preferred.length)?solveGlobalAggregateClaim(b.pool,target,b.preferred):null;
    if(globalBundle&&!globalBundle.ambiguous){
      globalBundle=materializeVirtualComponents(globalBundle,b.pool,x);
      if(globalBundle.derivedServices?.length){state.services.push(...globalBundle.derivedServices);state.auxMaterialized+=globalBundle.derivedServices.length}
@@ -4109,13 +4351,9 @@ function recomputeAll(){
      state.claimAnalyses.push({...x,analysisStatus:'package-paid',allocations:[{serviceId:packageSvc._id,service:packageSvc.service_type||packageSvc.source_sheet,amount:target}],analysisFormula:formula,analysisNote:`PP(AI) ${moneyFmt.format(target)} ตรงกับยอดแพ็กเกจของทะเบียน แต่ยังไม่พบชุดองค์ประกอบ PPFS69 ที่มีความมั่นใจเพียงพอ จึงยืนยันการจ่ายโดยไม่เดารายการย่อย`});return;
    }
 
-   // 5) Statement Component Guard: sibling Statement แยกยอดเป็นหลาย REP/หลายแถว
-   let statementComponent=deriveStatementComponentClaim(x,b);
-   if(statementComponent){
-     state.services.push(statementComponent.service);state.statementComponentMaterialized++;
-     let formula=applyAllocations(x,[{service:statementComponent.service,amount:target,label:statementComponent.price.name}],(b.method||'ผู้ป่วย+วันที่')+' + Statement Component Guard','statement-component',{formula:`${statementComponent.price.name} ${moneyFmt.format(target)}`,evidence:'Sibling Statement + unique PPFS69 rate'});
-     state.claimAnalyses.push({...x,analysisStatus:'statement-component',analysisFormula:formula,allocations:[{serviceId:statementComponent.service._id,service:statementComponent.price.name,amount:target}],analysisNote:`PP(AI) ${moneyFmt.format(target)} เป็น component แยกของ visit เดียวกัน · ${statementComponent.price.name} ${moneyFmt.format(target)} · ไม่หักยอดจากบริการหลักผิดรายการ`});return
-   }
+   // 5) Statement Component amount-only materialization is disabled in Evidence-First mode.
+   // A sibling Statement + a unique PPFS69 amount may be shown as a suggestion later,
+   // but cannot create a logical service unless an explicit validated basket/auxiliary registry evidence identifies it.
 
    // 6) Partial: มี preferred ชัดเจน จัดสรรเฉพาะส่วนที่พิสูจน์ได้
    if(b.preferred.length===1){
@@ -4138,7 +4376,11 @@ function recomputeAll(){
    if(s._supersededByCompositeClaim){s.repPaymentEvidence=[];s.matchStatus='superseded';return}
    let ev=repEvidenceRowsForService(s,stmRepCID,stmRepHN);s.repPaymentEvidence=ev;
    if(num(s.paid)<=0&&ev.length){
-     s.matchStatus='rep-confirmed';
+     if(isKnownNonFinancialService(s)){
+       s.matchStatus='evidence-only';s._nonFinancialEvidenceOnly=true;
+     }else{
+       s.matchStatus='rep-confirmed';
+     }
    }
  });
  state.services.forEach(s=>{if(num(s.paid)>0){let e=expectedForService(s);s.matchStatus=(e!=null&&num(s.paid)+0.009<e)?'partial':'paid'}});
@@ -4160,7 +4402,7 @@ function priorYearUnmatchedSTM(){return (state.unmatchedSTM||[]).filter(x=>isPri
 const EXCEPTION_META={
  'unpaid':{label:'ยังไม่พบ Statement',short:'ยังไม่พบชดเชย',css:'unpaid',base:85,desc:'มีบริการในทะเบียน แต่ยังไม่พบ Statement ที่ยืนยันการชดเชย',action:'ตรวจงวด Statement, REP/SEQ และสถานะการส่งเบิก หากพ้นรอบจ่ายให้ติดตาม Claim'},
  'partial':{label:'ชดเชยต่ำกว่าสิทธิ',short:'ชดเชยไม่ครบ',css:'partial',base:82,desc:'Statement PP(AI) จ่ายจริงต่ำกว่าอัตรา PPFS69 ของบริการที่ยืนยันได้',action:'ตรวจเหตุผลการหักจ่าย/เงื่อนไข PPFS69 และติดตามส่วนต่างเฉพาะเมื่อ Statement จ่ายจริงต่ำกว่าอัตราสิทธิ'},
- 'rep-confirmed':{label:'พบ REP · ยังไม่มีหลักฐานพอจัดสรร',short:'REP รอตรวจ',css:'rep',base:68,desc:'Statement มี PP(AI) และ REP ตรง แต่หลังผูกสูตรกลับเข้าทะเบียนแล้ว ยังไม่สามารถระบุยอดของบริการนี้ได้อย่างมีเอกลักษณ์',action:'ตรวจบริการจริง/เวชระเบียนเฉพาะรายการนี้ก่อนยืนยันการจัดสรร'},
+ 'rep-confirmed':{label:'พบ REP · Evidence Gap',short:'REP รอหลักฐาน',css:'rep',base:68,desc:'Statement มี PP(AI) และ REP/ผู้รับบริการตรง แต่ Evidence-First Policy ยังไม่พบ direct service link หรือ Validated Basket ที่ยืนยันการจัดสรรได้อย่างมีเอกลักษณ์',action:'ตรวจ REP/SEQ ในทะเบียน, วันบริการจริง หรือเพิ่ม Validated Basket เฉพาะรูปแบบที่ยืนยันจาก HIS/เวชระเบียน — ห้ามยืนยันจากยอดเงินอย่างเดียว'},
  'ambiguous':{label:'ยอดรวมกำกวม',short:'ยอดกำกวม',css:'ambiguous',base:75,desc:'พบ Statement แต่มีมากกว่าหนึ่งชุดบริการที่อธิบายยอด PP(AI) ได้',action:'ตรวจบริการจริงในวันเดียวกัน, เวชระเบียน และ PPFS69 ก่อนยืนยันชุดการจัดสรร'},
  'data-error':{label:'ข้อมูลไม่สมบูรณ์และยังจับคู่ไม่ได้',short:'Data Quality',css:'data',base:78,desc:'ข้อมูลสำคัญในทะเบียนไม่ครบ และยังไม่มีหลักฐาน Statement ที่ยืนยันการจับคู่',action:'แก้ CID/HN/REP/SEQ หรือข้อมูลอ้างอิงในทะเบียนต้นทาง แล้วประมวลผลใหม่'},
  'source-conflict':{label:'ทะเบียนบริการขัดกับ Statement',short:'Source Conflict',css:'data',base:72,desc:'บริการในทะเบียนต้นทางไม่สอดคล้องกับแพ็กเกจ PP(AI) ที่ยืนยันได้ ระบบตัดรายการต้นทางนี้ออกจากการคำนวณการเงินและเก็บไว้เพื่อ Audit',action:'ตรวจเวชระเบียน/HIS และแก้ประเภทบริการในทะเบียนต้นทาง เพื่อให้ข้อมูลต้นทางตรงบริการจริง'},
@@ -4272,9 +4514,37 @@ function addException(arr,type,r,financialRisk=0,reviewAmount=0,reason=''){
    source:r
  })
 }
+function repConfirmedExceptionGroups(){
+ let groups=new Map();
+ for(const r of state.recon||[]){
+   if(r.matchStatus!=='rep-confirmed')continue;
+   let evs=uniqueStatementRows((r.repPaymentEvidence||[]).filter(x=>num(x.pp_paid)!==0));
+   for(const x of evs){
+     let key=statementNaturalKey(x),g=groups.get(key);
+     if(!g){g={key,statement:x,services:[]};groups.set(key,g)}
+     if(!g.services.some(s=>s._id===r._id))g.services.push(r)
+   }
+ }
+ return [...groups.values()].map(g=>{
+   let x=g.statement,base=g.services[0]||{},labels=[...new Set(g.services.map(r=>r.item_detail||r.service_type||r.source_sheet||r.fund_sub).filter(Boolean))];
+   return {...base,
+     _id:'REP-GROUP|'+g.key,registry_rep_ref:'',registry_seq:'',rep_ref:'',seq:'',
+     claim_rep_ref:normREP(x.rep||''),claim_seq:normText(x.seq||'').replace(/\.0$/,''),
+     claim_ref_evidence:[x],repPaymentEvidence:[x],claims:[],
+     _exceptionFund:labels.length>1?'หลายบริการ / REP '+(x.rep||'-'):(base.service_type||base.source_sheet||base.fund_sub||'REP '+(x.rep||'-')),
+     _exceptionService:`${g.services.length} บริการจริงที่เชื่อมกับ Statement: ${labels.slice(0,6).join(' + ')}${labels.length>6?' …':''}`,
+     _exceptionExpected:0,_exceptionPaid:0,_repGroupCount:g.services.length,
+     _repGroupServiceIds:g.services.map(r=>r._id),_repGroupStatement:x,
+     _repGroupReason:`Statement PP(AI) ${moneyFmt.format(num(x.pp_paid))} บาทมี REP/ผู้รับบริการตรง และเชื่อมกับบริการจริง ${g.services.length} รายการ แต่ยังไม่มี direct service evidence / validated basket ที่ระบุการจัดสรรได้อย่างมีเอกลักษณ์`
+   }
+ })
+}
+function repConfirmedStatementCount(){return repConfirmedExceptionGroups().length}
+
 function buildExceptionItems(){
  let arr=[];
  for(let r of state.recon){
+   if(r._nonFinancialEvidenceOnly||r.matchStatus==='evidence-only')continue;
    let exp=exceptionExpectedAmount(r),paid=num(r.paid);
    if(r.matchStatus==='unpaid'){
      let risk=Math.max(exp-paid,0);
@@ -4284,9 +4554,7 @@ function buildExceptionItems(){
    if(r.matchStatus==='partial'){
      addException(arr,'partial',r,Math.max(exp-paid,0),0)
    }
-   if(r.matchStatus==='rep-confirmed'){
-     addException(arr,'rep-confirmed',r,0,exceptionRepValue(r)||exp)
-   }
+   // REP-confirmed is added once per unresolved Statement below, not once per candidate service.
    if(r.matchStatus==='ambiguous'){
      let review=0;
      if(Array.isArray(r.priceHints)&&r.priceHints.length)review=Math.max(...r.priceHints.map(x=>num(x.pp_paid||x.target||0)));
@@ -4306,6 +4574,12 @@ function buildExceptionItems(){
        :'ยังไม่มีราคาทางการ: '+(r.priceMissing||[]).join(', ');
      addException(arr,'price-mismatch',r,0,exp,reason)
    }
+ }
+
+ // Evidence-First: one Action Item per unresolved Statement/REP, with all real candidate services grouped.
+ for(const g of repConfirmedExceptionGroups()){
+   let review=num(g._repGroupStatement?.pp_paid)||exceptionRepValue(g);
+   addException(arr,'rep-confirmed',g,0,review,g._repGroupReason||EXCEPTION_META['rep-confirmed'].desc)
  }
 
  // STM with payment but no service match
@@ -4677,7 +4951,7 @@ function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x
    true
  );
  let svc={};state.recon.forEach(r=>r.items.forEach(it=>{let key=it.replace(/^PPFS-[^_]*_?/,'').slice(0,80);svc[key]=(svc[key]||0)+1}));let top=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([label,value])=>({label,value}));document.getElementById('topServices').innerHTML=hBar(top);
- let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!effectiveClaimSEQ(x)).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',currentYearUnmatchedSTM().length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',state.recon.filter(x=>x.matchStatus==='rep-confirmed').length,'info'],['STM/PP(AI) ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
+ let missingPrice=state.recon.filter(x=>x.items.length&&x.priceMissing.length).length, noSeq=state.recon.filter(x=>!effectiveClaimSEQ(x)).length;let issues=[['บริการ PP ที่ยังไม่พบผลชดเชย',unpaid,'bad'],['STM มียอด PP แต่จับคู่ไฟล์บริการไม่ได้',currentYearUnmatchedSTM().length,'warn'],['STM/AI ยอดรวมที่แตกเป็นหลายบริการสำเร็จ',state.autoAllocated,'good'],['บริการที่พบ PP(AI) ตาม REP แต่ยังรอจัดสรร',repConfirmedStatementCount(),'info'],['STM/PP(AI) ที่อธิบายได้บางส่วนแต่ยังมียอดคงเหลือ',state.residualSTM.length,'warn'],['บริการที่ยังมีรายการราคาไม่ครบ',missingPrice,'warn'],['STM ที่ตารางราคาช่วยเสนอชุดบริการได้',state.priceSuggestions.length,'violet'],['STM จับคู่ได้หลายบริการและยังแยกไม่ได้',state.ambiguousSTM.length,'warn']];document.getElementById('issues').innerHTML=issues.map(x=>`<div class="person-card"><div class="person-head"><div>${x[0]}</div><span class="badge b-${x[2]}">${intFmt.format(x[1])}</span></div></div>`).join('');
  let official=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).length;document.getElementById('priceNotice').className='notice '+(official?'':'warning');document.getElementById('priceNotice').innerHTML=official?`มีราคาแบบนำเข้า/ยืนยันแล้ว <b>${intFmt.format(official)}</b> รายการ ระบบจะใช้ราคานี้ก่อนราคาอนุมานในการแยกยอด PP`:'ยังไม่ได้รับ/นำเข้าตารางราคาอย่างเป็นทางการในชุดไฟล์นี้ ระบบจึงใช้เฉพาะอัตราที่อนุมานจากรายการเดี่ยวที่มีความสอดคล้องสูง และจะแสดงแหล่งราคาเป็น “อนุมาน” จนกว่าจะนำเข้าตารางราคาจริง';
 }
 function barChart(data,money=false){if(!data.length)return '<div class="muted small">ไม่มีข้อมูล</div>';let max=Math.max(...data.map(x=>x.value),1);return `<div class="bars">${data.map(x=>`<div class="barcol"><div class="bar" style="height:${Math.max(2,x.value/max*170)}px"><div class="tip">${money?moneyFmt.format(x.value):intFmt.format(x.value)}</div></div><div class="barlabel">${esc(x.label)}</div></div>`).join('')}</div>`}
@@ -4697,6 +4971,7 @@ function fundDashboardClaimValue(r){
 function aggregateFundPortfolio(){
  let month=document.getElementById('fundDashMonth')?.value||'',base=state.recon.filter(r=>!month||monthKey(r.date)===month),m=new Map();
  base.forEach(r=>{
+   if(r._nonFinancialEvidenceOnly||r.matchStatus==='evidence-only')return;
    let key=fundAuditKey(r)||'ไม่ระบุ';
    if(!m.has(key))m.set(key,{key,count:0,people:new Set(),registered:0,registeredN:0,expected:0,expectedN:0,paid:0,status:{paid:0,partial:0,'rep-confirmed':0,ambiguous:0,unpaid:0}});
    let o=m.get(key);o.count++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);
@@ -4838,6 +5113,7 @@ function fundAuditStatusHTML(r){
  if(r.matchStatus==='paid')return '<span class="badge b-good">ได้รับชดเชยแล้ว</span>';
  if(r.matchStatus==='partial')return '<span class="badge b-warn">ชดเชยบางส่วน</span>';
  if(r.matchStatus==='rep-confirmed')return '<span class="badge b-info">พบ REP · ยังไม่มีหลักฐานพอจัดสรร</span>';
+ if(r.matchStatus==='evidence-only')return '<span class="badge b-gray">ข้อมูลประกอบ · ไม่มีมูลค่าชดเชย</span>';
  if(r.matchStatus==='ambiguous')return '<span class="badge b-violet">รอตรวจสอบยอดรวม</span>';
  return '<span class="badge b-bad">ยังไม่พบชดเชย</span>';
 }
@@ -4890,7 +5166,7 @@ function renderFundAudit(){
 function exportFundAuditCSV(){
  if(!state.fundAuditLoggedIn)return;let rows=fundAuditRows();if(!rows.length){alert('ไม่มีข้อมูลสำหรับส่งออก');return}
  let head=['VN','CID','HN','ชื่อผู้ป่วย','วันที่ตรวจ','เวลา','เลขที่หนังสือ','กองทุนย่อย','รายการบริการ','เรียกเก็บ','สถานะการชดเชย','รับชดเชย','REP','รายละเอียดการจัดสรร'];
- let csv=[head,...rows.map(r=>{let claims=r.claims||[],reps=[...new Set(claims.map(c=>c.rep).filter(Boolean))].join('|'),detail=[...new Set(claims.map(c=>c.allocationFormula||c.matchMethod).filter(Boolean))].join(' | '),status=hasAggregateClaim(r)?'ได้รับชดเชยจากยอดรวม':r.matchStatus==='paid'?'ได้รับชดเชยแล้ว':r.matchStatus==='partial'?'ชดเชยบางส่วน':r.matchStatus==='rep-confirmed'?'พบ REP · ยังไม่มีหลักฐานพอจัดสรร':r.matchStatus==='ambiguous'?'รอตรวจสอบยอดรวม':'ยังไม่พบชดเชย';return [r.claim_reference||'',privacyCID(r.cid),r.hn||'',privacyPatientName(r.name),r.date||'',r.time||'',effectiveClaimREP(r)||effectiveClaimSEQ(r)||'',fundAuditKey(r),r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', '),num(r.claim_expected||r.registeredExpected||r.expected),status,num(r.paid),reps,detail]})].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ let csv=[head,...rows.map(r=>{let claims=r.claims||[],reps=[...new Set(claims.map(c=>c.rep).filter(Boolean))].join('|'),detail=[...new Set(claims.map(c=>c.allocationFormula||c.matchMethod).filter(Boolean))].join(' | '),status=hasAggregateClaim(r)?'ได้รับชดเชยจากยอดรวม':r.matchStatus==='paid'?'ได้รับชดเชยแล้ว':r.matchStatus==='partial'?'ชดเชยบางส่วน':r.matchStatus==='rep-confirmed'?'พบ REP · ยังไม่มีหลักฐานพอจัดสรร':r.matchStatus==='evidence-only'?'ข้อมูลประกอบ · ไม่มีมูลค่าชดเชย':r.matchStatus==='ambiguous'?'รอตรวจสอบยอดรวม':'ยังไม่พบชดเชย';return [r.claim_reference||'',privacyCID(r.cid),r.hn||'',privacyPatientName(r.name),r.date||'',r.time||'',effectiveClaimREP(r)||effectiveClaimSEQ(r)||'',fundAuditKey(r),r.item_detail||r.service_type||r.source_sheet||(r.items||[]).join(', '),num(r.claim_expected||r.registeredExpected||r.expected),status,num(r.paid),reps,detail]})].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
  let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),fund=(document.getElementById('fundAuditFund')?.value||'all').replace(/[\\/:*?"<>|]/g,'_'),month=document.getElementById('fundAuditMonth')?.value||'all';a.href=URL.createObjectURL(blob);a.download=`PP_Fund_Audit_${fund}_${month}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 function renderMonth(){let m=new Map();state.recon.forEach(r=>{let k=monthKey(r.date);if(!m.has(k))m.set(k,{key:k,count:0,matched:0,people:new Set(),paid:0,expected:0,expectedN:0});let o=m.get(k);o.count++;if(isMatchedStatus(r.matchStatus))o.matched++;if(r.cid||r.hn)o.people.add(r.cid||r.hn);o.paid+=r.paid;if(r.expected!=null){o.expected+=r.expected;o.expectedN++}});let rows=[...m.values()].sort((a,b)=>a.key.localeCompare(b.key));document.getElementById('monthBars').innerHTML=barChart(rows.map(x=>({label:thMonth(x.key),value:x.paid})),true);document.getElementById('monthTableBody').innerHTML=rows.map(x=>`<tr><td>${thMonth(x.key)}</td><td class="num">${intFmt.format(x.count)}</td><td class="num">${intFmt.format(x.people.size)}</td><td class="num">${intFmt.format(x.matched)}</td><td class="num">${moneyFmt.format(x.paid)}</td><td class="num">${x.expectedN?moneyFmt.format(x.expected):'<span class="muted">ราคาไม่ครบ</span>'}</td><td class="num">${x.expectedN?moneyFmt.format(x.paid-x.expected):'-'}</td></tr>`).join('')}
