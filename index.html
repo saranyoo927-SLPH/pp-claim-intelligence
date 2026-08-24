@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.20 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.22 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1858,7 +1858,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.20 · Evidence-First Allocation · Statement Exhaustion Guard · ANC 1,435/1,535 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.22 · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2537,38 +2537,23 @@ function normalizeKnownServiceBundles(rows){
      return;
    }
 
-   // 2) Existing Postnatal 285 Guard.
+   // 2) v6.1.6.22 Postnatal Evidence-Only Guard.
+   // A registered amount 285 must NEVER be used to invent 30015. If 30015 and 30016 are
+   // real services, both rows remain in the registry and the Validated PNC Basket will reconcile them.
+   // If only 30016 exists, keep only that real service; PP(AI) 285 alone is not sufficient evidence
+   // that 30015 was actually provided.
    let charge=num(s.claim_expected);
-   if(!isPostnatalSupplementService(s)||Math.abs(charge-285)>.01){out.push(s);return}
-   let examExists=source.some((x,j)=>j!==idx&&isPostnatalExamService(x)&&sameBundleClaimContext(s,x));
-   let supplement={...s,
-     claim_expected:135,
-     _registeredPackageCharge:charge,
-     _bundlePackageTotal:285,
-     _serviceRule:'POSTNATAL_285_SPLIT',
-     _canonicalServiceLabel:'ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน',
-     _officialServiceCode:'30016'
-   };
-   normalized++;
-   if(!examExists){
-     let refs=Array.isArray(s._sourceRows)?s._sourceRows.map(x=>({...x})):[sourceRowRef(s)];
-     let exam={...s,
-       row:String(s.row??idx+1)+'-30015',
-       fund_sub:'ตรวจหลังคลอด',service_type:'ตรวจหลังคลอด',
-       ppfs:'ค่าบริการตรวจหลังคลอด (30015)',items:['ค่าบริการตรวจหลังคลอด (30015)'],
-       item_detail:'30015 ค่าบริการตรวจหลังคลอด (PNC: Postnatal care)',
-       claim_expected:150,
+   if(isPostnatalSupplementService(s)&&Math.abs(charge-285)<=.01){
+     out.push({...s,
+       _registeredPackageCharge:charge,
        _bundlePackageTotal:285,
-       _derivedFromPackage:true,
-       _serviceRule:'POSTNATAL_285_SPLIT',
-       _canonicalServiceLabel:'ค่าบริการตรวจหลังคลอด',
-       _officialServiceCode:'30015',
-       _sourceRows:refs,
-       _duplicateCount:1
-     };
-     out.push(exam);expanded++
-   }else alreadySeparated++;
-   out.push(supplement)
+       _serviceRule:'POSTNATAL_285_EVIDENCE_ONLY',
+       _canonicalServiceLabel:'ค่ายา Triferdine (PNC: Postnatal care)',
+       _officialServiceCode:'30016'
+     });
+     normalized++;return
+   }
+   out.push(s)
  });
  return {rows:out,stats:{input:source.length,output:out.length,normalized,expanded,alreadySeparated,familyPlanningSplit,familyComponentsCreated}}
 }
@@ -2709,17 +2694,17 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   id:'POSTNATAL_EXAM_30015_150',
   fundPatterns:[/ตรวจหลังคลอด/i,/postnatal/i],
   itemPatterns:[/(^|\D)30015(\D|$)/i,/ค่าบริการตรวจหลังคลอด/i,/^ตรวจหลังคลอด$/i],
-  officialName:/ค่าบริการตรวจหลังคลอด/i,
+  officialName:/ค่าบริการตรวจหลังคลอด|30015|PNC\s*:\s*Postnatal\s*care/i,
   rate:150,requireItemMatch:true,
-  canonicalFund:'ตรวจหลังคลอด',canonicalService:'ค่าบริการตรวจหลังคลอด'
+  canonicalFund:'ตรวจหลังคลอด',canonicalService:'ค่าบริการตรวจหลังคลอด (PNC: Postnatal care)'
  },
  {
   id:'POSTNATAL_TRIFERDINE_30016_135',
   fundPatterns:[/Triferdine/i,/ยาเสริมหลังคลอด/i,/หลังคลอด/i],
   itemPatterns:[/(^|\D)30016(\D|$)/i,/Triferdine/i,/ยาเสริมหลังคลอด/i,/ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน/i],
-  officialName:/ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน/i,
+  officialName:/Triferdine|ค่ายา\s*Triferdine|ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน|30016|PNC\s*:\s*Postnatal\s*care/i,
   rate:135,requireItemMatch:true,
-  canonicalFund:'ตรวจหลังคลอด',canonicalService:'ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน'
+  canonicalFund:'ตรวจหลังคลอด',canonicalService:'ค่ายา Triferdine (PNC: Postnatal care)'
  },
  {
   id:'FP_COMBINED_PILL_40',
@@ -2896,6 +2881,24 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
    {rule:'ANC_LAB1_30012_600',qty:1},
    {rule:'ANC_PREG_TEST_30014_75',qty:1},
    {rule:'FLUORIDE_100',qty:1}
+  ]},
+ {id:'BASKET_PNC_285',label:'PNC = 285 (30015 ตรวจหลังคลอด + 30016 Triferdine)',
+  total:285,requireAllActual:true,crossDate:true,maxSpanDays:45,requireStatementDateAnchor:true,
+  // v6.1.6.22 Evidence-First PNC basket: ต้องมีบริการจริงครบก่อน; PP(AI) เป็น checksum เท่านั้น.
+  anchors:['POSTNATAL_EXAM_30015_150','POSTNATAL_TRIFERDINE_30016_135'],
+  components:[
+   {rule:'POSTNATAL_EXAM_30015_150',qty:1},
+   {rule:'POSTNATAL_TRIFERDINE_30016_135',qty:1}
+  ]},
+ {id:'BASKET_PNC_FP_SINGLE3_525',label:'PNC + FP003_2 ฮอร์โมนเดี่ยว 3 แผง = 525',
+  total:525,requireAllActual:true,crossDate:true,maxSpanDays:120,requireStatementDateAnchor:true,
+  // v6.1.6.22 ผู้ใช้ยืนยันบริการจริง: FP003_2 80 x 3 = 240 + 30015 150 + 30016 135 = 525.
+  // ทุก service identity ต้องมีอยู่จริง; ห้ามสร้างบริการจากยอดเงิน.
+  anchors:['FP_SINGLE_PILL_80','POSTNATAL_EXAM_30015_150','POSTNATAL_TRIFERDINE_30016_135'],
+  components:[
+   {rule:'FP_SINGLE_PILL_80',qty:3},
+   {rule:'POSTNATAL_EXAM_30015_150',qty:1},
+   {rule:'POSTNATAL_TRIFERDINE_30016_135',qty:1}
   ]},
  {id:'BASKET_TOP_ANC_PREGTEST_IMPLANT_5585',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ทดสอบการตั้งครรภ์ + ฝังยาคุม = 5,585',
    total:5585,
@@ -3130,7 +3133,7 @@ function isKnownNonFinancialService(s){
 }
 
 
-/* ===== v6.1.6.20 Evidence-First Allocation Policy =====
+/* ===== v6.1.6.22 Evidence-First Allocation Policy =====
    Auto-allocation hierarchy:
    A) direct registry REP/SEQ + patient
    B) unique same-day actual registry evidence
@@ -3184,22 +3187,33 @@ function applyValidatedCrossDateStatementBasket(x,b){
    if(!br.crossDate||Math.abs(target-num(br.total))>.001)continue;
    let used=new Set(),allocs=[],selected=[],ok=true;
    for(const comp of br.components||[]){
-     let qty=Math.max(1,Math.round(num(comp.qty)||1));
-     if(qty!==1){ok=false;break} // cross-date multi-qty needs an explicit future rule
+     let qty=Math.max(1,Math.round(num(comp.qty)||1)),rule=aliasRuleById(comp.rule);
+     if(!rule){ok=false;break}
+     // Cross-date quantity is permitted only when the declared service rule is explicitly repeatable.
+     // The quantity comes from the validated basket definition, not from searching PP(AI) multiples.
+     if(qty>1&&(!rule.repeatableQty||qty>(num(rule.maxQty)||12))){ok=false;break}
      let hits=validatedCrossDateComponentCandidates(x,br,comp).filter(s=>!used.has(s._id));
-     // Evidence-first: service identity must be unique BEFORE amount is considered.
+     // Evidence-first: the real service identity must be unique before the amount checksum is evaluated.
      if(hits.length!==1){ok=false;break}
-     let svc=hits[0],rule=aliasRuleById(comp.rule);if(!rule){ok=false;break}
-     used.add(svc._id);selected.push(svc);
-     allocs.push({service:svc,amount:num(rule.rate),label:rule.canonicalService||allocationServiceLabel(svc)})
+     let svc=hits[0],amount=Math.round(num(rule.rate)*qty*100)/100;
+     used.add(svc._id);selected.push({service:svc,rule,qty,amount});
+     allocs.push({service:svc,amount,label:rule.canonicalService||allocationServiceLabel(svc)})
    }
    if(!ok||!allocs.length)continue;
-   let dates=[...new Set(selected.map(s=>s.date).filter(Boolean))].sort();
+   let dates=[...new Set(selected.map(z=>z.service.date).filter(Boolean))].sort();
    if(dates.length<2)continue; // same-day flow is handled elsewhere
-   if(br.requireStatementDateAnchor&&!selected.some(s=>s.date===x.date||serviceRegistryREPs(s).includes(rep)))continue;
+   if(br.requireStatementDateAnchor&&!selected.some(z=>z.service.date===x.date||serviceRegistryREPs(z.service).includes(rep)))continue;
    let sum=Math.round(allocs.reduce((a,z)=>a+num(z.amount),0)*100)/100;
-   if(Math.abs(sum-target)>.001)continue; // checksum only
-   selected.forEach(s=>{
+   if(Math.abs(sum-target)>.001)continue; // PP(AI) is checksum only
+
+   // Commit quantity metadata only after all real identities are unique and the declared basket total passes.
+   selected.forEach(z=>{
+     let s=z.service;
+     if(z.qty>1){
+       s._validatedQuantityExpected=z.amount;
+       s._validatedQuantity=z.qty;
+       s._validatedQuantityRule=z.rule.id
+     }
      if(!serviceRegistryREPs(s).length){
        s.claim_rep_ref=rep;
        if(!serviceRegistrySEQ(s)&&x.seq)s.claim_seq=normText(x.seq).replace(/\.0$/,'');
@@ -3253,7 +3267,15 @@ function uniqueAliasRuleForVirtual(v){
  return hits.length===1?hits[0]:null
 }
 
+/* ===== v6.1.6.22 Price Classification Cache =====
+   Service identity does not change while one recompute cycle is running.
+   Cache deterministic/best official price matching to avoid rescanning PPFS69 rules/prices
+   thousands of times for the same registry rows. Caches are reset at recomputeAll().
+*/
 function deterministicOfficialPriceForService(s){
+ if(!s)return null;
+ if(state._deterministicPriceCache?.has(s))return state._deterministicPriceCache.get(s);
+ let result=null;
  let fundText=normText([s.source_sheet,s.fund_sub,s.service_type].filter(Boolean).join(' | '));
  let itemText=normText([s.item_detail,s.ppfs,...(s.items||[])].filter(Boolean).join(' | '));
  for(const rule of OFFICIAL_SERVICE_ALIAS_RULES){
@@ -3263,7 +3285,7 @@ function deterministicOfficialPriceForService(s){
    let ruleMatched=rule.requireItemMatch?itemMatch:(rule.requireFundMatch?fundMatch:(fundMatch||itemMatch));
    if(excluded||!ruleMatched)continue;
 
-   let candidates=(state.prices||[]).filter(p=>
+   let candidates=(state._officialPriceRowsCache||state.prices||[]).filter(p=>
      p.source==='official'
      && Math.abs(num(p.rate)-num(rule.rate))<0.001
      && rule.officialName.test(normText(p.name))
@@ -3276,17 +3298,24 @@ function deterministicOfficialPriceForService(s){
      source:'official',
      evidence:'Deterministic PPFS69 alias rule'
    };
-   return {...p,_matchScore:200,_deterministicRule:rule.id,_canonicalFund:rule.canonicalFund,_canonicalService:rule.canonicalService}
+   result={...p,_matchScore:200,_deterministicRule:rule.id,_canonicalFund:rule.canonicalFund,_canonicalService:rule.canonicalService};
+   break
  }
- return null
+ state._deterministicPriceCache?.set(s,result);
+ return result
 }
 
 function bestOfficialPriceForService(s){
+ if(!s)return null;
+ if(state._bestOfficialPriceCache?.has(s))return state._bestOfficialPriceCache.get(s);
  let exact=deterministicOfficialPriceForService(s);
- if(exact)return exact;
- let ranked=state.prices.filter(p=>p.source==='official'&&num(p.rate)>0).map(p=>({p,score:servicePriceScore(s,p)})).filter(x=>x.score>=70).sort((a,b)=>b.score-a.score);
- if(!ranked.length)return null;let top=ranked[0].score,topRows=ranked.filter(x=>x.score===top),rates=[...new Set(topRows.map(x=>Math.round(num(x.p.rate)*100)))];
- if(rates.length!==1)return null;return {...topRows[0].p,_matchScore:top}
+ if(exact){state._bestOfficialPriceCache?.set(s,exact);return exact}
+ let rows=state._officialPriceRowsCache||state.prices.filter(p=>p.source==='official'&&num(p.rate)>0);
+ let ranked=rows.map(p=>({p,score:servicePriceScore(s,p)})).filter(x=>x.score>=70).sort((a,b)=>b.score-a.score);
+ let result=null;
+ if(ranked.length){let top=ranked[0].score,topRows=ranked.filter(x=>x.score===top),rates=[...new Set(topRows.map(x=>Math.round(num(x.p.rate)*100)))];if(rates.length===1)result={...topRows[0].p,_matchScore:top}}
+ state._bestOfficialPriceCache?.set(s,result);
+ return result
 }
 function expectedInfoForService(s){
  let reg=num(s.claim_expected)>0?num(s.claim_expected):null,p=bestOfficialPriceForService(s);
@@ -3959,11 +3988,12 @@ const COMPOSITE_CLAIM_RULES=[
    {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:false},
    {label:'เคลือบฟลูออไรด์ (กลุ่มเสี่ยง)',rate:100,match:/15001|เคลือบฟล[ูอ]ออไรด์|ฟล[ูอ]ออไรด์/i,allowVirtual:false}
   ]},
- {id:'POSTNATAL_285',label:'บริการหลังคลอด 285 บาท (30015 + 30016)',total:285,
-  anchor:/หลังคลอด|postnatal|triferdine|30015|30016/i,allowAmountOnly:true,
+ {id:'POSTNATAL_285',label:'บริการหลังคลอด 285 บาท (30015 + 30016)',total:285,requireAllActual:true,
+  // v6.1.6.22 Evidence-First: amount 285 is never enough to create a missing PNC service.
+  anchor:/หลังคลอด|postnatal|triferdine|30015|30016/i,
   components:[
-   {label:'ค่าบริการตรวจหลังคลอด',rate:150,match:/30015|ค่าบริการตรวจหลังคลอด|postnatal care/i,allowVirtual:true},
-   {label:'ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน',rate:135,match:/30016|triferdine|ยาเสริมหลังคลอด|ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน/i,allowVirtual:true}
+   {label:'ค่าบริการตรวจหลังคลอด (PNC: Postnatal care)',rate:150,match:/30015|ค่าบริการตรวจหลังคลอด|postnatal care/i,allowVirtual:false},
+   {label:'ค่ายา Triferdine (PNC: Postnatal care)',rate:135,match:/30016|triferdine|ยาเสริมหลังคลอด|ยาเสริมธาตุเหล็ก.*กรดโฟลิ[กค].*ไอโอดีน/i,allowVirtual:false}
   ]},
  {id:'TOP_5510',label:'แพ็กเกจยุติการตั้งครรภ์ 5,510 บาท',total:5510,
   anchor:/ยุติการตั้งครรภ์|termination/i,
@@ -4095,17 +4125,35 @@ function fundAuditExpectedAmount(r){
  let v=hasAggregateClaim(r)&&num(r.expected)>0?num(r.expected):num(r.claim_expected||r.registeredExpected||r.expected);
  return v
 }
-function officialPriceRows(){return state.prices.filter(p=>p.source==='official'&&num(p.rate)>0)}
-function suggestClaimByOfficialPrice(candidates,target){
- let targetC=Math.round(num(target)*100),pool=uniqServices(candidates),known=pool.map(s=>({s,p:bestOfficialPriceForService(s)})).filter(x=>x.p&&num(x.p.rate)>0),ctx=contextualOfficialPrices(pool,target);if(targetC<=0||!ctx.length||!known.length)return null;
- let suggestions=[];
- function add(parts,missing){let sum=parts.reduce((a,x)=>a+num(x.rate),0);if(Math.round(sum*100)!==targetC)return;let score=parts.filter(x=>x.registered).length*160+parts.reduce((a,x)=>a+(x.contextScore||0),0)-missing.length*50-parts.length*3;let key=parts.map(x=>(x.p?.category||'')+'|'+(x.p?.name||x.label)+'|'+x.rate).sort().join('||');suggestions.push({parts,missing,score,key})}
- for(const k of known){let a=num(k.p.rate),rem=Math.round((num(target)-a)*100)/100;if(rem<=0)continue;for(const x of ctx){let p=x.p;if(Math.abs(num(p.rate)-rem)<.001)add([{registered:true,service:k.s,p:k.p,label:k.s.service_type||k.s.source_sheet,rate:a,contextScore:k.p._matchScore||70},{registered:false,p,label:p.name,rate:num(p.rate),contextScore:x.score}],[p])}}
- for(const k of known){let a=num(k.p.rate),rem=Math.round((num(target)-a)*100)/100;if(rem<=0)continue;for(let i=0;i<ctx.length;i++){let x1=ctx[i],p1=x1.p,r2=rem-num(p1.rate);if(r2<=0)continue;for(let j=i;j<ctx.length;j++){let x2=ctx[j],p2=x2.p;if(Math.abs(num(p2.rate)-r2)<.001)add([{registered:true,service:k.s,p:k.p,label:k.s.service_type||k.s.source_sheet,rate:a,contextScore:k.p._matchScore||70},{registered:false,p:p1,label:p1.name,rate:num(p1.rate),contextScore:x1.score},{registered:false,p:p2,label:p2.name,rate:num(p2.rate),contextScore:x2.score}],[p1,p2])}}}
- let uniq=new Map();suggestions.sort((a,b)=>b.score-a.score).forEach(s=>{if(!uniq.has(s.key))uniq.set(s.key,s)});let arr=[...uniq.values()].sort((a,b)=>b.score-a.score).slice(0,5);if(!arr.length)return null;
- let best=arr[0],formula=best.parts.map(x=>`${x.registered?'✓ ':'? '}${x.label||x.p?.name||'บริการ'} ${moneyFmt.format(x.rate)}`).join(' + '),missingNames=best.missing.map(p=>p.name);
- return {formula,missingNames,alternatives:arr.length,score:best.score,note:`PP(AI) ${moneyFmt.format(target)} บาท มีชุดราคาที่เป็นไปได้ในบริบทกองทุนนี้: ${formula}${arr.length>1?' · มีทางเลือกมากกว่า 1 ชุด จึงยังไม่จัดสรรอัตโนมัติ':''}`}
+function officialPriceRows(){
+ if(Array.isArray(state._officialPriceRowsCache))return state._officialPriceRowsCache;
+ state._officialPriceRowsCache=(state.prices||[]).filter(p=>p.source==='official'&&num(p.rate)>0);
+ return state._officialPriceRowsCache
 }
+function suggestClaimByOfficialPrice(candidates,target){
+ // v6.1.6.22 Performance/Evidence-First: suggestions are non-financial hints only.
+ // Search at most ONE missing official component and cap the contextual price list.
+ // The previous two-virtual nested search was O(price²) for every unresolved Statement
+ // and could freeze the browser on large production datasets.
+ let t=num(target),pool=uniqServices(candidates);if(t<=0||!pool.length)return null;
+ let known=pool.map(s=>({s,p:bestOfficialPriceForService(s)})).filter(x=>x.p&&num(x.p.rate)>0).slice(0,12);
+ if(!known.length)return null;
+ let ctx=contextualOfficialPrices(pool,target).slice(0,24),suggestions=[];
+ for(const k of known){
+   let a=num(k.p.rate),rem=Math.round((t-a)*100)/100;if(rem<=0)continue;
+   let hits=ctx.filter(x=>Math.abs(num(x.p.rate)-rem)<.001);
+   let sig=new Map();
+   for(const x of hits){let key=normalizePriceText((x.p.category||'')+'|'+(x.p.name||''))+'|'+Math.round(num(x.p.rate)*100);if(!sig.has(key))sig.set(key,x)}
+   if(sig.size===1){
+     let x=[...sig.values()][0],formula=`✓ ${k.s.service_type||k.s.source_sheet||'บริการจริง'} ${moneyFmt.format(a)} + ? ${x.p.name} ${moneyFmt.format(rem)}`;
+     suggestions.push({formula,missingNames:[x.p.name],score:(k.p._matchScore||70)+(x.score||0),note:`ข้อเสนอเพื่อการตรวจสอบเท่านั้น: PP(AI) ${moneyFmt.format(t)} อาจประกอบด้วย ${formula} · ระบบไม่จัดสรรอัตโนมัติจากยอดเงิน`})
+   }
+ }
+ if(!suggestions.length)return null;
+ suggestions.sort((a,b)=>b.score-a.score);
+ return suggestions[0]
+}
+
 function applyAllocations(x,allocs,method,status='allocated',meta={}){
  let formula=meta.formula||allocationFormula(allocs),target=num(x.pp_paid),extra={...meta};delete extra.formula;
  (allocs||[]).forEach(({service,amount})=>{
@@ -4153,6 +4201,8 @@ function statementRowsForExactService(s,idx){
 function exactStatementReconciliationGuard(){
  let idx=buildPaidStatementPatientIndex(),count=0,amountCorrected=0,rowsFixed=[];
  let services=(state.services||[]).filter(s=>!s._supersededByCompositeClaim);
+ // v6.1.6.22: one claim-allocation index instead of scanning every service for every candidate.
+ let allocIdx=buildStatementAllocationIndexMap(services);
  for(const s of services){
    let ei=expectedInfoForService(s),p=ei?.price,expected=num(ei?.amount);
    if(!p?._deterministicRule||expected<=0)continue;
@@ -4160,14 +4210,9 @@ function exactStatementReconciliationGuard(){
 
    let exact=statementRowsForExactService(s,idx).filter(x=>Math.abs(num(x.pp_paid)-expected)<.001);
    if(exact.length!==1)continue;
-   let x=exact[0],key=statementNaturalKey(x),allocRefs=[];
-   for(const other of services){
-     for(const c of (other.claims||[])){
-       if(statementNaturalKey(c)===key&&num(c.allocatedPP)>0)allocRefs.push({service:other,claim:c})
-     }
-   }
+   let x=exact[0],key=statementNaturalKey(x),a0=allocIdx.get(key);
    // ห้ามแย่ง Statement ที่ถูกจัดสรรให้บริการอื่นแล้ว
-   if(allocRefs.some(z=>z.service!==s))continue;
+   if(a0&&[...a0.serviceIds].some(id=>id!==s._id))continue;
 
    let before=num(s.paid),same=(s.claims||[]).filter(c=>statementNaturalKey(c)===key),claim;
    if(same.length){
@@ -4185,6 +4230,7 @@ function exactStatementReconciliationGuard(){
    }
    s.paid=Math.round((s.claims||[]).reduce((sum,c)=>sum+num(c.allocatedPP),0)*100)/100;
    amountCorrected+=Math.max(0,s.paid-before);count++;rowsFixed.push({serviceId:s._id,statementKey:key,expected,before,after:s.paid,rep:x.rep,tran:x.tran})
+   let ai=allocIdx.get(key)||{allocated:0,serviceIds:new Set()};ai.allocated=Math.max(ai.allocated,expected);if(s._id)ai.serviceIds.add(s._id);allocIdx.set(key,ai);
 
    // ถ้า Statement row นี้เคยถูกมองเป็น residual/ambiguous ให้ล้าง false positive ออก
    state.residualSTM=(state.residualSTM||[]).filter(z=>statementNaturalKey(z)!==key);
@@ -4333,28 +4379,35 @@ function strictRepAllocation(repServices,target){
  // ชุดย่อยจะ auto-allocate ได้เฉพาะเมื่อผ่าน Validated Statement Basket ก่อนมาถึงจุดนี้เท่านั้น.
  return {allocations:null,reason:'REP ตรง แต่ยอดรวมบริการทั้งหมดไม่ตรง PP(AI); ต้องใช้ direct service evidence หรือ Validated Basket — ไม่เลือก subset จากยอดเงิน',repTotal:total};
 }
-/* ===== v6.1.6.20 Statement Exhaustion Guard =====
-   เมื่อ Statement row ถูกจัดสรรครบ 100% ห้ามใช้ row เดิมเป็นหลักฐานซ้ำให้บริการอื่น.
-   - Statement 1,435 + ANC core 4 บริการจริง => จัดสรร 400+360+600+75; Fluoride 100 ไม่ถูกกินยอด
-   - Statement 1,535 + ANC core 4 + Fluoride 100 ครบจริง => Validated Basket จัดสรรครบทั้ง 5 บริการ
-   ทั้งสองกรณีใช้ service identity เป็นหลัก และใช้ PP(AI) เป็น checksum เท่านั้น.
+/* ===== v6.1.6.22 Statement Exhaustion Index =====
+   Performance fix: the previous guard rescanned ALL services/claims for every evidence check,
+   producing O(services²) work and browser "Page Unresponsive" on production data.
+   Build one allocation index after matching, then every evidence lookup is O(1).
 */
-function statementAllocationForRow(x){
- let key=statementNaturalKey(x||{}),allocated=0,serviceIds=new Set();
- for(const svc of (state.services||[])){
+function buildStatementAllocationIndexMap(services=state.services||[]){
+ let m=new Map();
+ for(const svc of services){
    for(const c of (svc.claims||[])){
-     if(statementNaturalKey(c)===key&&num(c.allocatedPP)>0){
-       allocated+=num(c.allocatedPP);if(svc._id)serviceIds.add(svc._id)
-     }
+     let amount=num(c.allocatedPP);if(amount<=0)continue;
+     let key=statementNaturalKey(c),a=m.get(key);
+     if(!a){a={allocated:0,serviceIds:new Set()};m.set(key,a)}
+     a.allocated+=amount;if(svc._id)a.serviceIds.add(svc._id)
    }
  }
- return {allocated:Math.round(allocated*100)/100,target:num(x?.pp_paid),serviceIds}
+ for(const a of m.values())a.allocated=Math.round(a.allocated*100)/100;
+ return m
+}
+function rebuildStatementAllocationIndex(){
+ state._statementAllocationIndex=buildStatementAllocationIndexMap(state.services||[]);
+ return state._statementAllocationIndex
+}
+function statementAllocationForRow(x){
+ let key=statementNaturalKey(x||{}),idx=state._statementAllocationIndex||rebuildStatementAllocationIndex(),a=idx.get(key);
+ return {allocated:a?.allocated||0,target:num(x?.pp_paid),serviceIds:a?.serviceIds||new Set()}
 }
 function statementEvidenceAvailableForService(s,x){
  let a=statementAllocationForRow(x);
- // ถ้าบริการนี้ได้รับ allocation จาก Statement row นี้ ให้คง evidence ไว้
  if(s?._id&&a.serviceIds.has(s._id))return true;
- // ถ้า Statement ยังเหลือยอดที่ยังไม่จัดสรรจริง จึงยังใช้เป็น evidence gap ได้
  return a.allocated+0.009<a.target
 }
 function pruneExhaustedDerivedClaimReferences(){
@@ -4363,8 +4416,6 @@ function pruneExhaustedDerivedClaimReferences(){
    let rawReps=serviceRegistryREPs(s),rawSeq=serviceRegistrySEQ(s);
    let ev=uniqueStatementRows(s.claim_ref_evidence||[]).filter(x=>statementEvidenceAvailableForService(s,x));
    if(ev.length){s.claim_ref_evidence=ev;continue}
-   // Raw registry REP/SEQ are source facts and must never be erased.
-   // Only clear references that were derived/backfilled from a Statement which is now fully exhausted elsewhere.
    if(!rawReps.length&&!rawSeq&&(s.claim_rep_ref||s.claim_seq)){
      s.claim_rep_ref='';s.claim_seq='';s.claim_ref_evidence=[];s.claim_ref_source='';s.claim_ref_ambiguous=false;
      s._claimRefPrunedByStatementExhaustion=true
@@ -4387,6 +4438,9 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
 }
 function recomputeAll(){
  let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.crossDateRepAnalyses=0;state.sourceConflicts=[];
+ // v6.1.6.22 per-cycle caches/indexes
+ state._officialPriceRowsCache=(state.prices||[]).filter(p=>p.source==='official'&&num(p.rate)>0);
+ state._deterministicPriceCache=new WeakMap();state._bestOfficialPriceCache=new WeakMap();state._statementAllocationIndex=null;
  // Claim-derived logical rows are regenerated from validated rules on every recompute.
  // Never feed the previous derived rows back into matching, otherwise they would duplicate themselves.
  state.services=(state.services||[]).filter(s=>!s._derivedFromCompositeClaim&&!s._derivedFromAuxEvidence&&!s._derivedFromStatementComponent&&!s._derivedFromValidatedBasket);
@@ -4416,7 +4470,7 @@ function recomputeAll(){
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
    b=reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN);
 
-   // v6.1.6.19 Evidence-First cross-date: only explicit validated basket + real deterministic services.
+   // v6.1.6.22 Evidence-First cross-date: only explicit validated basket + real deterministic services.
    // Generic recent-service subset-sum by PP(AI) is disabled.
    if(applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN))return;
 
@@ -4457,20 +4511,12 @@ function recomputeAll(){
      state.claimAnalyses.push({...x,analysisStatus:isMulti?'evidence-aggregate':'evidence-exact',allocations:sol.allocations.map(a=>({serviceId:a.service._id,service:a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisFormula:formula,analysisNote:`Evidence-First · PP(AI) ${moneyFmt.format(target)} = ${formula}`});return;
    }
 
-   // 2) Global Aggregate: allowed only when there is a direct REP/SEQ anchor.
-   // Virtual residuals may bind only to an actual deterministic service row or explicit auxiliary evidence.
-   let globalBundle=(b.preferred&&b.preferred.length)?solveGlobalAggregateClaim(b.pool,target,b.preferred):null;
-   if(globalBundle&&!globalBundle.ambiguous){
-     globalBundle=materializeVirtualComponents(globalBundle,b.pool,x);
-     if(globalBundle.derivedServices?.length){state.services.push(...globalBundle.derivedServices);state.auxMaterialized+=globalBundle.derivedServices.length}
-   }
-   if(globalBundle&&!globalBundle.ambiguous&&globalBundle.allocations?.length&&!(globalBundle.virtual||[]).length){
-     state.autoAllocated++;
-     let virtualNames=globalBundle.virtual.map(v=>v.label),materializedNames=(globalBundle.materialized||[]).map(v=>v.service||v.label);
-     let method=(b.method||'ผู้ป่วย+วันที่')+' + Global Aggregate Claim Allocation'+(globalBundle.materializedCount?` + Materialized ${globalBundle.materializedCount} บริการจริง`:'');
-     applyAllocations(x,globalBundle.allocations,method,'global-bundle',{formula:globalBundle.formula,bundleTotal:target,virtualComponents:globalBundle.virtual,bundleComponents:globalBundle.full,materializedComponents:globalBundle.materialized||[],evidence:globalBundle.evidence});
-     state.claimAnalyses.push({...x,analysisStatus:'global-bundle',analysisFormula:globalBundle.formula,bundleComponents:globalBundle.full,virtualComponents:globalBundle.virtual,materializedComponents:globalBundle.materialized||[],allocations:globalBundle.allocations.map(a=>({serviceId:a.service._id,service:a.label||a.service.service_type||a.service.source_sheet,amount:a.amount})),analysisNote:`PP(AI) ${moneyFmt.format(target)} = ${globalBundle.formula}${materializedNames.length?' · ผูกกลับทะเบียนจริง: '+materializedNames.join(', '):''}${virtualNames.length?' · ไม่มีทะเบียนแยก: '+virtualNames.join(', '):''}`});return;
-   }
+   // 2) v6.1.6.22 Performance + Evidence-First Guard:
+   // Generic Global Aggregate subset/virtual search is intentionally NOT executed here.
+   // It is exponential (up to 2^18 combinations) and conflicts with Evidence-First because PP(AI)
+   // would become the driver for selecting services. Only declared Validated Baskets / direct evidence
+   // / repeatable-quantity rules may auto-allocate below.
+   let globalBundle=null;
 
    // 3) กฎ Composite ที่ยืนยันไว้ (fallback สำหรับกรณีองค์ประกอบบางรายการไม่มีทะเบียนแยก)
    let bundle=solveKnownCompositeClaim(b.pool,target);
@@ -4515,7 +4561,9 @@ function recomputeAll(){
  });
  // v6.1.6.5 final reconciliation: Statement AI + deterministic PPFS69 exact match wins over registry charge
  exactStatementReconciliationGuard();
- // v6.1.6.19: once a Statement is fully allocated to identified services, remove only weak/backfilled references
+ // v6.1.6.22: build Statement allocation index ONCE; all exhaustion/evidence checks below are O(1).
+ rebuildStatementAllocationIndex();
+ // Once a Statement is fully allocated to identified services, remove only weak/backfilled references
  // from unpaid sibling services so they do not become false REP Evidence Gap items.
  pruneExhaustedDerivedClaimReferences();
 
@@ -5856,7 +5904,7 @@ function personRowHTML(r){
       ${ev?.allocationFormula?`<div><b>แตกยอด PP(AI):</b> ${esc(ev.allocationFormula)}</div>`:''}
     </div>
    </div>
-   ${r._serviceRule==='POSTNATAL_285_SPLIT'?`<div class="notice" style="margin-top:10px"><b>PPFS Rule Guard:</b> ยอดหลังคลอด 285 บาทถูกแยกตาม PPFS69 เป็น 30015 ค่าตรวจหลังคลอด 150 บาท + 30016 ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน 135 บาท${r._derivedFromPackage?' · รายการนี้สร้างเชิงตรรกะจากแพ็กเกจต้นทางเพื่อให้ Reconcile ตรงบริการจริง':''}</div>`:''}
+   ${r._serviceRule==='POSTNATAL_285_EVIDENCE_ONLY'?`<div class="notice" style="margin-top:10px"><b>PPFS Rule Guard:</b> ยอดทะเบียน 285 บาทถูกเก็บเป็นหลักฐานแพ็กเกจเท่านั้น ระบบจะยืนยัน 30015 + 30016 เมื่อพบบริการจริงทั้งสองรายการ ไม่สร้างบริการจากยอดเงิน</div>`:''}
    ${num(r._duplicateCount)>1?`<div class="notice" style="margin-top:10px"><b>Duplicate Guard:</b> รวมทะเบียนต้นทาง ${intFmt.format(r._duplicateCount)} แถวเป็น 1 รายการบริการ เพื่อป้องกันการนับ/จัดสรรซ้ำ</div>`:''}
    ${r._derivedFromAuxEvidence?`<div class="notice" style="margin-top:10px"><b>Evidence Guard:</b> สร้าง Logical Service จากบริการประกอบที่พบในแถวทะเบียน + อัตรา PPFS69 + PP(AI) แบบ exact subset โดยไม่เดาจากยอดเงินเพียงอย่างเดียว</div>`:''}
    ${r._derivedFromValidatedBasket?`<div class="notice" style="margin-top:10px"><b>Validated Statement Basket Guard:</b> สร้าง Logical Service จากสูตรบริการที่ตรวจยืนยันแล้ว + อัตรา PPFS69 + Statement PP(AI) โดยเก็บกฎอ้างอิง ${esc(r._basketRule||r._serviceRule||'-')}</div>`:''}
