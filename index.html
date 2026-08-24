@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.17 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.18 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1858,7 +1858,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.17 · Evidence-First Allocation · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.18 · Evidence-First Allocation · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2458,10 +2458,86 @@ function sameBundleClaimContext(a,b){
  if(!compatibleOptional(a.claim_reference,b.claim_reference,normText))return false;
  return true
 }
+/* ===== v6.1.6.18 Direct Family-Planning Service Split Guard =====
+   เป้าหมาย: เมื่อทะเบียนบริการ 1 แถวระบุบริการจริงมากกว่า 1 รายการอย่างชัดเจน
+   เช่น "FP002:NOR plant(Implanon) ... ,Off Norplan" ให้แตกเป็นบริการจริง 2 รายการ
+   ก่อน Matching: ฝังยาคุม 2,150 + ถอดยาฝังคุมกำเนิด 350 บาท
+
+   หลักความปลอดภัย (Evidence-First):
+   - ตรวจจากข้อความบริการจริง/รหัสบริการเท่านั้น ไม่อนุมานจากยอด 2,500 บาท
+   - Off Norplan / Off Implanon / ถอดยาฝัง = ถอดยาฝังคุมกำเนิด (FP002_2) 350 บาท
+   - ต้องพบหลักฐาน "ฝัง" และ "ถอด" แยกกันในแถวเดียวกันจึงแตก 2 รายการ
+   - ถ้ามีแถวบริการจริงแยกอยู่แล้วใน visit เดียวกัน จะไม่สร้าง logical ซ้ำ
+*/
+function familyPlanningImplantEvidence(s){
+ let raw=serviceRuleText(s);
+ // Direct removal evidence. Keep this intentionally narrow: "off" must refer to implant/Norplan.
+ let removeRe=/(?:^|\D)FP002_2(?:\D|$)|ถอดยาฝัง(?:คุมกำเนิด)?|ถอดยาคุมกำเนิด|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i;
+ let hasRemove=removeRe.test(raw);
+ // Remove the removal phrase first, otherwise words such as "ยาฝัง" inside "ถอดยาฝัง" could
+ // incorrectly become insertion evidence.
+ let insertText=raw
+   .replace(/(?:^|\D)FP002_2(?:\D|$)/ig,' ')
+   .replace(/ถอดยาฝัง(?:คุมกำเนิด)?|ถอดยาคุมกำเนิด/ig,' ')
+   .replace(/off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/ig,' ');
+ let insertRe=/(?:^|\D)FP002(?!_?2)(?:_?1)?(?:\D|$)|nor\s*plant|norplant|implanon|ฝังยาคุมกำเนิด|ยาฝังคุมกำเนิด/i;
+ let hasInsert=insertRe.test(insertText);
+ return {hasInsert,hasRemove,raw};
+}
+function familyPlanningSplitRow(s,kind,packageCharge,idx){
+ let isInsert=kind==='insert';
+ let code=isInsert?'FP002':'FP002_2';
+ let label=isInsert?'ค่าบริการฝังยาคุมกำเนิด':'ถอดยาฝังคุมกำเนิด';
+ let rate=isInsert?2150:350;
+ let original=normText([s?.item_detail,s?.ppfs,...(s?.items||[])].filter(Boolean).join(' | '));
+ let refs=Array.isArray(s?._sourceRows)?s._sourceRows.map(x=>({...x})):[sourceRowRef(s)];
+ return {...s,
+   row:String(s?.row??idx+1)+(isInsert?'-FP002':'-FP002_2'),
+   fund_sub:'วางแผนครอบครัว',
+   service_type:'วางแผนครอบครัว',
+   ppfs:`${code} ${label}`,
+   items:[`${code} ${label}`],
+   item_detail:`${code} ${label}${!isInsert?' (Off Norplan)':''}`,
+   claim_expected:rate,
+   _registeredPackageCharge:packageCharge>0?packageCharge:null,
+   _bundlePackageTotal:packageCharge>0?packageCharge:2500,
+   _validatedBundleOfficialTotal:2500,
+   _derivedFromDirectServiceEvidence:true,
+   _serviceRule:'FP_IMPLANT_INSERT_REMOVE_DIRECT_SPLIT',
+   _canonicalServiceLabel:label,
+   _officialServiceCode:code,
+   _directServiceEvidence:original,
+   _sourceRows:refs,
+   _duplicateCount:1
+ };
+}
 function normalizeKnownServiceBundles(rows){
  let source=(rows||[]).map(x=>({...x,items:Array.isArray(x.items)?[...x.items]:splitItems(x.ppfs)}));
- let out=[],normalized=0,expanded=0,alreadySeparated=0;
+ let out=[],normalized=0,expanded=0,alreadySeparated=0,familyPlanningSplit=0,familyComponentsCreated=0;
  source.forEach((s,idx)=>{
+   // 1) Family Planning: one registry row explicitly contains both Implant + Off Norplan.
+   //    Split by DIRECT service evidence, never by amount.
+   let fp=familyPlanningImplantEvidence(s);
+   if(fp.hasInsert&&fp.hasRemove){
+     let charge=num(s.claim_expected);
+     // If the workbook already contains a separate real component in the same visit, do not duplicate it.
+     let insertExists=source.some((x,j)=>{
+       if(j===idx||!sameBundleClaimContext(s,x))return false;
+       let e=familyPlanningImplantEvidence(x);return e.hasInsert&&!e.hasRemove
+     });
+     let removeExists=source.some((x,j)=>{
+       if(j===idx||!sameBundleClaimContext(s,x))return false;
+       let e=familyPlanningImplantEvidence(x);return e.hasRemove&&!e.hasInsert
+     });
+     if(!insertExists){out.push(familyPlanningSplitRow(s,'insert',charge,idx));familyComponentsCreated++}
+     else alreadySeparated++;
+     if(!removeExists){out.push(familyPlanningSplitRow(s,'remove',charge,idx));familyComponentsCreated++}
+     else alreadySeparated++;
+     normalized++;familyPlanningSplit++;expanded+=Math.max(0,(insertExists?0:1)+(removeExists?0:1)-1);
+     return;
+   }
+
+   // 2) Existing Postnatal 285 Guard.
    let charge=num(s.claim_expected);
    if(!isPostnatalSupplementService(s)||Math.abs(charge-285)>.01){out.push(s);return}
    let examExists=source.some((x,j)=>j!==idx&&isPostnatalExamService(x)&&sameBundleClaimContext(s,x));
@@ -2494,7 +2570,7 @@ function normalizeKnownServiceBundles(rows){
    }else alreadySeparated++;
    out.push(supplement)
  });
- return {rows:out,stats:{input:source.length,output:out.length,normalized,expanded,alreadySeparated}}
+ return {rows:out,stats:{input:source.length,output:out.length,normalized,expanded,alreadySeparated,familyPlanningSplit,familyComponentsCreated}}
 }
 
 function statementNaturalKey(x){
@@ -2573,8 +2649,8 @@ function servicePriceScore(s,p){
  if(/ใส่ห่วงอนามัย|ห่วงคุมกำเนิด|\biud\b/i.test(itemJoined)&&/^ใส่ห่วงอนามัย$/i.test(name))score=Math.max(score,160);
  if(/ยาเม็ดคุมกำเนิดฉุกเฉิน|emergency\s*contrace/i.test(itemJoined)&&/^ยาเม็ดคุมกำเนิดฉุกเฉิน$/i.test(name))score=Math.max(score,160);
  if(/ถุงยางอนามัย|\bcondom\b/i.test(itemJoined)&&/^ถุงยางอนามัย/i.test(name))score=Math.max(score,158);
- if(/fp002_2|ถอดยาฝัง|ถอดยาคุมกำเนิด|off\s*(?:norplan|implanon|ฝัง)/i.test(itemJoined)&&/^ถอดยาฝังคุมกำเนิด$/i.test(name))score=Math.max(score,162);
- if(!/fp002_2|ถอด|off\s*(?:norplan|implanon|ฝัง)/i.test(itemJoined)&&/(?:^|\D)fp002(?:\D|$)|nor\s*plant|implanon|ฝังยาคุมกำเนิด|ยาฝังคุมกำเนิด/i.test(itemJoined)&&/^ค่าบริการฝังยาคุมกำเนิด$/i.test(name))score=Math.max(score,160);
+ if(/fp002_2|ถอดยาฝัง|ถอดยาคุมกำเนิด|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i.test(itemJoined)&&/^ถอดยาฝังคุมกำเนิด$/i.test(name))score=Math.max(score,162);
+ if(!/fp002_2|ถอด|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i.test(itemJoined)&&/(?:^|\D)fp002(?:\D|$)|nor\s*plant|implanon|ฝังยาคุมกำเนิด|ยาฝังคุมกำเนิด/i.test(itemJoined)&&/^ค่าบริการฝังยาคุมกำเนิด$/i.test(name))score=Math.max(score,160);
  if(/(^|\D)30014(\D|$)|ทดสอบ.*ตั้งครรภ์|pregnancy\s*test/i.test(itemJoined)&&/ทดสอบ.*ตั้งครรภ์/i.test(name))score=Math.max(score,152);
  if(/(^|\D)30012(\D|$)|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i.test(itemJoined)&&/^แล็บ\s*1$/i.test(name))score=Math.max(score,155);
  if(/(^|\D)30010(\D|$)|อัลตราซาวน์|ultrasound/i.test(itemJoined)&&/อัลตราซาวน์/i.test(name))score=Math.max(score,155);
@@ -2696,7 +2772,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
  {
   id:'FP_IMPLANT_REMOVE_350',
   fundPatterns:[/วางแผนครอบครัว/i,/คุมกำเนิด/i],
-  itemPatterns:[/FP002_2/i,/ถอดยาฝัง/i,/ถอดยาคุมกำเนิด/i,/off\s*(?:norplan|implanon|ฝัง)/i],
+  itemPatterns:[/FP002_2/i,/ถอดยาฝัง/i,/ถอดยาคุมกำเนิด/i,/off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i],
   officialName:/^ถอดยาฝังคุมกำเนิด$/i,
   rate:350,requireItemMatch:true,
   canonicalFund:'วางแผนครอบครัว',canonicalService:'ถอดยาฝังคุมกำเนิด'
@@ -2705,7 +2781,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
   id:'FP_IMPLANT_INSERT_2150',
   fundPatterns:[/วางแผนครอบครัว/i,/คุมกำเนิด/i],
   itemPatterns:[/(?:^|\D)FP002(?:\D|$)/i,/NOR\s*plant/i,/Implanon/i,/ฝังยาคุมกำเนิด/i,/ยาฝังคุมกำเนิด/i],
-  excludeItemPatterns:[/FP002_2/i,/ถอด/i,/off\s*(?:norplan|implanon|ฝัง)/i],
+  excludeItemPatterns:[/FP002_2/i,/ถอด/i,/off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i],
   officialName:/^ค่าบริการฝังยาคุมกำเนิด$/i,
   rate:2150,requireItemMatch:true,
   canonicalFund:'วางแผนครอบครัว',canonicalService:'ค่าบริการฝังยาคุมกำเนิด'
@@ -2747,7 +2823,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
 ];
 
 
-/* ===== v6.1.6.17 Validated Statement Basket Guard =====
+/* ===== v6.1.6.18 Validated Statement Basket Guard =====
    เป้าหมาย: แก้ false Residual ที่ Statement PP(AI) เป็น "ยอดรวมหลายบริการ"
    แต่ทะเบียนส่งเบิกมีเพียงบางองค์ประกอบหรือจำนวนหน่วยไม่ครบ
 
@@ -2796,7 +2872,7 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
   ]},
  {id:'BASKET_ANC_CORE_FLUORIDE_1535',label:'ANC core + Fluoride = 1,535',
   total:1535,crossDate:true,maxSpanDays:60,requireAllActual:true,requireStatementDateAnchor:true,
-  // v6.1.6.17 Evidence-First cross-date rule:
+  // v6.1.6.18 Evidence-First cross-date rule:
   // ใช้เฉพาะเมื่อพบบริการจริงครบ 5 องค์ประกอบและแต่ละองค์ประกอบมี deterministic service identity
   // Amount 1,535 ใช้เป็น final checksum เท่านั้น ไม่ใช้ค้น/เดาบริการจากราคา
   components:[
@@ -3036,7 +3112,7 @@ function isKnownNonFinancialService(s){
 }
 
 
-/* ===== v6.1.6.17 Evidence-First Allocation Policy =====
+/* ===== v6.1.6.18 Evidence-First Allocation Policy =====
    Auto-allocation hierarchy:
    A) direct registry REP/SEQ + patient
    B) unique same-day actual registry evidence
@@ -3470,11 +3546,11 @@ const AUXILIARY_SERVICE_EVIDENCE_RULES=[
   match:/ถุงยางอนามัย|\bcondom\b/i,
   officialName:/^ถุงยางอนามัย/i},
  {id:'FP_IMPLANT_REMOVE_350',domain:'family',code:'FP002_2',label:'ถอดยาฝังคุมกำเนิด',rate:350,
-  match:/FP002_2|ถอดยาฝัง|ถอดยาคุมกำเนิด|off\s*(?:norplan|implanon|ฝัง)/i,
+  match:/FP002_2|ถอดยาฝัง|ถอดยาคุมกำเนิด|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i,
   officialName:/^ถอดยาฝังคุมกำเนิด$/i},
  {id:'FP_IMPLANT_INSERT_2150',domain:'family',code:'FP002',label:'ค่าบริการฝังยาคุมกำเนิด',rate:2150,
   match:/(?:^|\D)FP002(?:\D|$)|NOR\s*plant|Implanon|ฝังยาคุมกำเนิด|ยาฝังคุมกำเนิด/i,
-  exclude:/FP002_2|ถอด|off\s*(?:norplan|implanon|ฝัง)/i,
+  exclude:/FP002_2|ถอด|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i,
   officialName:/^ค่าบริการฝังยาคุมกำเนิด$/i}
 ];
 function auxiliaryServiceText(s){return normText(s?.aux_service_text||'')}
@@ -3598,7 +3674,7 @@ function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
 }
 
 function virtualToRegistryScore(service,v){
- // v6.1.6.17: amount/domain similarity is not enough to identify a service.
+ // v6.1.6.18: amount/domain similarity is not enough to identify a service.
  // A virtual PPFS component may bind back only to a REAL row with the same deterministic service rule.
  let vr=uniqueAliasRuleForVirtual(v);if(!vr)return -1;
  if(serviceDeterministicRuleId(service)!==vr.id)return -1;
@@ -3836,10 +3912,10 @@ const COMPOSITE_CLAIM_RULES=[
    {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:true}
   ]},
  {id:'FP_IMPLANT_INSERT_REMOVE_2500',label:'วางแผนครอบครัว 2,500 บาท (ฝังยาคุม + ถอดยาฝัง)',total:2500,
-  anchor:/FP002_1|FP002_2|ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant|ถอดยาฝัง|off\s*(?:norplan|implanon|ฝัง)/i,
+  anchor:/FP002_1|FP002_2|ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant|ถอดยาฝัง|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i,
   components:[
    {label:'ค่าบริการฝังยาคุมกำเนิด',rate:2150,match:/FP002_1|(?:^|\D)FP002(?:\D|$)|ฝังยาคุม|ยาฝังคุม|implanon|nor\s*plant/i,allowVirtual:true},
-   {label:'ถอดยาฝังคุมกำเนิด',rate:350,match:/FP002_2|ถอดยาฝัง|ถอดยาคุม|off\s*(?:norplan|implanon|ฝัง)/i,allowVirtual:true}
+   {label:'ถอดยาฝังคุมกำเนิด',rate:350,match:/FP002_2|ถอดยาฝัง|ถอดยาคุม|off\s*(?:nor\s*plan|norplan|nor\s*plant|norplant|implanon|implant|ฝัง)/i,allowVirtual:true}
   ]},
  {id:'ANC_LAB1_CARE_960',label:'แพ็กเกจ ANC 960 บาท (30012 + 30011)',total:960,
   anchor:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,
@@ -3886,7 +3962,7 @@ function solveKnownCompositeClaim(candidates,target){
  for(const rule of COMPOSITE_CLAIM_RULES){
   if(Math.abs(t-rule.total)>.001)continue;
   let anchor=pool.find(s=>rule.anchor.test(compositeServiceText(s))),amountOnlyRecovery=false;
-  // v6.1.6.17 Evidence-First: composite rules MUST have a real registry anchor.
+  // v6.1.6.18 Evidence-First: composite rules MUST have a real registry anchor.
   // A matching PP(AI) total without an anchor is never sufficient for auto-recovery.
   if(!anchor)continue;
   let used=new Set(),allocations=[],virtual=[],ok=true;
@@ -4191,7 +4267,7 @@ function crossDateRepCandidatePool(x,b,stmRepCID,stmRepHN){
  })
 }
 function applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN){
- // v6.1.6.17: generic patient-window subset-sum recovery is disabled.
+ // v6.1.6.18: generic patient-window subset-sum recovery is disabled.
  // Cross-date auto-allocation is permitted only by an explicit validated basket
  // whose component identities are all present as real deterministic registry services.
  return applyValidatedCrossDateStatementBasket(x,b)
@@ -4269,12 +4345,12 @@ function recomputeAll(){
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
    b=reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN);
 
-   // v6.1.6.17 Evidence-First cross-date: only explicit validated basket + real deterministic services.
+   // v6.1.6.18 Evidence-First cross-date: only explicit validated basket + real deterministic services.
    // Generic recent-service subset-sum by PP(AI) is disabled.
    if(applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN))return;
 
    if(!b.pool.length){
-     // v6.1.6.17 Evidence-First: no registry candidate/anchor => never infer a service from PP(AI) amount.
+     // v6.1.6.18 Evidence-First: no registry candidate/anchor => never infer a service from PP(AI) amount.
      let priorFY=isPriorFiscalYearDate(x.date);
      let annotated={...x,fiscalStatus:priorFY?'prior-fiscal-year':'current-fiscal-year',
        analysisNote:priorFY?priorFiscalYearLabel():'ไม่พบบริการจาก REP+ผู้รับบริการ, SEQ หรือผู้รับบริการ/วันที่เดียวกัน'};
@@ -5653,7 +5729,7 @@ function exportClaimReferenceAuditCSV(){
  downloadBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'PP_Claim_Reference_Audit.csv')
 }
 
-function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.recon.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)),dupS=state.serviceDedup?.removed||0,dupT=state.stmDedup?.removed||0,normP=state.serviceNormalization?.normalized||0,expandP=state.serviceNormalization?.expanded||0,stmComp=state.statementComponentMaterialized||0,srcConflict=(state.sourceConflicts||[]).length,exactFix=state.exactStatementCorrections?.count||0,exactAmt=state.exactStatementCorrections?.amountCorrected||0,anc960=(state.claimAnalyses||[]).filter(x=>x.bundleRule==='ANC_LAB1_CARE_960').length;document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div><div><b>Duplicate Guard</b><div class="kpi value">${intFmt.format(dupS)} / ${intFmt.format(dupT)}</div><div class="small muted">รวมบริการซ้ำ / STM ซ้ำ · Rule Guard หลังคลอด ${intFmt.format(normP)} แถว → เพิ่ม 30015 ${intFmt.format(expandP)} รายการ · Evidence Guard FP ${intFmt.format(state.auxMaterialized||0)} รายการ · Statement Component ${intFmt.format(stmComp)} · Exact Statement Guard ${intFmt.format(exactFix)} รายการ (${moneyFmt.format(exactAmt)} บาท) · ANC 960 Guard ${intFmt.format(anc960)} รายการ · Statement Basket Guard ${intFmt.format(state.validatedBasketAnalyses||0)} เคส / Logical ${intFmt.format(state.validatedBasketMaterialized||0)} รายการ · PDPA Display Guard เปิดใช้งาน · Source Conflict ${intFmt.format(srcConflict)}</div></div></div>`}
+function renderDataSummary(){let dates=state.services.map(x=>x.date).filter(Boolean).sort(),stmDates=state.stm.map(x=>x.date).filter(Boolean).sort();let official=state.prices.filter(x=>x.source==='official'&&num(x.rate)>0).length,inferred=state.prices.filter(x=>x.source==='inferred'&&num(x.rate)>0).length,types=new Set(state.recon.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)),dupS=state.serviceDedup?.removed||0,dupT=state.stmDedup?.removed||0,normP=state.serviceNormalization?.normalized||0,expandP=state.serviceNormalization?.expanded||0,fpSplit=state.serviceNormalization?.familyPlanningSplit||0,fpComponents=state.serviceNormalization?.familyComponentsCreated||0,stmComp=state.statementComponentMaterialized||0,srcConflict=(state.sourceConflicts||[]).length,exactFix=state.exactStatementCorrections?.count||0,exactAmt=state.exactStatementCorrections?.amountCorrected||0,anc960=(state.claimAnalyses||[]).filter(x=>x.bundleRule==='ANC_LAB1_CARE_960').length;document.getElementById('dataSummary').innerHTML=`<div class="grid three"><div><b>บริการ PP</b><div class="kpi value">${intFmt.format(state.services.length)}</div><div class="small muted">${esc(dates[0]||'-')} ถึง ${esc(dates.at(-1)||'-')}</div></div><div><b>ประเภทรายการบริการ</b><div class="kpi value">${intFmt.format(types.size)}</div><div class="small muted">โหมด: ${esc(state.serviceMode||'-')}</div></div><div><b>STM รายบุคคล</b><div class="kpi value">${intFmt.format(state.stm.length)}</div><div class="small muted">${esc(stmDates[0]||'-')} ถึง ${esc(stmDates.at(-1)||'-')}</div></div><div><b>ตารางราคา</b><div class="kpi value">${intFmt.format(official)} / ${intFmt.format(inferred)}</div><div class="small muted">ทางการ/ยืนยันแล้ว · อนุมาน</div></div><div><b>STM แยกยอดรวมอัตโนมัติ</b><div class="kpi value">${intFmt.format(state.autoAllocated)}</div><div class="small muted">ใช้ยอดรายการบริการย้อนกลับจาก PP ที่จ่ายรวม</div></div><div><b>Duplicate Guard</b><div class="kpi value">${intFmt.format(dupS)} / ${intFmt.format(dupT)}</div><div class="small muted">รวมบริการซ้ำ / STM ซ้ำ · Rule Guard Normalize ${intFmt.format(normP)} แถว · FP Implant/Off Norplan ${intFmt.format(fpSplit)} แถว → ${intFmt.format(fpComponents)} บริการ · เพิ่ม logical component ${intFmt.format(expandP)} รายการ · Evidence Guard FP ${intFmt.format(state.auxMaterialized||0)} รายการ · Statement Component ${intFmt.format(stmComp)} · Exact Statement Guard ${intFmt.format(exactFix)} รายการ (${moneyFmt.format(exactAmt)} บาท) · ANC 960 Guard ${intFmt.format(anc960)} รายการ · Statement Basket Guard ${intFmt.format(state.validatedBasketAnalyses||0)} เคส / Logical ${intFmt.format(state.validatedBasketMaterialized||0)} รายการ · PDPA Display Guard เปิดใช้งาน · Source Conflict ${intFmt.format(srcConflict)}</div></div></div>`}
 /* ===== v6.1.6.6 PDPA Display Guard =====
    - เก็บข้อมูลดิบไว้ใช้ Matching/Search ภายในเหมือนเดิม
    - ปกปิดเฉพาะชั้น Presentation/Export: ชื่อสกุล + CID
