@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.18 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.1.6.20 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1858,7 +1858,7 @@ body{font-size:13px;line-height:1.62}
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.1.6.18 · Evidence-First Allocation · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.1.6.20 · Evidence-First Allocation · Statement Exhaustion Guard · ANC 1,435/1,535 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2458,7 +2458,7 @@ function sameBundleClaimContext(a,b){
  if(!compatibleOptional(a.claim_reference,b.claim_reference,normText))return false;
  return true
 }
-/* ===== v6.1.6.18 Direct Family-Planning Service Split Guard =====
+/* ===== v6.1.6.19 Direct Family-Planning Service Split Guard =====
    เป้าหมาย: เมื่อทะเบียนบริการ 1 แถวระบุบริการจริงมากกว่า 1 รายการอย่างชัดเจน
    เช่น "FP002:NOR plant(Implanon) ... ,Off Norplan" ให้แตกเป็นบริการจริง 2 รายการ
    ก่อน Matching: ฝังยาคุม 2,150 + ถอดยาฝังคุมกำเนิด 350 บาท
@@ -2823,7 +2823,7 @@ const OFFICIAL_SERVICE_ALIAS_RULES=[
 ];
 
 
-/* ===== v6.1.6.18 Validated Statement Basket Guard =====
+/* ===== v6.1.6.19 Validated Statement Basket Guard =====
    เป้าหมาย: แก้ false Residual ที่ Statement PP(AI) เป็น "ยอดรวมหลายบริการ"
    แต่ทะเบียนส่งเบิกมีเพียงบางองค์ประกอบหรือจำนวนหน่วยไม่ครบ
 
@@ -2870,17 +2870,32 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
    {rule:'ANC_LAB1_30012_600',qty:1},
    {rule:'ANC_PREG_TEST_30014_75',qty:1}
   ]},
- {id:'BASKET_ANC_CORE_FLUORIDE_1535',label:'ANC core + Fluoride = 1,535',
-  total:1535,crossDate:true,maxSpanDays:60,requireAllActual:true,requireStatementDateAnchor:true,
-  // v6.1.6.18 Evidence-First cross-date rule:
-  // ใช้เฉพาะเมื่อพบบริการจริงครบ 5 องค์ประกอบและแต่ละองค์ประกอบมี deterministic service identity
-  // Amount 1,535 ใช้เป็น final checksum เท่านั้น ไม่ใช้ค้น/เดาบริการจากราคา
+ {id:'BASKET_ANC_CORE_1435',label:'ANC core = 1,435 (30010 + 30011 + 30012 + 30014)',
+  total:1435,requireAllActual:true,
+  // v6.1.6.20 Evidence-First ANC basket:
+  // Statement 1,435 ยืนยัน ANC core 4 บริการจริงเท่านั้น
+  // 30010 Ultrasound 400 + 30011 ANC care 360 + 30012 Lab 1 600 + 30014 Pregnancy test 75 = 1,435
+  // ถ้ามี Fluoride 100 แต่ Statement = 1,435 ให้ Fluoride คงเป็นบริการแยกและยังไม่ถือว่าได้รับชดเชย.
+  anchors:['ANC_ULTRASOUND_30010_400','ANC_CARE_30011_360','ANC_LAB1_30012_600','ANC_PREG_TEST_30014_75'],
   components:[
    {rule:'ANC_ULTRASOUND_30010_400',qty:1},
-   {rule:'FLUORIDE_100',qty:1},
+   {rule:'ANC_CARE_30011_360',qty:1},
+   {rule:'ANC_LAB1_30012_600',qty:1},
+   {rule:'ANC_PREG_TEST_30014_75',qty:1}
+  ]},
+ {id:'BASKET_ANC_FLUORIDE_1535',label:'ANC + Fluoride = 1,535 (30010 + 30011 + 30012 + 30014 + 15001)',
+  total:1535,requireAllActual:true,
+  // v6.1.6.20 Validated Full ANC + Fluoride Basket:
+  // ใช้ได้เฉพาะเมื่อพบบริการจริงครบทั้ง 5 service identities ของผู้ป่วยใน candidate episode
+  // 30010 Ultrasound 400 + 30011 ANC care 360 + 30012 Lab 1 600 + 30014 Pregnancy test 75 + 15001 Fluoride 100 = 1,535
+  // PP(AI) 1,535 เป็น checksum หลังยืนยันบริการจริงครบ ไม่ใช้ยอดเงินสร้าง/เดาบริการที่หาย.
+  anchors:['ANC_ULTRASOUND_30010_400','ANC_CARE_30011_360','ANC_LAB1_30012_600','ANC_PREG_TEST_30014_75','FLUORIDE_100'],
+  components:[
+   {rule:'ANC_ULTRASOUND_30010_400',qty:1},
+   {rule:'ANC_CARE_30011_360',qty:1},
    {rule:'ANC_LAB1_30012_600',qty:1},
    {rule:'ANC_PREG_TEST_30014_75',qty:1},
-   {rule:'ANC_CARE_30011_360',qty:1}
+   {rule:'FLUORIDE_100',qty:1}
   ]},
  {id:'BASKET_TOP_ANC_PREGTEST_IMPLANT_5585',label:'ยุติการตั้งครรภ์ + ฝากครรภ์ + ทดสอบการตั้งครรภ์ + ฝังยาคุม = 5,585',
    total:5585,
@@ -3073,6 +3088,9 @@ function applyValidatedStatementBasket(x,b){
          s._validatedQuantityExpected=amount;s._validatedQuantity=qty;s._validatedQuantityRule=comp.rule
        }
      }else{
+       // Evidence-First: rules marked requireAllActual may NEVER create a logical service.
+       // Every component identity must already exist in the real registry before PP(AI) is considered.
+       if(br.requireAllActual){ok=false;break}
        s=basketLogicalService(rule,x,anchors[0],qty,br,componentIndex);
        derived.push(s)
      }
@@ -3112,7 +3130,7 @@ function isKnownNonFinancialService(s){
 }
 
 
-/* ===== v6.1.6.18 Evidence-First Allocation Policy =====
+/* ===== v6.1.6.20 Evidence-First Allocation Policy =====
    Auto-allocation hierarchy:
    A) direct registry REP/SEQ + patient
    B) unique same-day actual registry evidence
@@ -3206,14 +3224,15 @@ function applyValidatedCrossDateStatementBasket(x,b){
 function solveEvidenceFirstActualClaim(b,target){
  let t=num(target),preferred=uniqServices(b?.preferred||[]).filter(s=>num(remainingExpectedForService(s))>0);
  if(preferred.length){
-   let sol=solveClaimAllocation(b?.pool||[],t,preferred);
-   if(!sol?.allocations?.length)return sol||{allocations:null,reason:'direct reference ยังรวมยอดไม่ลงตัว'};
-   let chosen=new Set(sol.allocations.map(a=>a.service._id));
-   let prefTotal=Math.round(preferred.reduce((a,s)=>a+num(remainingExpectedForService(s)),0)*100)/100;
-   // If all direct-reference services could fit within the Statement, every one of them must be selected.
-   if(prefTotal<=t+.001&&preferred.some(s=>!chosen.has(s._id)))
-     return {allocations:null,reason:'พบ exact amount แต่ต้องตัดบริการที่มี REP/SEQ ตรงออก จึงไม่ auto-allocate'};
-   return {...sol,evidenceMode:'direct-reference'}
+   // Evidence-First: direct references identify the candidate services; PP(AI) is a checksum only.
+   // Therefore auto-allocation is allowed only when the COMPLETE direct-reference set equals PP(AI).
+   // Never cherry-pick a money-matching subset from multiple REP/SEQ-linked services.
+   let rows=preferred.map(s=>({service:s,amount:remainingExpectedForService(s)}));
+   if(rows.some(z=>z.amount==null||z.amount<=0))return {allocations:null,reason:'direct reference มีบริการที่ราคายังยืนยันไม่ได้'};
+   let prefTotal=Math.round(rows.reduce((a,z)=>a+num(z.amount),0)*100)/100;
+   if(Math.abs(prefTotal-t)<.001)
+     return {allocations:rows,reason:'บริการ direct-reference ทั้งชุดรวมตรง PP(AI)',solutions:1,evidenceMode:'direct-reference-all'};
+   return {allocations:null,reason:'direct reference มีหลายบริการแต่ยอดรวมทั้งชุดไม่ตรง PP(AI); ต้องใช้ Validated Basket/direct service evidence — ไม่เลือก subset จากยอดเงิน',repTotal:prefTotal};
  }
  // No REP/SEQ anchor: never cherry-pick a subset by money. Only accept the entire same-day actual set.
  let sameDay=uniqServices(b?.pd||[]).filter(s=>num(remainingExpectedForService(s))>0);
@@ -3674,7 +3693,7 @@ function solveGlobalAggregateClaim(candidates,target,preferredServices=[]){
 }
 
 function virtualToRegistryScore(service,v){
- // v6.1.6.18: amount/domain similarity is not enough to identify a service.
+ // v6.1.6.19: amount/domain similarity is not enough to identify a service.
  // A virtual PPFS component may bind back only to a REAL row with the same deterministic service rule.
  let vr=uniqueAliasRuleForVirtual(v);if(!vr)return -1;
  if(serviceDeterministicRuleId(service)!==vr.id)return -1;
@@ -3923,13 +3942,22 @@ const COMPOSITE_CLAIM_RULES=[
    {label:'แล็บ1',rate:600,match:/30012|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i,allowVirtual:true},
    {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:true}
   ]},
- {id:'ANC_CORE_1435',label:'แพ็กเกจ ANC 1,435 บาท (30014 + 30012 + 30010 + 30011)',total:1435,
+ {id:'ANC_CORE_1435',label:'แพ็กเกจ ANC 1,435 บาท (30014 + 30012 + 30010 + 30011)',total:1435,requireAllActual:true,
   anchor:/30014|ทดสอบการตั้งครรภ์|pregnancy\s*test|30011|ฝากครรภ์|\banc\b/i,
   components:[
-   {label:'ตรวจปัสสาวะทดสอบการตั้งครรภ์',rate:75,match:/30014|ทดสอบ.*ตั้งครรภ์|pregnancy\s*test/i,allowVirtual:true},
-   {label:'แล็บ1',rate:600,match:/30012|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i,allowVirtual:true},
-   {label:'อัลตราซาวน์',rate:400,match:/30010|อัลตราซาวน์|ultrasound/i,allowVirtual:true},
-   {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:true}
+   {label:'ตรวจปัสสาวะทดสอบการตั้งครรภ์',rate:75,match:/30014|ทดสอบ.*ตั้งครรภ์|pregnancy\s*test/i,allowVirtual:false},
+   {label:'แล็บ1',rate:600,match:/30012|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i,allowVirtual:false},
+   {label:'อัลตราซาวน์',rate:400,match:/30010|อัลตราซาวน์|ultrasound/i,allowVirtual:false},
+   {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:false}
+  ]},
+ {id:'ANC_FLUORIDE_1535',label:'แพ็กเกจ ANC + Fluoride 1,535 บาท (30014 + 30012 + 30010 + 30011 + 15001)',total:1535,requireAllActual:true,
+  anchor:/30014|ทดสอบการตั้งครรภ์|pregnancy\s*test|30011|ฝากครรภ์|\banc\b|15001|ฟล[ูอ]ออไรด์/i,
+  components:[
+   {label:'ตรวจปัสสาวะทดสอบการตั้งครรภ์',rate:75,match:/30014|ทดสอบ.*ตั้งครรภ์|pregnancy\s*test/i,allowVirtual:false},
+   {label:'แล็บ1',rate:600,match:/30012|ค่าตรวจทางห้องปฏิบัติการ|แล็บ\s*1|lab\s*1/i,allowVirtual:false},
+   {label:'อัลตราซาวน์',rate:400,match:/30010|อัลตราซาวน์|ultrasound/i,allowVirtual:false},
+   {label:'ฝากครรภ์',rate:360,match:/30011|ค่าบริการดูแลการฝากครรภ์|ฝากครรภ์|\banc\b/i,allowVirtual:false},
+   {label:'เคลือบฟลูออไรด์ (กลุ่มเสี่ยง)',rate:100,match:/15001|เคลือบฟล[ูอ]ออไรด์|ฟล[ูอ]ออไรด์/i,allowVirtual:false}
   ]},
  {id:'POSTNATAL_285',label:'บริการหลังคลอด 285 บาท (30015 + 30016)',total:285,
   anchor:/หลังคลอด|postnatal|triferdine|30015|30016/i,allowAmountOnly:true,
@@ -3962,13 +3990,14 @@ function solveKnownCompositeClaim(candidates,target){
  for(const rule of COMPOSITE_CLAIM_RULES){
   if(Math.abs(t-rule.total)>.001)continue;
   let anchor=pool.find(s=>rule.anchor.test(compositeServiceText(s))),amountOnlyRecovery=false;
-  // v6.1.6.18 Evidence-First: composite rules MUST have a real registry anchor.
+  // v6.1.6.19 Evidence-First: composite rules MUST have a real registry anchor.
   // A matching PP(AI) total without an anchor is never sufficient for auto-recovery.
   if(!anchor)continue;
   let used=new Set(),allocations=[],virtual=[],ok=true;
   for(const comp of rule.components){
    let svc=pool.find(s=>!used.has(s._id)&&comp.match.test(compositeServiceText(s)));
    if(svc){used.add(svc._id);allocations.push({service:svc,amount:comp.rate,label:comp.label});continue}
+   if(rule.requireAllActual){ok=false;break}
    if(comp.allowVirtual&&compositePriceExists(comp)){virtual.push({label:comp.label,amount:comp.rate,source:'ตารางราคา PPFS69',component:comp});continue}
    if(comp.required){ok=false;break}
    ok=false;break;
@@ -4267,7 +4296,7 @@ function crossDateRepCandidatePool(x,b,stmRepCID,stmRepHN){
  })
 }
 function applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN){
- // v6.1.6.18: generic patient-window subset-sum recovery is disabled.
+ // v6.1.6.19: generic patient-window subset-sum recovery is disabled.
  // Cross-date auto-allocation is permitted only by an explicit validated basket
  // whose component identities are all present as real deterministic registry services.
  return applyValidatedCrossDateStatementBasket(x,b)
@@ -4299,11 +4328,50 @@ function strictRepAllocation(repServices,target){
  if(Math.abs(total-num(target))<.001){
    return {allocations:active.map(x=>({service:x.service,amount:x.amount})),reason:'บริการทั้งหมดภายใต้ REP รวมตรง PP(AI)',allRep:true};
  }
- // ถ้ายอดทั้ง REP ไม่ตรง ให้หา exact subset เฉพาะบริการใน REP ก่อน ไม่ปนบริการจากวัน/กองทุนอื่น
- let sol=solveClaimAllocation(pool,target,pool);
- if(sol.allocations)return {...sol,reason:'exact subset เฉพาะ REP+ผู้ป่วย'};
- return {allocations:null,reason:sol.reason||'REP ตรง แต่ยังแยกยอดไม่ได้',repTotal:total};
+ // v6.1.6.19 Evidence-First: ถ้า REP มีหลายบริการและยอดรวมทั้งหมดไม่ตรง PP(AI)
+ // ห้ามเลือก exact subset จากยอดเงิน เพราะอาจตัดบริการที่ไม่ได้รับชดเชย (เช่น Fluoride 100)
+ // ชุดย่อยจะ auto-allocate ได้เฉพาะเมื่อผ่าน Validated Statement Basket ก่อนมาถึงจุดนี้เท่านั้น.
+ return {allocations:null,reason:'REP ตรง แต่ยอดรวมบริการทั้งหมดไม่ตรง PP(AI); ต้องใช้ direct service evidence หรือ Validated Basket — ไม่เลือก subset จากยอดเงิน',repTotal:total};
 }
+/* ===== v6.1.6.20 Statement Exhaustion Guard =====
+   เมื่อ Statement row ถูกจัดสรรครบ 100% ห้ามใช้ row เดิมเป็นหลักฐานซ้ำให้บริการอื่น.
+   - Statement 1,435 + ANC core 4 บริการจริง => จัดสรร 400+360+600+75; Fluoride 100 ไม่ถูกกินยอด
+   - Statement 1,535 + ANC core 4 + Fluoride 100 ครบจริง => Validated Basket จัดสรรครบทั้ง 5 บริการ
+   ทั้งสองกรณีใช้ service identity เป็นหลัก และใช้ PP(AI) เป็น checksum เท่านั้น.
+*/
+function statementAllocationForRow(x){
+ let key=statementNaturalKey(x||{}),allocated=0,serviceIds=new Set();
+ for(const svc of (state.services||[])){
+   for(const c of (svc.claims||[])){
+     if(statementNaturalKey(c)===key&&num(c.allocatedPP)>0){
+       allocated+=num(c.allocatedPP);if(svc._id)serviceIds.add(svc._id)
+     }
+   }
+ }
+ return {allocated:Math.round(allocated*100)/100,target:num(x?.pp_paid),serviceIds}
+}
+function statementEvidenceAvailableForService(s,x){
+ let a=statementAllocationForRow(x);
+ // ถ้าบริการนี้ได้รับ allocation จาก Statement row นี้ ให้คง evidence ไว้
+ if(s?._id&&a.serviceIds.has(s._id))return true;
+ // ถ้า Statement ยังเหลือยอดที่ยังไม่จัดสรรจริง จึงยังใช้เป็น evidence gap ได้
+ return a.allocated+0.009<a.target
+}
+function pruneExhaustedDerivedClaimReferences(){
+ for(const s of (state.services||[])){
+   if(num(s.paid)>0)continue;
+   let rawReps=serviceRegistryREPs(s),rawSeq=serviceRegistrySEQ(s);
+   let ev=uniqueStatementRows(s.claim_ref_evidence||[]).filter(x=>statementEvidenceAvailableForService(s,x));
+   if(ev.length){s.claim_ref_evidence=ev;continue}
+   // Raw registry REP/SEQ are source facts and must never be erased.
+   // Only clear references that were derived/backfilled from a Statement which is now fully exhausted elsewhere.
+   if(!rawReps.length&&!rawSeq&&(s.claim_rep_ref||s.claim_seq)){
+     s.claim_rep_ref='';s.claim_seq='';s.claim_ref_evidence=[];s.claim_ref_source='';s.claim_ref_ambiguous=false;
+     s._claimRefPrunedByStatementExhaustion=true
+   }
+ }
+}
+
 function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  let rows=[...(s.claim_ref_evidence||[])],reps=serviceMatchREPs(s);
  for(const rep of reps){
@@ -4312,7 +4380,10 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  }
  let paid=uniqueStatementRows(rows).filter(x=>num(x.pp_paid)!==0);
  if(s.date&&paid.length){let same=paid.filter(x=>!x.date||x.date===s.date);if(same.length)paid=same}
- return paid.length?paid:uniqueStatementRows(rows)
+ // Fully allocated Statement rows belong to the services that consumed them; they are not residual evidence for siblings.
+ paid=paid.filter(x=>statementEvidenceAvailableForService(s,x));
+ if(paid.length)return paid;
+ return uniqueStatementRows(rows).filter(x=>num(x.pp_paid)===0||statementEvidenceAvailableForService(s,x))
 }
 function recomputeAll(){
  let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.crossDateRepAnalyses=0;state.sourceConflicts=[];
@@ -4345,12 +4416,12 @@ function recomputeAll(){
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
    b=reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN);
 
-   // v6.1.6.18 Evidence-First cross-date: only explicit validated basket + real deterministic services.
+   // v6.1.6.19 Evidence-First cross-date: only explicit validated basket + real deterministic services.
    // Generic recent-service subset-sum by PP(AI) is disabled.
    if(applyUniqueCrossDateRepAggregate(x,b,stmRepCID,stmRepHN))return;
 
    if(!b.pool.length){
-     // v6.1.6.18 Evidence-First: no registry candidate/anchor => never infer a service from PP(AI) amount.
+     // v6.1.6.19 Evidence-First: no registry candidate/anchor => never infer a service from PP(AI) amount.
      let priorFY=isPriorFiscalYearDate(x.date);
      let annotated={...x,fiscalStatus:priorFY?'prior-fiscal-year':'current-fiscal-year',
        analysisNote:priorFY?priorFiscalYearLabel():'ไม่พบบริการจาก REP+ผู้รับบริการ, SEQ หรือผู้รับบริการ/วันที่เดียวกัน'};
@@ -4444,6 +4515,9 @@ function recomputeAll(){
  });
  // v6.1.6.5 final reconciliation: Statement AI + deterministic PPFS69 exact match wins over registry charge
  exactStatementReconciliationGuard();
+ // v6.1.6.19: once a Statement is fully allocated to identified services, remove only weak/backfilled references
+ // from unpaid sibling services so they do not become false REP Evidence Gap items.
+ pruneExhaustedDerivedClaimReferences();
 
  // Safety net ทุกกองทุน: ถ้า REP+CID/HN มี PP(AI)>0 จริง แต่ solver ยังจัดสรรไม่ได้ ห้ามรายงานว่า 'ยังไม่พบชดเชย'
  // หลัง v6.1.5.8 บริการที่ปรากฏใน Global formula จะถูก materialize ก่อนมาถึงจุดนี้
