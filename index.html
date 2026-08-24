@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.1.6.22 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.2.0 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1381,6 +1381,64 @@ body{font-size:13px;line-height:1.62}
   .barcol{min-width:56px}
 }
 
+
+
+/* =========================================================
+   v6.2.0 — Enterprise Intelligence UI/UX Architecture
+   Benchmark direction: Carbon / Primer / Fluent / Atlassian / GOV.UK
+   UI-only upgrade. Claim matching engine remains unchanged.
+   ========================================================= */
+:root{
+ --e-space-1:4px;--e-space-2:8px;--e-space-3:12px;--e-space-4:16px;--e-space-5:24px;--e-space-6:32px;--e-space-7:48px;
+ --e-radius-sm:8px;--e-radius-md:10px;--e-radius-lg:12px;
+ --e-border:#dfe5ec;--e-border-soft:#edf1f5;--e-surface:#fff;--e-surface-2:#f7f9fb;--e-bg:#f3f6f9;
+ --e-ink:#101828;--e-text:#344054;--e-muted:#667085;--e-brand:#0b4a6f;--e-blue:#155eef;--e-teal:#0e9384;
+}
+html,body{background:var(--e-bg)}
+body{overflow-x:hidden}
+.app{margin:0;min-height:100vh;border:0;border-radius:0;box-shadow:none;background:var(--e-surface)}
+.sidebar{width:240px;height:100vh;padding:14px 12px;background:#fff;border-right:1px solid var(--e-border);transition:width .18s ease;padding .18s ease}
+.brand{padding:6px 8px 14px;margin-bottom:6px}.brand-logo-img{max-width:205px}.brand p{font-size:9px;margin-top:8px}.brand-tags{margin-top:8px}
+.nav-section-label{padding:13px 9px 5px;font-size:7.5px}.navbtn{min-height:40px;padding:8px 9px;border-radius:9px;font-size:10.5px;margin:1px 0}.navbtn.active{box-shadow:none;background:#eef4ff;border-color:#d9e5ff}.navbtn.active:before{height:18px}
+.sidefoot{border-radius:10px;padding:11px;margin-top:12px;box-shadow:none}
+.main{background:var(--e-bg)}
+.topbar{min-height:68px;padding:10px 20px;background:rgba(255,255,255,.97);display:flex;align-items:center;gap:16px;box-shadow:none}
+.topbar-leading{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.topbar-copy{min-width:0}.top-kicker{font-size:7.5px}.top-title{font-size:18px}.top-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:620px}
+.shell-toggle{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--e-border);border-radius:9px;background:#fff;color:#475467;cursor:pointer;flex:0 0 auto}.shell-toggle:hover{background:#f8fafc;border-color:#cdd6e0}.shell-toggle svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.topbar-context{display:flex;align-items:stretch;gap:6px}.context-chip{min-width:82px;border-left:1px solid var(--e-border);padding:2px 10px;display:flex;flex-direction:column;justify-content:center}.context-chip b{font:700 10px/1.2 var(--font-number);color:#1d2939}.context-chip small{font-size:7.5px;color:#98a2b3;margin-top:2px;white-space:nowrap}.context-chip.evidence b{color:#067647}
+.topbar-actions{gap:8px}.auth-chip{border-radius:9px}.pill{border-radius:9px;padding:7px 9px}
+.content{max-width:1800px;padding:20px 22px 28px}.page-head{margin-bottom:14px;padding-bottom:12px}.page-head h2{font-size:23px}.page-head p{font-size:10.5px}
+.card,.exception-hero,.queue-card,.fund-status-card,.live-source,.sync-strip,.exception-kpi,.kpi-card,.fund-status-card{border-radius:var(--e-radius-lg);box-shadow:none;border-color:var(--e-border)}
+.card{padding:15px}.card:hover{box-shadow:none;border-color:#d3dbe5}
+.btn{border-radius:8px;padding:8px 11px;box-shadow:none;font-size:10.5px}.btn:hover{transform:none}.btn.primary,.btn.dark{box-shadow:none}
+.filters input,.filters select,.form-control,.exception-filter-field input,.exception-filter-field select,.filter-field select,.filter-field input{border-radius:8px;padding:8px 10px;min-height:36px;box-shadow:none}
+.table-wrap{border-radius:9px}.table{font-size:11px}.table th{padding:9px 9px;background:#f7f9fb;color:#475467}.table td{padding:9px}.table tr:hover td{background:#fafcff}
+.kpis.command-kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}.command-kpis .kpi{min-height:110px;border-radius:10px;padding:14px}.command-kpis .kpi .label{min-height:0;font-size:9.5px}.command-kpis .kpi .value{font-size:25px;margin:10px 0 4px}.command-kpis .kpi .note{font-size:9px}
+.command-context{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:10px 12px;margin:-2px 0 10px;background:#fff;border:1px solid var(--e-border);border-radius:10px}.command-context>div{display:flex;align-items:center;gap:8px;min-width:0}.command-context b{font-size:10.5px}.command-context small{font-size:9px;color:var(--e-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.command-dot{width:8px;height:8px;border-radius:50%;background:#079455;box-shadow:0 0 0 3px #dcfae6}.text-action{border:0;background:transparent;color:#175cd3;font-weight:600;font-size:10px;cursor:pointer;white-space:nowrap}
+.section-title{font-size:15px}.section-subtitle{font-size:9px}
+.donut{width:148px;height:148px}.donut:after{width:102px;height:102px}.donut-wrap{width:148px}.hrow{grid-template-columns:minmax(135px,1.3fr) 2fr 76px;gap:8px;font-size:10.5px}.track{height:9px}
+.queue-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}.queue-card{padding:11px 12px}.queue-name{font-size:10.5px}.queue-count{font-size:18px}.queue-money{font-size:9.5px}.queue-desc{font-size:8.5px}
+.exception-hero{padding:16px}.exception-hero-title h3{font-size:17px}.exception-kpis{gap:8px}.exception-kpi{padding:11px}.exception-kpi .ek-value{font-size:19px}.exception-kpi .ek-label,.exception-kpi .ek-note{font-size:8.5px}
+.exception-filters{grid-template-columns:minmax(180px,1.4fr) repeat(4,minmax(120px,.8fr)) auto;gap:8px}.exception-filter-field label{font-size:8.5px}
+.exception-table{min-width:980px;table-layout:fixed}.exception-table th:nth-child(1){width:9%}.exception-table th:nth-child(2){width:29%}.exception-table th:nth-child(3){width:15%}.exception-table th:nth-child(4){width:12%}.exception-table th:nth-child(5){width:13%}.exception-table th:nth-child(6){width:16%}.exception-table th:nth-child(7){width:6%}
+.exception-table td{vertical-align:top}.exception-table .issue-title{font-size:10.5px}.exception-table .issue-reason{max-width:none;font-size:9px;line-height:1.45}.patient-mini{font-size:9px}.patient-mini b{font-size:10px}.recommendation{max-width:none;font-size:9px}.priority-pill{font-size:8.5px;padding:4px 6px}
+.evidence-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.evidence-pill{display:inline-flex;align-items:center;gap:4px;border:1px solid #e4e7ec;background:#f8fafc;color:#475467;padding:3px 6px;border-radius:999px;font-size:8px;font-weight:650;white-space:nowrap}.evidence-pill.ok{background:#ecfdf3;border-color:#abefc6;color:#067647}.evidence-pill.gap{background:#fef3f2;border-color:#fecdca;color:#b42318}.evidence-pill.info{background:#eff8ff;border-color:#b2ddff;color:#175cd3}
+.issue-meta{font-size:8.5px;color:#667085;margin-top:4px;line-height:1.4}.financial-stack{text-align:right}.financial-stack .risk{font:700 11px var(--font-number);color:#b42318}.financial-stack .review{font:650 10px var(--font-number);color:#b54708}.financial-stack .paid{font:650 9px var(--font-number);color:#067647}.financial-stack small{display:block;font-size:7.5px;color:#98a2b3;margin-top:2px}
+.queue-toolbar{display:flex;align-items:center;gap:6px}.mini-control,.mini-select{height:30px;border:1px solid var(--e-border);border-radius:7px;background:#fff;color:#475467;font:600 9px var(--font-ui);padding:0 8px}.mini-control{cursor:pointer;min-width:30px}.mini-control:disabled{opacity:.35;cursor:not-allowed}.mini-select{padding-right:5px}.exception-caption{align-items:center}
+/* Table density */
+#exceptions.queue-comfortable .exception-table td{padding-top:13px;padding-bottom:13px}#exceptions.queue-compact .exception-table td{padding-top:7px;padding-bottom:7px}
+/* Evidence Side Panel */
+#detailModal{padding:0;background:rgba(16,24,40,.34);place-items:stretch;justify-items:end;backdrop-filter:none}
+#detailModal .modalbox{height:100vh;max-height:none;width:min(720px,94vw);max-width:none;border-radius:0;padding:0;overflow:auto;box-shadow:-18px 0 48px rgba(16,24,40,.16);animation:drawerIn .18s ease;background:#fff}
+#detailModal .close{position:sticky;top:12px;float:right;margin:12px 12px 0 0;z-index:3;border-radius:8px;background:#f2f4f7}
+#detailModal #modalContent{padding:22px 24px 34px;clear:both}#detailModal #modalContent>h2{font-family:var(--font-heading);font-size:22px;margin:2px 0 5px;color:#101828!important}#detailModal #modalContent>p{font-size:10px;color:#667085;border-bottom:1px solid var(--e-border);padding-bottom:14px;margin-bottom:14px}
+#detailModal .notice{border-radius:9px;border-left-width:3px;box-shadow:none}#detailModal .table-wrap{max-height:360px}
+@keyframes drawerIn{from{transform:translateX(28px);opacity:.7}to{transform:none;opacity:1}}
+/* Collapsed shell */
+body.enterprise-sidebar-collapsed .sidebar{width:68px;padding-left:8px;padding-right:8px}body.enterprise-sidebar-collapsed .brand p,body.enterprise-sidebar-collapsed .brand-tags,body.enterprise-sidebar-collapsed .nav-section-label,body.enterprise-sidebar-collapsed .nav-label,body.enterprise-sidebar-collapsed .exception-nav-count,body.enterprise-sidebar-collapsed .sidefoot{display:none!important}body.enterprise-sidebar-collapsed .brand-logo-img{display:none}body.enterprise-sidebar-collapsed .brand{height:42px;border-bottom:0;position:relative}body.enterprise-sidebar-collapsed .brand:after{content:"PP";position:absolute;inset:4px;display:grid;place-items:center;border-radius:9px;background:#0b4a6f;color:#fff;font:800 11px var(--font-number)}body.enterprise-sidebar-collapsed .navbtn{justify-content:center;padding:8px}body.enterprise-sidebar-collapsed .navbtn.active:before{display:none}
+@media(max-width:1280px){.topbar-context .context-chip:nth-child(2){display:none}.kpis.command-kpis{grid-template-columns:repeat(3,1fr)}.exception-filters{grid-template-columns:repeat(3,1fr)}.queue-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:980px){.sidebar{width:100%;height:auto;position:relative}.shell-toggle{display:none}.topbar-context{order:3;width:100%}.topbar{flex-wrap:wrap}.topbar-leading{min-width:60%}.content{padding:16px}.kpis.command-kpis{grid-template-columns:repeat(2,1fr)}.queue-grid{grid-template-columns:repeat(2,1fr)}body.enterprise-sidebar-collapsed .sidebar{width:100%}}
+@media(max-width:680px){.topbar-context{display:none}.command-context{align-items:flex-start}.command-context>div{display:block}.command-context small{display:block;margin-top:3px;white-space:normal}.kpis.command-kpis{grid-template-columns:1fr}.queue-grid{grid-template-columns:1fr}.exception-filters{grid-template-columns:1fr}.exception-caption{display:block}.queue-toolbar{margin-top:8px;flex-wrap:wrap}.exception-table{min-width:900px}}
 </style>
 <script src="./config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -1400,20 +1458,20 @@ body{font-size:13px;line-height:1.62}
     <div class="brand-tags"><span>PPFS69</span><span>AI(PP)</span><span>LIVE</span></div>
   </div>
   <div class="nav-section-label">EXECUTIVE</div>
-  <button class="navbtn active" data-page="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span class="nav-label">ภาพรวม</span></button>
-  <button class="navbtn" data-page="fund"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg></span><span class="nav-label">แดชบอร์ดรายกองทุน</span></button>
+  <button class="navbtn active" data-page="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span class="nav-label">Executive Command Center</span></button>
+  <button class="navbtn" data-page="fund"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg></span><span class="nav-label">Fund Portfolio</span></button>
   <div class="nav-section-label">ANALYTICS & RECONCILIATION</div>
-  <button class="navbtn" data-protected="true" data-page="exceptions"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="nav-label">ศูนย์งานที่ต้องดำเนินการ</span><span id="exceptionNavCount" class="exception-nav-count">0</span></button>
-  <button class="navbtn" data-page="serviceReport"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></span><span class="nav-label">รายงานรายบริการ</span></button>
-  <button class="navbtn" data-protected="true" data-page="fundAudit"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="m14 17 2 2 4-4"/></svg></span><span class="nav-label">ตรวจสอบรายกองทุน</span></button>
-  <button class="navbtn" data-page="month"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 10h18"/></svg></span><span class="nav-label">รายงานจำแนกเดือน</span></button>
+  <button class="navbtn" data-protected="true" data-page="exceptions"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="nav-label">Exception Center</span><span id="exceptionNavCount" class="exception-nav-count">0</span></button>
+  <button class="navbtn" data-page="serviceReport"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></span><span class="nav-label">Claim Intelligence</span></button>
+  <button class="navbtn" data-protected="true" data-page="fundAudit"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="m14 17 2 2 4-4"/></svg></span><span class="nav-label">Claim Audit Workbench</span></button>
+  <button class="navbtn" data-page="month"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 10h18"/></svg></span><span class="nav-label">Monthly Analytics</span></button>
   <div class="nav-section-label">CONTROL & GOVERNANCE</div>
-  <button class="navbtn" data-protected="true" data-page="individual"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="8" r="4"/><path d="M4 21a7 7 0 0 1 14 0"/><circle cx="18" cy="16" r="3"/><path d="m20.2 18.2 2 2"/></svg></span><span class="nav-label">ตรวจสอบรายบุคคล</span></button>
-  <button class="navbtn" data-page="prices"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="nav-label">ตารางราคา PP</span></button>
-  <button class="navbtn" data-page="innovationkpi"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span><span class="nav-label">KPI ระบบ PP Claim Intelligence</span></button>
+  <button class="navbtn" data-protected="true" data-page="individual"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="8" r="4"/><path d="M4 21a7 7 0 0 1 14 0"/><circle cx="18" cy="16" r="3"/><path d="m20.2 18.2 2 2"/></svg></span><span class="nav-label">Patient Audit</span></button>
+  <button class="navbtn" data-page="prices"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="nav-label">PPFS69 Rules</span></button>
+  <button class="navbtn" data-page="innovationkpi"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span><span class="nav-label">Performance KPI</span></button>
   <div class="nav-section-label">SYSTEM</div>
-  <button class="navbtn" data-protected="true" data-page="data"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-5V2"/><path d="M20 7a8 8 0 1 0 1 8"/><path d="m20 7-4-4"/></svg></span><span class="nav-label">แหล่งข้อมูล / ซิงก์</span></button>
-  <button class="navbtn hidden" id="userManagementNav" data-page="users"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">จัดการผู้ใช้งาน</span></button>
+  <button class="navbtn" data-protected="true" data-page="data"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-5V2"/><path d="M20 7a8 8 0 1 0 1 8"/><path d="m20 7-4-4"/></svg></span><span class="nav-label">Data Quality & Sync</span></button>
+  <button class="navbtn hidden" id="userManagementNav" data-page="users"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">Administration</span></button>
   <div class="sidefoot">
     <div class="sidefoot-title"><span class="sidefoot-dot"></span> RECONCILIATION ENGINE</div>
     <div class="sidefoot-flow">REP + CID/HN → SEQ → CID/HN + วันที่</div>
@@ -1423,10 +1481,20 @@ body{font-size:13px;line-height:1.62}
 </aside>
 <main class="main">
 <header class="topbar">
-  <div class="topbar-copy">
-    <div class="top-kicker">NATIONAL HEALTH INNOVATION PILOT</div>
-    <div class="top-title">PP Claim Intelligence Platform</div>
-    <div class="top-sub" id="datasetLabel"></div>
+  <div class="topbar-leading">
+    <button class="shell-toggle" id="shellToggle" onclick="toggleEnterpriseSidebar()" title="ย่อ/ขยายเมนู" aria-label="ย่อหรือขยายเมนู">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="topbar-copy">
+      <div class="top-kicker">ENTERPRISE HEALTH REVENUE INTELLIGENCE</div>
+      <div class="top-title">PP Claim Intelligence</div>
+      <div class="top-sub" id="datasetLabel"></div>
+    </div>
+  </div>
+  <div class="topbar-context">
+    <span class="context-chip"><b>FY 2569</b><small>งบประมาณ</small></span>
+    <span class="context-chip"><b id="enterpriseLastSync">—</b><small>Last sync</small></span>
+    <span class="context-chip evidence"><b>Evidence-first</b><small>Allocation policy</small></span>
   </div>
   <div class="topbar-actions">
     <div class="auth-account">
@@ -1437,8 +1505,12 @@ body{font-size:13px;line-height:1.62}
 </header>
 <div class="content">
 <section id="overview" class="page active">
- <div class="page-head"><div><h2>ภาพรวมการตรวจสอบ PP</h2><p>เปรียบเทียบบริการที่จัดทำไว้กับผลตอบกลับการชดเชยจาก สปสช.</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
- <div class="grid kpis" id="kpiGrid"></div>
+ <div class="page-head"><div><h2>Executive Command Center</h2><p>มูลค่าตามสิทธิ → PP(AI) ที่ได้รับ → Revenue at Risk → Exception ที่ต้องดำเนินการ โดยใช้หลักฐานบริการเป็นตัวนำ</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
+ <div class="command-context">
+   <div><span class="command-dot"></span><b>Revenue Assurance</b><small>Service Registry → REP/SEQ → Statement PP(AI) → PPFS69 → Evidence → Allocation</small></div>
+   <button class="text-action" onclick="protectedNavigate('exceptions')">เปิด Priority Work Queue →</button>
+ </div>
+ <div class="grid kpis command-kpis" id="kpiGrid"></div>
  <div class="grid two">
   <div class="card"><h3 class="section-title">สถานะการจับคู่บริการกับ STM</h3><div class="split"><div><div class="donut-wrap"><div class="donut" id="matchDonut"></div><div class="donut-label" id="matchPct" style="inset:57px 0 auto 0"></div></div></div><div id="statusLegend"></div></div></div>
   <div class="card">
@@ -1461,8 +1533,8 @@ body{font-size:13px;line-height:1.62}
 <section id="exceptions" class="page">
  <div class="page-head">
    <div>
-     <h2>ศูนย์งานที่ต้องดำเนินการ</h2>
-     <p>Exception-first workflow · ระบบคัดเฉพาะรายการที่ต้องติดตาม จัดลำดับความสำคัญ และประเมิน Revenue at Risk อัตโนมัติ</p>
+     <h2>Exception Center</h2>
+     <p>Priority Work Queue สำหรับ Claim ที่ต้องตรวจสอบ · แสดงหลักฐานที่มี/ขาด มูลค่าความเสี่ยง และ Next Best Action โดยไม่เดาจากยอดเงิน</p>
    </div>
    <div class="toolbar">
      <button class="btn" onclick="clearExceptionFilters()">ล้างตัวกรอง</button>
@@ -1528,27 +1600,30 @@ body{font-size:13px;line-height:1.62}
  <div class="card" style="margin-top:16px">
    <div class="exception-caption">
      <div>
-       <h3 class="section-title" style="margin-bottom:4px">Action List</h3>
+       <h3 class="section-title" style="margin-bottom:4px">Priority Work Queue</h3>
        <div class="small muted" id="exceptionCaption">ทุก Exception</div>
      </div>
-     <div class="small muted" id="exceptionCount"></div>
+     <div class="queue-toolbar">
+       <button class="mini-control" id="queueDensityBtn" onclick="toggleExceptionDensity()" title="ปรับความหนาแน่นตาราง">Compact</button>
+       <select class="mini-select" id="exceptionPageSize" onchange="setExceptionPageSize(this.value)" title="จำนวนรายการต่อหน้า">
+         <option value="25">25 / หน้า</option><option value="50" selected>50 / หน้า</option><option value="100">100 / หน้า</option>
+       </select>
+       <button class="mini-control" onclick="setExceptionPage(-1)" id="exceptionPrev">‹</button>
+       <div class="small muted" id="exceptionCount"></div>
+       <button class="mini-control" onclick="setExceptionPage(1)" id="exceptionNext">›</button>
+     </div>
    </div>
    <div class="table-wrap">
      <table class="table exception-table">
        <thead>
          <tr>
            <th>Priority</th>
-           <th>Exception</th>
-           <th>กองทุน / บริการ</th>
-           <th>ผู้รับบริการ</th>
-           <th>วันที่</th>
+           <th>Issue / Evidence</th>
+           <th>Patient</th>
            <th>REP / SEQ</th>
-           <th class="num">ตามสิทธิ</th>
-           <th class="num">รับแล้ว</th>
-           <th class="num">Revenue at Risk</th>
-           <th class="num">มูลค่ารอตรวจ</th>
+           <th class="num">Financial</th>
            <th>Next Best Action</th>
-           <th>ตรวจสอบ</th>
+           <th>Open</th>
          </tr>
        </thead>
        <tbody id="exceptionBody"></tbody>
@@ -4832,7 +4907,7 @@ function refreshExceptionFilterOptions(items){
 }
 function setExceptionType(type){
  let sel=document.getElementById('exceptionType');if(sel)sel.value=type||'';
- renderExceptionCenter()
+ exceptionPage=1;renderExceptionCenter()
 }
 function filteredExceptionItems(all){
  let q=normText(document.getElementById('exceptionSearch')?.value||'').toLowerCase(),
@@ -4866,6 +4941,44 @@ function exceptionDetailAction(x){
  }
  return '<span class="small muted">ตรวจทะเบียนต้นทาง</span>'
 }
+
+
+// ===== v6.2.0 UI-only helpers: app shell, evidence chips, queue pagination =====
+let exceptionPage=1;
+let exceptionPageSize=50;
+let exceptionDensity='compact';
+function toggleEnterpriseSidebar(){
+ document.body.classList.toggle('enterprise-sidebar-collapsed');
+ try{localStorage.setItem('ppEnterpriseSidebar',document.body.classList.contains('enterprise-sidebar-collapsed')?'collapsed':'open')}catch(e){}
+}
+function restoreEnterpriseShell(){
+ try{if(localStorage.getItem('ppEnterpriseSidebar')==='collapsed')document.body.classList.add('enterprise-sidebar-collapsed')}catch(e){}
+ let page=document.getElementById('exceptions');if(page)page.classList.add('queue-'+exceptionDensity)
+}
+function renderEnterpriseChrome(){
+ let sync=document.getElementById('liveSyncTime')?.textContent||'';
+ if(!sync||sync==='—'){
+   let m=String(state.label||'').match(/Sync\s+(.+)$/);sync=m?m[1]:'—'
+ }
+ let el=document.getElementById('enterpriseLastSync');if(el)el.textContent=sync||'—'
+}
+function evidencePills(x){
+ let hasPatient=!!(x.hn||x.cid),hasRep=!!x.rep,hasSeq=!!x.seq;
+ let serviceGap=x.type==='rep-confirmed'||x.type==='ambiguous'||x.type==='statement-unmatched';
+ return `<div class="evidence-pills">
+   <span class="evidence-pill ${hasRep?'ok':'gap'}">REP ${hasRep?'✓':'—'}</span>
+   <span class="evidence-pill ${hasPatient?'ok':'gap'}">Patient ${hasPatient?'✓':'—'}</span>
+   ${hasSeq?'<span class="evidence-pill ok">SEQ ✓</span>':''}
+   <span class="evidence-pill ${serviceGap?'gap':'info'}">Service ${serviceGap?'?':'evidence'}</span>
+ </div>`
+}
+function setExceptionPage(delta){exceptionPage=Math.max(1,exceptionPage+Number(delta||0));renderExceptionCenter()}
+function setExceptionPageSize(v){exceptionPageSize=Math.max(10,Number(v)||50);exceptionPage=1;renderExceptionCenter()}
+function toggleExceptionDensity(){
+ exceptionDensity=exceptionDensity==='compact'?'comfortable':'compact';
+ let page=document.getElementById('exceptions');if(page){page.classList.remove('queue-compact','queue-comfortable');page.classList.add('queue-'+exceptionDensity)}
+ let b=document.getElementById('queueDensityBtn');if(b)b.textContent=exceptionDensity==='compact'?'Compact':'Comfortable';
+}
 function renderExceptionCenter(){
  let all=buildExceptionItems();
  refreshExceptionFilterOptions(all);
@@ -4878,54 +4991,65 @@ function renderExceptionCenter(){
  let nav=document.getElementById('exceptionNavCount');if(nav)nav.textContent=intFmt.format(all.length);
 
  let kpis=[
-   ['Action Items',intFmt.format(all.length),'รายการที่ระบบแนะนำให้ตรวจ'],
-   ['Unique Cases',intFmt.format(unique),'บริการ/Statement ไม่ซ้ำ'],
+   ['Action Items',intFmt.format(all.length),'รายการที่ต้องดำเนินการ'],
+   ['Unique Cases',intFmt.format(unique),'ผู้ป่วย/Statement ไม่ซ้ำ'],
    ['Revenue at Risk',moneyFmt.format(risk),'บาท · ยังไม่ได้รับ/ได้รับไม่ครบ'],
-   ['รอตรวจสอบ/จัดสรร',moneyFmt.format(review),'บาท · พบเงินแล้วแต่ยังต้องยืนยัน'],
+   ['Evidence Review',moneyFmt.format(review),'บาท · พบเงินแล้วแต่ยังต้องยืนยัน'],
    ['Critical',intFmt.format(critical),'รายการความสำคัญสูงสุด'],
-   ['ค้าง ≥ 30 วัน',intFmt.format(older30),'รายการตามวันที่บริการ']
+   ['Aging ≥ 30d',intFmt.format(older30),'รายการตามวันที่บริการ']
  ];
  let kp=document.getElementById('exceptionKPIs');
  if(kp)kp.innerHTML=kpis.map(x=>`<div class="exception-kpi"><div class="ek-label">${x[0]}</div><div class="ek-value">${x[1]}</div><div class="ek-note">${x[2]}</div></div>`).join('');
 
  let summary=exceptionQueueSummary(all),active=document.getElementById('exceptionType')?.value||'';
  let q=document.getElementById('exceptionQueues');
- if(q)q.innerHTML=summary.map(x=>{
-   let meta=EXCEPTION_META[x.type],money=x.risk>0?`Revenue at Risk ${moneyFmt.format(x.risk)} บาท`:x.review>0?`รอตรวจ ${moneyFmt.format(x.review)} บาท`:'ไม่มีมูลค่าเงินที่คำนวณได้';
+ if(q)q.innerHTML=summary.filter(x=>x.count>0).map(x=>{
+   let meta=EXCEPTION_META[x.type],money=x.risk>0?`Risk ${moneyFmt.format(x.risk)} บาท`:x.review>0?`Review ${moneyFmt.format(x.review)} บาท`:'ไม่มีมูลค่าเงินที่คำนวณได้';
    return `<div class="queue-card q-${meta.css} ${active===x.type?'active':''}" onclick="setExceptionType('${x.type}')">
       <div class="queue-head"><div class="queue-name">${meta.label}</div><div class="queue-count">${intFmt.format(x.count)}</div></div>
       <div class="queue-money">${money}</div><div class="queue-desc">${meta.desc}</div>
    </div>`
  }).join('');
 
- let rows=filteredExceptionItems(all),body=document.getElementById('exceptionBody');
+ let filtered=filteredExceptionItems(all);
+ let pages=Math.max(1,Math.ceil(filtered.length/exceptionPageSize));exceptionPage=Math.min(Math.max(1,exceptionPage),pages);
+ let start=(exceptionPage-1)*exceptionPageSize,rows=filtered.slice(start,start+exceptionPageSize),body=document.getElementById('exceptionBody');
  if(body)body.innerHTML=rows.length?rows.map(x=>`<tr>
    <td>${priorityBadge(x)}${x.days?`<div class="small muted" style="margin-top:5px">${intFmt.format(x.days)} วัน</div>`:''}</td>
-   <td><div class="issue-title">${esc(EXCEPTION_META[x.type]?.label||x.type)}</div><div class="issue-reason">${esc(x.reason)}</div></td>
-   <td><b>${esc(x.fund)}</b><div class="small muted" style="margin-top:4px;max-width:220px">${esc(x.service)}</div></td>
+   <td>
+     <div class="issue-title">${esc(EXCEPTION_META[x.type]?.label||x.type)}</div>
+     <div class="issue-meta"><b>${esc(x.fund||'-')}</b> · ${esc(x.date||'-')}</div>
+     <div class="issue-meta">${esc(x.service||'-')}</div>
+     ${evidencePills(x)}
+     <div class="issue-reason">${esc(x.reason)}</div>
+   </td>
    <td><div class="patient-mini"><b>${esc(privacyPatientName(x.name))}</b><br>HN ${esc(x.hn||'-')}<br>CID ${esc(privacyCID(x.cid))}</div></td>
-   <td>${esc(x.date||'-')}</td>
-   <td><b>${esc(x.rep||'-')}</b><div class="small muted">${x.seq?'SEQ '+esc(x.seq):''}</div></td>
-   <td class="num">${x.expected?moneyFmt.format(x.expected):'-'}</td>
-   <td class="num">${x.paid?moneyFmt.format(x.paid):'-'}</td>
-   <td class="num">${x.financialRisk?`<span class="money-risk">${moneyFmt.format(x.financialRisk)}</span>`:'-'}</td>
-   <td class="num">${x.reviewAmount?`<span class="money-review">${moneyFmt.format(x.reviewAmount)}</span>`:'-'}</td>
+   <td><b>${esc(x.rep||'-')}</b><div class="small muted">${x.seq?'SEQ '+esc(x.seq):'SEQ —'}</div></td>
+   <td><div class="financial-stack">
+      ${x.financialRisk?`<div class="risk">${moneyFmt.format(x.financialRisk)}</div><small>Revenue at Risk</small>`:''}
+      ${x.reviewAmount?`<div class="review">${moneyFmt.format(x.reviewAmount)}</div><small>Evidence review</small>`:''}
+      ${x.paid?`<div class="paid">รับแล้ว ${moneyFmt.format(x.paid)}</div>`:''}
+      ${!x.financialRisk&&!x.reviewAmount&&!x.paid?'<span class="muted">—</span>':''}
+   </div></td>
    <td><div class="recommendation">${esc(x.recommendation)}</div></td>
    <td>${exceptionDetailAction(x)}</td>
- </tr>`).join(''):'<tr><td colspan="12"><div class="exception-empty">ไม่พบ Exception ตามเงื่อนไขที่เลือก</div></td></tr>';
+ </tr>`).join(''):'<tr><td colspan="7"><div class="exception-empty">ไม่พบ Exception ตามเงื่อนไขที่เลือก</div></td></tr>';
 
  let caption=document.getElementById('exceptionCaption'),count=document.getElementById('exceptionCount');
  if(caption){
    let type=document.getElementById('exceptionType')?.value||'',pr=document.getElementById('exceptionPriority')?.value||'';
    caption.textContent=[type?EXCEPTION_META[type]?.label:'ทุก Exception',pr?`Priority: ${pr}`:''].filter(Boolean).join(' · ')
  }
- if(count)count.textContent=`แสดง ${intFmt.format(rows.length)} จาก ${intFmt.format(all.length)} Action Items`
+ if(count)count.textContent=filtered.length?`${intFmt.format(start+1)}–${intFmt.format(Math.min(start+rows.length,filtered.length))} / ${intFmt.format(filtered.length)} · หน้า ${exceptionPage}/${pages}`:`0 / 0`;
+ let prev=document.getElementById('exceptionPrev'),next=document.getElementById('exceptionNext');if(prev)prev.disabled=exceptionPage<=1;if(next)next.disabled=exceptionPage>=pages;
+ let den=document.getElementById('queueDensityBtn');if(den)den.textContent=exceptionDensity==='compact'?'Compact':'Comfortable';
+ renderEnterpriseChrome();
 }
 function clearExceptionFilters(){
  ['exceptionSearch','exceptionType','exceptionPriority','exceptionFund','exceptionMonth'].forEach(id=>{
    let e=document.getElementById(id);if(e)e.value=''
  });
- renderExceptionCenter()
+ exceptionPage=1;renderExceptionCenter()
 }
 function exportExceptionCSV(){
  let all=buildExceptionItems(),rows=filteredExceptionItems(all);
@@ -5134,9 +5258,9 @@ function exportInnovationKPI(){
  downloadCSV(rows,'PP_Claim_Intelligence_Innovation_KPI.csv')
 }
 
-function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderExceptionCenter();renderInnovationKPI();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();renderClaimReferenceAudit();}
+function renderAll(){document.getElementById('datasetLabel').textContent=state.label;renderOverview();renderExceptionCenter();renderInnovationKPI();renderServiceReport();renderFund();refreshFundAuditFunds();if(state.fundAuditLoggedIn)renderFundAudit();renderMonth();renderPrices();renderDataSummary();renderClaimReferenceAudit();renderEnterpriseChrome();}
 function renderOverview(){let total=state.recon.length,paid=state.recon.filter(x=>isMatchedStatus(x.matchStatus)).length,partial=state.recon.filter(x=>x.matchStatus==='partial').length,amb=state.recon.filter(x=>x.matchStatus==='ambiguous').length,unpaid=total-paid-amb;let stmPP=state.stm.reduce((a,x)=>a+num(x.pp_paid),0),matchedPaid=state.recon.reduce((a,x)=>a+num(x.paid),0);let expRows=state.recon.filter(x=>x.expected!=null),expected=expRows.reduce((a,x)=>a+x.expected,0);let pct=total?paid/total*100:0;
- let ks=[['บริการ PP ในไฟล์บริการ',intFmt.format(total),'รายการ','info'],['จับคู่ STM ได้',intFmt.format(paid),`${pct.toFixed(1)}% ของบริการ PP`,'good'],['ยังไม่พบชดเชย',intFmt.format(unpaid),'ควรติดตาม/ตรวจงวด','bad'],['ยอด PP จาก STM ทั้งหมด',moneyFmt.format(stmPP),'บาท','info'],['ยอด PP ที่จับคู่บริการได้',moneyFmt.format(matchedPaid),'บาท','good'],['STM PP ที่ยังจับคู่ไม่ได้',intFmt.format(currentYearUnmatchedSTM().length),'รายการ (อาจอยู่นอกช่วงไฟล์บริการ)','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
+ let commandExceptions=buildExceptionItems(),commandRisk=commandExceptions.reduce((a,x)=>a+num(x.financialRisk),0),commandCritical=commandExceptions.filter(x=>x.priority==='critical').length;let ks=[['มูลค่าตามสิทธิ PPFS69',moneyFmt.format(expected),'บาท · จากบริการที่มีราคา','info'],['PP(AI) Received',moneyFmt.format(stmPP),'บาท · Statement','good'],['Revenue at Risk',moneyFmt.format(commandRisk),'บาท · ต้องติดตาม','bad'],['Match Rate',`${pct.toFixed(1)}%`,`${intFmt.format(paid)} / ${intFmt.format(total)} บริการ`,'good'],['Critical Exceptions',intFmt.format(commandCritical),'รายการ Priority สูงสุด','warn']];document.getElementById('kpiGrid').innerHTML=ks.map(k=>`<div class="card kpi ${k[3]}"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('');
  document.getElementById('matchDonut').style.setProperty('--angle',(pct*3.6)+'deg');document.getElementById('matchPct').innerHTML=`${pct.toFixed(1)}%<div class="small muted">จับคู่ได้</div>`;document.getElementById('statusLegend').innerHTML=`<div class="hbars"><div class="hrow"><span>ได้รับชดเชย</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><b class="right">${intFmt.format(paid)}</b></div><div class="hrow"><span>ยังไม่พบชดเชย</span><div class="track"><div class="fill" style="width:${total?unpaid/total*100:0}%;background:#dc2626"></div></div><b class="right">${intFmt.format(unpaid)}</b></div><div class="hrow"><span>จับคู่กำกวม</span><div class="track"><div class="fill" style="width:${total?amb/total*100:0}%;background:#d97706"></div></div><b class="right">${intFmt.format(amb)}</b></div></div>`;
  const FY2569_MONTHS=['2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09'];
  let mm=Object.fromEntries(FY2569_MONTHS.map(k=>[k,0]));
@@ -5919,7 +6043,7 @@ function showDetail(idenc){
  let id=decodeURIComponent(idenc),r=state.recon.find(x=>x._id===id);if(!r)return;
  let ev=primaryClaimEvidence(r),dq=dataQualityNote(r);
  document.getElementById('modalContent').innerHTML=`
-  <h2 style="color:var(--navy)">รายละเอียดการตรวจสอบ</h2>
+  <h2 style="color:var(--navy)">Claim Evidence</h2><div class="small muted" style="margin-bottom:10px">Evidence-first reconciliation · แสดงที่มาของ REP/SEQ, PPFS69 และการจัดสรรโดยตรวจสอบย้อนกลับได้</div>
   <p><b>${esc(privacyPatientName(r.name))}</b> · HN ${esc(r.hn)} · CID ${esc(privacyCID(r.cid))} · ${esc(r.date)}</p>
   <div class="notice">
     <b>Claim Reference:</b>
@@ -5947,7 +6071,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.1.6.8-composite-quantity-date-guard',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.2.0-enterprise-ui-evidence-first',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
@@ -5972,7 +6096,7 @@ function applyLiveGoogleData(payload){
  for(const p of inferred)if(!state.prices.some(x=>(p.code&&x.code===p.code)||normText(x.name)===normText(p.name)))state.prices.push(p);
  state.label=`LIVE · ${payload.meta?.service?.name||'Service'} + ${payload.meta?.statement?.name||'Statement'} · Sync ${payload.meta?.syncedAt||''}`;
  let meta=payload.meta||{},sm=meta.service||{},tm=meta.statement||{},set=(id,v)=>{let e=document.getElementById(id);if(e)e.textContent=v};
- set('liveSyncTime',meta.syncedAt||'—');set('liveServiceRows',intFmt.format(sm.rows||0));set('liveServiceSheets',intFmt.format(sm.sheetsRead||0));
+ set('liveSyncTime',meta.syncedAt||'—');set('enterpriseLastSync',meta.syncedAt||'—');set('liveServiceRows',intFmt.format(sm.rows||0));set('liveServiceSheets',intFmt.format(sm.sheetsRead||0));
  set('liveServiceFunds',intFmt.format(new Set(state.services.map(x=>x.service_type||x.source_sheet||x.fund_sub).filter(Boolean)).size));
  set('liveSTMRows',intFmt.format(tm.rows||0));set('liveSTMPaid',intFmt.format(tm.paidRows||0));set('liveSTMSum',moneyFmt.format(tm.paidTotal||0));
  let warnings=Array.isArray(meta.warnings)?meta.warnings:[],w=document.getElementById('liveWarnings');
@@ -5996,6 +6120,7 @@ function exportReconcileCSV(){let rows=[['วันที่','HN','PID','ชื
  x.pp_paid,'','',''
 ]));let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='PP_reconcile_result.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>protectedNavigate(b.dataset.page)));
+restoreEnterpriseShell();
 loadEmbedded();safeRecompute('เริ่มต้นระบบ');
 updateRoleMenuVisibility();
 setTimeout(()=>{
