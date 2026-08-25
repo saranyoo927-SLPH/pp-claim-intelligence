@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.2.4 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.2.5 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -2000,7 +2000,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.2.4 · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.2.5 · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -4890,32 +4890,28 @@ function buildExceptionItems(){
    let noStatementEvidence=!hasStatementEvidence(r);
 
    /*
-      v6.2.4 Unified Action Item Guard
+      v6.2.5 Statement-First Action Classification
       หนึ่งบริการจริง = หนึ่งงานหลักใน Priority Work Queue
 
-      กรณีที่ "ยังไม่พบ Statement" เกิดพร้อมกับ Data Quality ที่เป็นเหตุโดยตรง
-      เช่น ไม่มี REP/SEQ ทั้งทะเบียนและ Statement:
-      - ห้ามสร้างทั้ง unpaid + data-error ซ้ำกัน 2 กลุ่ม
-      - ให้ Data Quality เป็น root cause หลัก
-      - แต่ยังคง Revenue at Risk ของบริการนั้นไว้ครบ
-      - สถานะทางการเงิน "ยังไม่พบ Statement" ถูกเก็บเป็น secondary condition
+      หากบริการอยู่ในสถานะ "ยังไม่พบ Statement" ให้จัดอยู่กลุ่มนี้เพียงกลุ่มเดียว
+      แม้จะมี Data Quality problem ร่วม เช่น ไม่มี REP/SEQ:
+      - ห้ามสร้าง data-error ซ้ำอีกแถว
+      - เก็บ Data Quality ไว้เป็น "สาเหตุประกอบ" ภายในงานยังไม่พบ Statement
+      - Revenue at Risk คงอยู่ในงานยังไม่พบ Statement ครบถ้วน
+      - กลุ่มข้อมูลไม่สมบูรณ์ ใช้เฉพาะกรณีที่ไม่ใช่ unpaid และข้อมูลขาดจนจับคู่ไม่ได้
    */
    if(r.matchStatus==='unpaid'){
      let risk=Math.max(exp-paid,0);
      if(!risk&&num(r.claim_expected)>0)risk=Math.max(num(r.claim_expected)-paid,0);
-
-     if(dataProblems.length&&noStatementEvidence){
-       let reason=['ยังไม่พบ Statement',...dataProblems].join(' · ');
-       let before=arr.length;
-       addException(arr,'data-error',r,risk,0,reason);
-       let item=arr[before];
-       if(item){
-         item.secondaryTypes=['unpaid'];
-         item.secondaryLabels=[EXCEPTION_META.unpaid?.label||'ยังไม่พบ Statement'];
-         item.recommendation='แก้ข้อมูลอ้างอิงที่ขาด (โดยเฉพาะ REP/SEQ) แล้วประมวลผลใหม่ จากนั้นตรวจงวด Statement/สถานะการส่งเบิก หากยังไม่พบจึงติดตาม Claim';
-       }
-     }else{
-       addException(arr,'unpaid',r,risk,0)
+     let before=arr.length;
+     let reason=dataProblems.length&&noStatementEvidence
+       ? `ยังไม่พบ Statement · สาเหตุประกอบ: ${dataProblems.join(' · ')}`
+       : '';
+     addException(arr,'unpaid',r,risk,0,reason);
+     let item=arr[before];
+     if(item&&dataProblems.length&&noStatementEvidence){
+       item.dataQualityNotes=[...dataProblems];
+       item.recommendation='ตรวจงวด Statement/สถานะการส่งเบิก และแก้ข้อมูลอ้างอิงที่ขาด (เช่น REP/SEQ) ก่อนประมวลผลใหม่ หากยังไม่พบจึงติดตาม Claim';
      }
    }
 
@@ -4931,7 +4927,7 @@ function buildExceptionItems(){
    }
 
    // สำหรับ status ที่ไม่ใช่ unpaid: Data Quality ยังเป็น Action Item ได้ตามปกติ
-   // แต่ unpaid + Data Quality ถูก merge ไปด้านบนแล้วเพื่อไม่ให้ซ้ำข้ามกลุ่ม
+   // unpaid + Data Quality ถูกจัดอยู่กลุ่มยังไม่พบ Statement ด้านบนแล้ว เพื่อไม่ให้ซ้ำข้ามกลุ่ม
    if(r.matchStatus!=='unpaid'&&dataProblems.length&&noStatementEvidence){
      addException(arr,'data-error',r,0,0,dataProblems.join(' · '))
    }
@@ -4982,7 +4978,7 @@ function buildExceptionItems(){
  // Safety dedupe: ป้องกันงานเดียวกันหลุดมาซ้ำจากหลาย diagnostic path
  // ใช้ serviceId เป็นหลัก; pseudo Statement/Residual/Conflict จะมี id ของตัวเองและไม่ถูกยุบผิดเคส
  let merged=new Map();
- const typeRank={'source-conflict':100,'residual':95,'statement-unmatched':90,'rep-confirmed':85,'ambiguous':80,'partial':75,'data-error':70,'unpaid':60,'price-mismatch':50};
+ const typeRank={'source-conflict':100,'residual':95,'statement-unmatched':90,'rep-confirmed':85,'ambiguous':80,'partial':75,'unpaid':72,'data-error':65,'price-mismatch':50};
  for(const x of arr){
    let key=x.serviceId ? ('SERVICE|'+x.serviceId) : ('ITEM|'+x.id);
    if(!merged.has(key)){merged.set(key,x);continue}
