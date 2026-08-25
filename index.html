@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.2.1 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.2.2 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1006,7 +1006,40 @@ body{
 #serviceReport .page-head h2:before{content:"SERVICE PERFORMANCE"}
 #fund .page-head h2:before{content:"FUND PORTFOLIO INTELLIGENCE"}
 #fundAudit .page-head h2:before{content:"CLAIM AUDIT WORKBENCH"}
-#month .page-head h2:before{content:"MONTHLY PERFORMANCE"}
+#month .page-head h2:before{content:"รายงานรายเดือน"}
+.month-chart-card{padding:16px 18px 12px;overflow:hidden;background:linear-gradient(180deg,#ffffff 0%,#fbfcff 100%)}
+.month-bars-panel{width:100%}
+#monthBars .bars{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(74px,1fr);
+  align-items:end;
+  justify-content:stretch;
+  gap:14px;
+  width:100%;
+  min-height:320px;
+  height:320px;
+  padding:30px 18px 44px;
+  border-bottom:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+#monthBars .barcol{min-width:74px;max-width:96px;height:100%}
+#monthBars .bar{
+  width:56px;max-width:100%;
+  border-radius:16px 16px 5px 5px;
+  box-shadow:0 14px 28px rgba(53,99,255,.18)
+}
+#monthBars .bar .tip{font-size:11px;font-weight:700;transform:translate(-50%,-10px)}
+#monthBars .barlabel{bottom:-34px;font-size:11px;line-height:1.35;text-align:center;white-space:normal;max-width:76px}
+@media(max-width:980px){
+  .month-chart-card{padding:14px 12px 10px}
+  #monthBars .bars{grid-auto-columns:minmax(66px,1fr);gap:10px;min-height:280px;height:280px;padding:24px 10px 40px}
+  #monthBars .bar{width:48px}
+  #monthBars .bar .tip{font-size:10px}
+  #monthBars .barlabel{font-size:10px;max-width:68px}
+}
+
 #individual .page-head h2:before{content:"PATIENT-LEVEL INVESTIGATION"}
 #prices .page-head h2:before{content:"PPFS RULE MASTER"}
 #innovationkpi .page-head h2:before{content:"INNOVATION PERFORMANCE"}
@@ -1457,18 +1490,18 @@ body.enterprise-sidebar-collapsed .sidebar{width:68px;padding-left:8px;padding-r
     <p>โรงพยาบาลเสลภูมิ · Automated Claim Reconciliation<br>Revenue Assurance & Executive Intelligence</p>
     <div class="brand-tags"><span>PPFS69</span><span>AI(PP)</span><span>LIVE</span></div>
   </div>
-  <div class="nav-section-label">EXECUTIVE</div>
-  <button class="navbtn active" data-page="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span class="nav-label">ภาพรวมแพลตฟอร์ม</span></button>
-  <button class="navbtn" data-page="fund"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg></span><span class="nav-label">แดชบอร์ด PP Intelligence Platform </span></button>
-  <div class="nav-section-label">ANALYTICS & RECONCILIATION</div>
-  <button class="navbtn" data-protected="true" data-page="exceptions"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="nav-label">ศูนย์งานที่ต้องดำเนินการ</span><span id="exceptionNavCount" class="exception-nav-count">0</span></button>
-  <button class="navbtn" data-page="serviceReport"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></span><span class="nav-label">รายงานรายบริการ</span></button>
-  <button class="navbtn" data-protected="true" data-page="fundAudit"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="m14 17 2 2 4-4"/></svg></span><span class="nav-label">ตรวจสอบรายกองทุน</span></button>
+  <div class="nav-section-label">ผู้บริหาร</div>
+  <button class="navbtn active" data-page="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span><span class="nav-label">ศูนย์บัญชาการผู้บริหาร</span></button>
+  <button class="navbtn" data-page="fund"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg></span><span class="nav-label">พอร์ตกองทุน</span></button>
+  <div class="nav-section-label">วิเคราะห์และกระทบยอด</div>
+  <button class="navbtn" data-protected="true" data-page="exceptions"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><span class="nav-label">ศูนย์ติดตามปัญหา</span><span id="exceptionNavCount" class="exception-nav-count">0</span></button>
+  <button class="navbtn" data-page="serviceReport"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg></span><span class="nav-label">วิเคราะห์การชดเชย</span></button>
+  <button class="navbtn" data-protected="true" data-page="fundAudit"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="m14 17 2 2 4-4"/></svg></span><span class="nav-label">โต๊ะทำงานตรวจสอบชดเชย</span></button>
   <button class="navbtn" data-page="month"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 10h18"/></svg></span><span class="nav-label">วิเคราะห์รายเดือน</span></button>
-  <div class="nav-section-label">System Control</div>
   <button class="navbtn" data-protected="true" data-page="individual"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="8" r="4"/><path d="M4 21a7 7 0 0 1 14 0"/><circle cx="18" cy="16" r="3"/><path d="m20.2 18.2 2 2"/></svg></span><span class="nav-label">ตรวจสอบรายบุคคล</span></button>
-  <button class="navbtn" data-page="prices"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="nav-label">รายการราคา PPFS69</span></button>
-  <button class="navbtn" data-page="innovationkpi"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span><span class="nav-label">Platform KPI </span></button>
+  <div class="nav-section-label">ควบคุมและกำกับ</div>
+  <button class="navbtn" data-page="prices"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="nav-label">กฎและอัตรา PPFS69</span></button>
+  <button class="navbtn" data-page="innovationkpi"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span><span class="nav-label">ตัวชี้วัดผลการดำเนินงาน</span></button>
   <div class="nav-section-label">ระบบ</div>
   <button class="navbtn" data-protected="true" data-page="data"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-5V2"/><path d="M20 7a8 8 0 1 0 1 8"/><path d="m20 7-4-4"/></svg></span><span class="nav-label">คุณภาพข้อมูลและซิงก์</span></button>
   <button class="navbtn hidden" id="userManagementNav" data-page="users"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">ผู้ดูแลระบบ</span></button>
@@ -1505,7 +1538,7 @@ body.enterprise-sidebar-collapsed .sidebar{width:68px;padding-left:8px;padding-r
 </header>
 <div class="content">
 <section id="overview" class="page active">
- <div class="page-head"><div><h2>ภาพรวมสำหรับผู้บริหาร</h2><p>มูลค่าตามสิทธิ → PP(AI) ที่ได้รับ → Revenue at Risk → Exception ที่ต้องดำเนินการ โดยใช้หลักฐานบริการเป็นตัวนำ</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
+ <div class="page-head"><div><h2>ศูนย์บัญชาการผู้บริหาร</h2><p>มูลค่าตามสิทธิ → PP(AI) ที่ได้รับ → Revenue at Risk → Exception ที่ต้องดำเนินการ โดยใช้หลักฐานบริการเป็นตัวนำ</p></div><div class="toolbar"><button class="btn" onclick="exportReconcileCSV()">ส่งออกผลตรวจ CSV</button><button class="btn primary" onclick="recomputeAll()">คำนวณใหม่</button></div></div>
  <div class="command-context">
    <div><span class="command-dot"></span><b>Revenue Assurance</b><small>Service Registry → REP/SEQ → Statement PP(AI) → PPFS69 → Evidence → Allocation</small></div>
    <button class="text-action" onclick="protectedNavigate('exceptions')">เปิด Priority Work Queue →</button>
@@ -1533,7 +1566,7 @@ body.enterprise-sidebar-collapsed .sidebar{width:68px;padding-left:8px;padding-r
 <section id="exceptions" class="page">
  <div class="page-head">
    <div>
-     <h2>ศูนย์ติดตามงานที่ต้องดำเนินการ</h2>
+     <h2>ศูนย์ติดตามปัญหา</h2>
      <p>Priority Work Queue สำหรับ Claim ที่ต้องตรวจสอบ · แสดงหลักฐานที่มี/ขาด มูลค่าความเสี่ยง และ Next Best Action โดยไม่เดาจากยอดเงิน</p>
    </div>
    <div class="toolbar">
@@ -1728,7 +1761,7 @@ body.enterprise-sidebar-collapsed .sidebar{width:68px;padding-left:8px;padding-r
 </section>
 <section id="month" class="page">
  <div class="page-head"><div><h2>รายงานจำแนกเดือน</h2><p>สรุปจำนวนบริการ ผู้รับบริการ ยอดจ่าย และส่วนต่างเทียบราคาที่มีในระบบ</p></div></div>
- <div class="card"><div id="monthBars"></div></div>
+ <div class="card month-chart-card"><div id="monthBars" class="month-bars-panel"></div></div>
  <div class="card" style="margin-top:14px"><div class="table-wrap"><table class="table"><thead><tr><th>เดือนบริการ</th><th class="num">บริการ PP</th><th class="num">ผู้รับบริการ</th><th class="num">จับคู่ STM</th><th class="num">ยอด PP จ่าย</th><th class="num">ยอดตามราคาที่คำนวณได้</th><th class="num">ส่วนต่าง</th></tr></thead><tbody id="monthTableBody"></tbody></table></div></div>
 </section>
 <section id="individual" class="page">
@@ -1933,7 +1966,7 @@ body.enterprise-sidebar-collapsed .sidebar{width:68px;padding-left:8px;padding-r
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.2.1 · Thai Navigation & Readability Upgrade · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.2.2 · Thai Navigation & Monthly Chart Balance Upgrade · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
