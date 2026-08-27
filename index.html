@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.2.9 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.3.0 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1518,6 +1518,13 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 .topbar-actions{margin-left:auto}
 @media (max-width:980px){.topbar{padding:14px 16px!important;min-height:auto!important}.top-title{font-size:22px!important}.top-kicker{font-size:7.5px}}
 
+
+/* ===== v6.3.0 Human Verification Workflow ===== */
+.hv-banner{border:1px solid #b2ddff;background:linear-gradient(135deg,#eff8ff,#f8fbff);border-radius:14px;padding:13px 15px;margin:12px 0;color:#1849a9;font-size:13px;line-height:1.6}
+.hv-statement{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0 14px}.hv-stat{border:1px solid #eaecf0;border-radius:12px;padding:10px 12px;background:#fff}.hv-stat .l{font-size:11px;color:#667085;font-weight:700}.hv-stat .v{font-size:16px;color:#101828;font-weight:850;margin-top:3px;font-variant-numeric:tabular-nums}.hv-stat .v.money{color:#b54708}
+.hv-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}.hv-table th{background:#f8fafc;color:#475467;font-size:12px;padding:9px;border-bottom:1px solid #eaecf0;text-align:left}.hv-table td{padding:10px 9px;border-bottom:1px solid #f2f4f7;vertical-align:middle}.hv-table .num{text-align:right}.hv-select,.hv-amount,.hv-note{border:1px solid #d0d5dd;border-radius:9px;background:#fff;font:inherit;color:#344054}.hv-select{min-height:38px;padding:6px 8px}.hv-amount{width:110px;min-height:38px;padding:6px 9px;text-align:right;font-variant-numeric:tabular-nums}.hv-note{width:100%;min-height:72px;padding:9px 10px;resize:vertical;box-sizing:border-box}.hv-total{display:flex;align-items:center;justify-content:flex-end;gap:18px;padding:12px 4px 4px;flex-wrap:wrap}.hv-total .metric{text-align:right}.hv-total .metric .l{font-size:10px;color:#667085}.hv-total .metric .v{font-size:18px;font-weight:850;font-variant-numeric:tabular-nums}.hv-total .ok{color:#067647}.hv-total .bad{color:#b42318}.hv-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}.hv-actions .btn{min-height:42px}.hv-audit{margin-top:18px;border-top:1px solid #eaecf0;padding-top:14px}.hv-audit-item{display:grid;grid-template-columns:140px 1fr auto;gap:10px;padding:9px 0;border-bottom:1px solid #f2f4f7;font-size:11px;line-height:1.5}.hv-audit-time{color:#667085}.hv-audit-actor{color:#344054;font-weight:700}.hv-case-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#fff7ed;color:#b54708;border:1px solid #fedf89;font-size:10px;font-weight:800}.hv-verified-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#ecfdf3;color:#067647;border:1px solid #abefc6;font-size:10px;font-weight:800}.hv-ledger-row{padding:12px;border:1px solid #eaecf0;border-radius:12px;margin:8px 0;background:#fff}.hv-ledger-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hv-ledger-title{font-weight:850;color:#101828;font-size:13px}.hv-ledger-sub{font-size:11px;color:#667085;line-height:1.55;margin-top:4px}.hv-ledger-alloc{font-size:11px;color:#344054;margin-top:7px}.hv-pattern{margin-top:12px;padding:11px 12px;border-radius:12px;background:#f8fafc;border:1px solid #eaecf0;font-size:11px;line-height:1.55}.hv-warning{color:#b54708}.hv-success{color:#067647}.hv-pending{color:#667085}
+@media(max-width:760px){.hv-statement{grid-template-columns:1fr 1fr}.hv-audit-item{grid-template-columns:1fr}.hv-table{min-width:760px}}
+
 </style>
 <script src="./config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -1611,6 +1618,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
      <p>Priority Work Queue สำหรับ Claim ที่ต้องตรวจสอบ · แสดงหลักฐานที่มี/ขาด มูลค่าความเสี่ยง และ Next Best Action โดยไม่เดาจากยอดเงิน</p>
    </div>
    <div class="toolbar">
+     <button class="btn" onclick="openHumanVerifiedLedger()">ประวัติการยืนยัน</button>
      <button class="btn" onclick="clearExceptionFilters()">ล้างตัวกรอง</button>
      <button class="btn primary" onclick="exportExceptionCSV()">ส่งออก Action List CSV</button>
    </div>
@@ -1642,7 +1650,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
          <option value="unpaid">ยังไม่พบ Statement</option>
          <option value="partial">ชดเชยบางส่วน</option>
          <option value="rep-confirmed">พบ REP รอจัดสรร</option>
-         <option value="ambiguous">ยอดรวมกำกวม</option>
+         <option value="ambiguous">ยอดกำกวม · รอยืนยัน</option>
          <option value="data-error">ข้อมูลไม่สมบูรณ์</option>
          <option value="price-mismatch">ราคา/Rule ต้องตรวจ</option>
          <option value="statement-unmatched">Statement ผูกบริการไม่ได้</option>
@@ -2007,7 +2015,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.2.9 · Validated FP003_2x3 + Triferdine 375 Basket · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.3.0 · Human Verification Workflow · Verified Allocation Ledger · Audit Trail · Human Validated Basket · Validated FP003_2x3 + Triferdine 375 Basket · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -2417,6 +2425,63 @@ async function changePPUserRole(uid){
 
 const OFFICIAL_PPFS69=[{"category":"บริการ  1  บริการฝากครรภ์","name":"ฝากครรภ์","rate":360.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ1","rate":600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"แล็บ2","rate":190.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"อัลตราซาวน์","rate":400.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  1  บริการฝากครรภ์","name":"ตรวจและทำความสะอาดฟัน","rate":500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Alpha-thalassemia 1 (PCR)","rate":800.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Beta-thalassemia (Mutation analysis)","rate":3000.0,"unit":"ต่อการตั้งครรภ์ต่อคน","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"หัตถการเพื่อตรวจวินิจฉัยทารกในครรภ์","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"DNA Based Analysis","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  2  บริการป้องกันและควบคุมโรคโลหิตจางธาลัสซีเมียในหญิงตั้งครรภ์","name":"Hemoglobin typing","rate":270.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์","rate":120.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบย้อนทาง Treponemal test (TT)ด้วยวิธี Chemiluminescent immunoassay (CIA/CLIA)หรือ Enzyme immunoassay (EIA) หรือ RapidDiagnostic Test (RDT)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจแบบตั้งเดิม Nontreponemal test (NTT)ด้วยวิธี Rapid Plasma Reagin (RPR) หรือVenereal Disease Research Laboratory (VDRL)","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  3  บริการคัดกรอง ธาลัสซีเมียในสามีหรือคู่ของหญิงตั้งครรภ์ที่เป็นชายและการคัดกรองซิฟิลิส","name":"ซิฟิลิส-ตรวจ Treponemal test (TT) ด้วยวิธี Treponema pallidum particle agglutination test (TPPA) หรือ Treponema pallidum hemagglutination test(TPHA)","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"การเจาะเลือดและให้คำปรึกษาพร้อมจัดส่งเลือด","rate":200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Non-Invasive Prenatal Test : NIPT","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจNon-Invasive Prenatal Test : NIPT","rate":2600.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Quadruple test","rate":1200.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"รับเลือดและตรวจQuadruple test","rate":1300.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"Prenatal Diagnosis: PND","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  4  บริการป้องกันและควบคุมกลุ่มอาการดาวน์ในหญิงตั้งครรภ์","name":"ตรวจโครโมโชม","rate":2500.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าตรวจTSHรวมค่าส่งสิ่งส่งตรวจ","rate":135.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  5  บริการป้องกันและควบคุมภาวะพร่องฮอร์โมนไทรอยด์ (TSH)","name":"ค่าติดตามและค่าตรวจTSH","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  6  บริการตรวจคัดกรองผู้ป่วยโรคพันธุกรรมเมตาบอลิกด้วยเครื่อง Tandem mass spectrometry (TMS)","name":"ค่าตรวจด้วยเครื่อง TMS","rate":500.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ค่าบริการตรวจหลังคลอด","rate":150.0,"unit":"ไม่เกิน 2 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  7  บริการตรวจหลังคลอด","name":"ยาเสริมธาตุเหล็ก กรดโฟลิก ไอโอดีน","rate":135.0,"unit":"ไม่เกิน 3 ครั้งต่อการคลอด","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  8  บริการทดสอบการตั้งครรภ์","name":"ตรวจปัสสาวะทดสอบการตั้งครรภ์","rate":75.0,"unit":"ต่อครั้งไม่เกิน 4 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนรวม","rate":40.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว","rate":80.0,"unit":"ต่อแผง จ่ายครั้งละไม่เกิน 3 แผงและไม่เกิน 13 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาฉีดคุมกำเนิด","rate":60.0,"unit":"ต่อครั้ง ไม่เกิน 5 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ใส่ห่วงอนามัย","rate":800.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ค่าบริการฝังยาคุมกำเนิด","rate":2150.0,"unit":"ต่อครั้ง ทุก 3 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถอดยาฝังคุมกำเนิด","rate":350.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ยาเม็ดคุมกำเนิดฉุกเฉิน","rate":50.0,"unit":"ต่อแผง ไม่เกิน 2 แผงต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  9  บริการวางแผนครอบครัวและการป้องกันการตั้งครรภ์ไม่พึงประสงค์","name":"ถุงยางอนามัย(เฉพาะหน่วยที่ไม่ได้เหมาจ่ายรายหัว)","rate":1.0,"unit":"ชิ้น ไม่เกิน 10 ชิ้นต่อคน ไม่เกิน 365 ชิ้นต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  10  บริการป้องกันการยุติการตั้งครรภ์ที่ไม่ปลอดภัย","name":"บริการยุติการตั้งครรภ์","rate":3000.0,"unit":"ต่อการตั้งครรภ์","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติทั่วไป (Stock lens)","rate":800.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  11  บริการแว่นตาเด็กที่มีสายตาผิดปกติ","name":"เลนส์สายตาผิดปกติที่ต้องสั่งตัดพิเศษ (Lab Leกs)","rate":1000.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ค่าบริการเก็บตัวอย่าง","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิดสองสายพันธุ์","rate":280.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"HPV ตรวจชนิด14สายพันธุ์","rate":370.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจทางเซลล์วิทยาด้วยวิธี Liquid based cytology","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"ตรวจติดตามซ้ำด้วยวิธี Pap smear","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"Pap smear หรือวิธี VIA","rate":250.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  12  บริการตรวจคัดกรองมะเร็งปากมดลูก","name":"วิธี Colposcopy รวมการตัดชิ้นเนื้อ (Biopsy หรือ LEEP)","rate":900.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  13  บริการคัดกรองรอยโรคเสี่ยงมะเร็งและมะเร็งช่องปาก (CA Oral Screening)","name":"ค่า biopsy และค่าตรวจทางพยาธิวิทยา","rate":600.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Chest-X-ray : CXR","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี สำหรับผู้ต้องขัง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"TB-LAMP","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR (Xpert MTB/RIF)","rate":500.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"วินิจฉัยวัณโรค/ตรวจหาเชื้อ MTB","rate":400.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา Rifarmpicin","rate":100.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Real-time PCR MTB/MDR","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"Line Probe Assay (LPA)","rate":600.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจหาเชื้อดื้อยา INH + Rifampicin (2 ชนิด)","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจพบผลดื้อยา First – line drugs ให้บริการตรวจวินิจฉัยวัณโรคดื้อยา Second – line drugs","rate":700.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธี AFB","rate":20.0,"unit":"ต่อครั้ง ไม่เกิน 3 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Solid media","rate":200.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  14  บริการตรวจคัดกรองและค้นหาวัณโรคในกลุ่มเสี่ยงสูง","name":"ตรวจด้วยวิธีเพาะเลี้ยงเชื้อ Culture เทคนิค Liquid media","rate":300.0,"unit":"ต่อครั้ง ไม่เกิน 1 ครั้งต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 35 – 59 ปี-Fasting Plasma Glucose: FPG","rate":40.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  15  บริการคัดกรองเบาหวานและไขมันในเลือด","name":"ผู้มีอายุ 45 – 70 ปี-ตรวจวัด Total Cholesterol และ HDL","rate":160.0,"unit":"ต่อครั้ง ทุก 5 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA2","name":"บริการประเมินความเสี่ยง+ให้คำปรึกษา+เก็บตัวอย่าง(เลือด)+จัดส่ง","rate":500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA3","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับผู้ป่วยมะเร็งเต้านมที่มีความเสี่ยงสูง","rate":10000.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  16  บริการตรวจคัดกรองยีนกลายพันธุ์โรคมะเร็งเต้านม BRCA1/BRCA4","name":"ค่าบริการตรวจยืน BRCA1/BRCA2 สำหรับญาติสายตรง","rate":2500.0,"unit":"ต่อครั้ง คนละ 1 ครั้งตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  17  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการเจาะเลือดและตรวจนับเม็ดเลือด(CBC)","rate":65.0,"unit":"ต่อคนต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  18  บริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","name":"ค่าบริการยาเม็ดเสริมธาตุเหล็กและกรดโฟลิค","rate":80.0,"unit":"ต่อครั้ง คนละ 1 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  19  บริการเคลือบฟลูออไรด์","name":"ค่าบริการเคลือบฟลออไรด์ชนิดเข้มข้นสูง","rate":100.0,"unit":"ต่อครั้ง คนละไม่เกิน 2 ครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  20  บริการตรวจคัดกรองมะเร็งลำไส้ใหญ่และลำไส้ตรง (Fit test)","name":"FIT Test","rate":60.0,"unit":"ต่อครั้ง คนละ 1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  21  บริการคัดกรองไวรัสตับอักเสบบี","name":"ค่าบริการตรวจด้วย HBsAg","rate":50.0,"unit":"ผู้ที่เกิดก่อน พ.ศ. 2535 คนละ 1 ครั้ง ตลอดชีวิต","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"บริการตรวจด้วย Anti-HCV","rate":50.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV core antigen","rate":400.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  22  บริการคัดกรองไวรัสตับอักเสบซี","name":"HCV RNA (qualitative method wรือ quantitative method)","rate":1690.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  23  บริการตรวจคัดกรองพยาธิใบไม้ตับด้วยการตรวจปัสสาวะ  (เฉพาะหน่วยนวัตกรรม)","name":"Urine OV Rapid Diagnosis Test ; OV-RDT","rate":150.0,"unit":"ต่อครั้ง ต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  24  บริการตรวจคัดกรองมะเร็งเต้านมด้วยเครื่องแมมโมแกรมและอัลตราซาวด์","name":"ค่าบริการตรวจแมมโมแกรมและอัลตราชาวด์","rate":2400.0,"unit":"1 ครั้งทุก 2 ปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  25  บริการให้วัคซีนป้องกันโรค","name":"ค่าบริการให้วัคชีนป้องกันโรค","rate":20.0,"unit":"ต่อโดส","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าเจาะเลือดและให้คำปรึกษา","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  26  บริการคัดกรองวัณโรคระยะแฝง (Latent TB Infection)","name":"ค่าจัดส่ง","rate":100.0,"unit":"ต่อครั้ง","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  27  บริการคัดกรองโลหิตจางจากการขาดธาตุเหล็ก","name":"ค่าตรวจคัดกรอง","rate":30.0,"unit":"ต่อครั้งต่อช่วงอายุ","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"},{"category":"บริการ  28  บริการยาน้ำเสริมธาตุเหล็กเพื่อป้องกันโลหิตจางจากการขาดธาตุเหล็ก","name":"บริการให้ยาน้ำเสริมธาตุเหล็ก","rate":50.0,"unit":"ต่อครั้งต่อปี","source":"official","evidence":"ตารางราคา PPFS69 ที่ฝังในระบบ"}];
 let state={services:[],stm:[],prices:[],recon:[],unmatchedSTM:[],ambiguousSTM:[],residualSTM:[],claimAnalyses:[],priceSuggestions:[],loggedIn:false,fundAuditLoggedIn:false,label:'',serviceMode:'',autoAllocated:0,auxMaterialized:0,validatedBasketMaterialized:0,validatedBasketAnalyses:0,claimRefAudit:null,serviceNormalization:null,serviceDedup:null,stmDedup:null};
+
+/* ===== v6.3.0 Human Verification persistent ledger ===== */
+const HUMAN_LEDGER_STORAGE_KEY='ppClaimHumanVerifiedLedger_v630';
+const HUMAN_AUDIT_STORAGE_KEY='ppClaimHumanAuditTrail_v630';
+const HUMAN_BASKET_STORAGE_KEY='ppClaimHumanValidatedBaskets_v630';
+function loadLocalJSON(key,fallback){try{let v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch(e){return fallback}}
+function saveLocalJSON(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){console.warn('localStorage',e);return false}}
+state.humanAllocationLedger=loadLocalJSON(HUMAN_LEDGER_STORAGE_KEY,{});
+state.humanAuditTrail=loadLocalJSON(HUMAN_AUDIT_STORAGE_KEY,[]);
+state.humanValidatedBaskets=loadLocalJSON(HUMAN_BASKET_STORAGE_KEY,[]);
+state.humanDecisionIssues=[];
+
+function stableHash53(str,seed=0){
+ let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;
+ str=String(str||'');for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
+ h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+ h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+ return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)
+}
+function humanStatementId(x){return 'STM-'+stableHash53(statementNaturalKey(x))}
+function humanServiceKey(s){return 'SVC-'+stableHash53(s?._id||serviceId(s,s?.row||0))}
+function humanDecisionForStatement(x){return state.humanAllocationLedger?.[humanStatementId(x)]||null}
+function humanActor(){return {email:ppCurrentUser?.email||'local-user',uid:ppCurrentUser?.uid||'',role:ppUserProfile?.role||(isPPAdmin()?'admin':'local')}}
+function canHumanVerifyAllocations(){
+ if(!firebaseConfigReady())return true;
+ if(isPPAdmin())return true;
+ return !!(ppCurrentUser&&ppCurrentUser.emailVerified&&isProfileApproved()&&['admin','revenue_officer','auditor'].includes(ppUserProfile?.role))
+}
+function canPromoteHumanBasket(){return !firebaseConfigReady()||isPPAdmin()||ppUserProfile?.role==='admin'}
+function persistHumanLedger(){saveLocalJSON(HUMAN_LEDGER_STORAGE_KEY,state.humanAllocationLedger||{})}
+function persistHumanAudit(){saveLocalJSON(HUMAN_AUDIT_STORAGE_KEY,state.humanAuditTrail||[])}
+function persistHumanBaskets(){saveLocalJSON(HUMAN_BASKET_STORAGE_KEY,state.humanValidatedBaskets||[])}
+function appendHumanAudit(action,statementId,detail={}){
+ let a=humanActor();state.humanAuditTrail=state.humanAuditTrail||[];
+ state.humanAuditTrail.unshift({id:'AUD-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),action,statementId,at:new Date().toISOString(),actor:a.email,role:a.role,...detail});
+ if(state.humanAuditTrail.length>1000)state.humanAuditTrail=state.humanAuditTrail.slice(0,1000);persistHumanAudit()
+}
+function humanDecisionStatement(decision){return (state.stm||[]).find(x=>humanStatementId(x)===decision?.statementId)||null}
+function humanDecisionComponents(allocations){
+ let out=[];
+ for(const a of allocations||[]){
+   let s=(state.services||[]).find(z=>humanServiceKey(z)===a.serviceKey);if(!s)continue;
+   let ruleId=serviceDeterministicRuleId(s),rule=ruleId?aliasRuleById(ruleId):null,rate=num(rule?.rate),amount=num(a.amount),qty=1;
+   if(rate>0){let q=amount/rate,rq=Math.round(q);if(rq>=1&&Math.abs(q-rq)<.001)qty=rq}
+   out.push({serviceKey:a.serviceKey,rule:ruleId||'',qty,amount,label:allocationServiceLabel(s)})
+ }
+ return out
+}
+function humanPatternId(total,components){
+ let sig=(components||[]).map(c=>`${c.rule}:${c.qty}:${Math.round(num(c.amount)*100)}`).sort().join('|');
+ return 'PAT-'+stableHash53(`${Math.round(num(total)*100)}|${sig}`)
+}
+function humanPatternStats(patternId){
+ let decisions=Object.values(state.humanAllocationLedger||{}).filter(d=>d?.status==='verified'&&d.patternId===patternId);
+ return {count:decisions.length,decisions}
+}
+
 const moneyFmt=new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const intFmt=new Intl.NumberFormat('th-TH');
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -4711,7 +4776,7 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  return rows.filter(x=>num(x.pp_paid)===0||statementEvidenceAvailableForService(s,x))
 }
 function recomputeAll(){
- let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.crossDateRepAnalyses=0;state.sourceConflicts=[];
+ let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.crossDateRepAnalyses=0;state.sourceConflicts=[];state.humanDecisionIssues=[];
  // v6.1.6.22 per-cycle caches/indexes
  state._officialPriceRowsCache=(state.prices||[]).filter(p=>p.source==='official'&&num(p.rate)>0);
  state._deterministicPriceCache=new WeakMap();state._bestOfficialPriceCache=new WeakMap();state._statementAllocationIndex=null;
@@ -4743,6 +4808,12 @@ function recomputeAll(){
  state.stm.filter(x=>num(x.pp_paid)!==0).forEach(x=>{
    let target=num(x.pp_paid),b=candidateBundleForSTM(x,idxSeq,idxCD,idxHD,idxRepCID,idxRepHN);
    b=reserveCandidatesForExactStatementDate(x,b,stmRepCID,stmRepHN);
+
+   // v6.3.0 Human-in-the-loop has precedence over automated inference.
+   // A verified decision is replayed deterministically on every recompute.
+   if(applyHumanVerifiedAllocation(x,b))return;
+   // Human-approved patterns may become reusable baskets only after repeated verification and Admin promotion.
+   if(applyHumanValidatedBasket(x,b))return;
 
    // v6.1.6.22 Evidence-First cross-date: only explicit validated basket + real deterministic services.
    // Generic recent-service subset-sum by PP(AI) is disabled.
@@ -4875,7 +4946,7 @@ const EXCEPTION_META={
  'unpaid':{label:'ยังไม่พบ Statement',short:'ยังไม่พบชดเชย',css:'unpaid',base:85,desc:'มีบริการในทะเบียน แต่ยังไม่พบ Statement ที่ยืนยันการชดเชย',action:'ตรวจงวด Statement, REP/SEQ และสถานะการส่งเบิก หากพ้นรอบจ่ายให้ติดตาม Claim'},
  'partial':{label:'ชดเชยต่ำกว่าสิทธิ',short:'ชดเชยไม่ครบ',css:'partial',base:82,desc:'Statement PP(AI) จ่ายจริงต่ำกว่าอัตรา PPFS69 ของบริการที่ยืนยันได้',action:'ตรวจเหตุผลการหักจ่าย/เงื่อนไข PPFS69 และติดตามส่วนต่างเฉพาะเมื่อ Statement จ่ายจริงต่ำกว่าอัตราสิทธิ'},
  'rep-confirmed':{label:'พบ REP · Evidence Gap',short:'REP รอหลักฐาน',css:'rep',base:68,desc:'Statement มี PP(AI) และ REP/ผู้รับบริการตรง แต่ Evidence-First Policy ยังไม่พบ direct service link หรือ Validated Basket ที่ยืนยันการจัดสรรได้อย่างมีเอกลักษณ์',action:'ตรวจ REP/SEQ ในทะเบียน, วันบริการจริง หรือเพิ่ม Validated Basket เฉพาะรูปแบบที่ยืนยันจาก HIS/เวชระเบียน — ห้ามยืนยันจากยอดเงินอย่างเดียว'},
- 'ambiguous':{label:'ยอดรวมกำกวม',short:'ยอดกำกวม',css:'ambiguous',base:75,desc:'พบ Statement แต่มีมากกว่าหนึ่งชุดบริการที่อธิบายยอด PP(AI) ได้',action:'ตรวจบริการจริงในวันเดียวกัน, เวชระเบียน และ PPFS69 ก่อนยืนยันชุดการจัดสรร'},
+ 'ambiguous':{label:'ยอดกำกวม · รอยืนยัน',short:'รอยืนยัน',css:'ambiguous',base:75,desc:'Statement มีมากกว่าหนึ่งบริการที่อาจเกี่ยวข้อง ระบบรวมเป็น 1 Case เพื่อให้เจ้าหน้าที่ตรวจและยืนยันโดยไม่เดาจากยอดเงิน',action:'เปิดตรวจสอบและยืนยันบริการจริงจาก HIS/เวชระเบียน แล้วบันทึก Verified Allocation'},
  'data-error':{label:'ข้อมูลไม่สมบูรณ์และยังจับคู่ไม่ได้',short:'Data Quality',css:'data',base:78,desc:'ข้อมูลสำคัญในทะเบียนไม่ครบ และยังไม่มีหลักฐาน Statement ที่ยืนยันการจับคู่',action:'แก้ CID/HN/REP/SEQ หรือข้อมูลอ้างอิงในทะเบียนต้นทาง แล้วประมวลผลใหม่'},
  'source-conflict':{label:'ทะเบียนบริการขัดกับ Statement',short:'Source Conflict',css:'data',base:72,desc:'บริการในทะเบียนต้นทางไม่สอดคล้องกับแพ็กเกจ PP(AI) ที่ยืนยันได้ ระบบตัดรายการต้นทางนี้ออกจากการคำนวณการเงินและเก็บไว้เพื่อ Audit',action:'ตรวจเวชระเบียน/HIS และแก้ประเภทบริการในทะเบียนต้นทาง เพื่อให้ข้อมูลต้นทางตรงบริการจริง'},
  'price-mismatch':{label:'ราคา / Rule ต้องตรวจ',short:'Price / Rule',css:'price',base:60,desc:'ไม่มีราคาทางการที่ชัดเจน หรือยอดทะเบียนไม่สอดคล้องกับอัตรา PPFS69',action:'ตรวจ PPFS Rule Master, วันที่มีผลบังคับใช้ และอัตราเรียกเก็บของบริการ'},
@@ -4986,6 +5057,181 @@ function addException(arr,type,r,financialRisk=0,reviewAmount=0,reason=''){
    source:r
  })
 }
+
+/* ===== v6.3.0 Ambiguity Case Grouping & Human Verification ===== */
+function ambiguityStatementRows(){
+ let rows=[...(state.ambiguousSTM||[]),...(state.priceSuggestions||[])].filter(x=>num(x.pp_paid)>0);
+ return uniqueStatementRows(rows).filter(x=>!humanDecisionForStatement(x))
+}
+function serviceHasStatementKey(r,key){
+ let ev=[...(r.priceHints||[]),...(r.claim_ref_evidence||[]),...(r.repPaymentEvidence||[])];
+ return ev.some(x=>statementNaturalKey(x)===key)
+}
+function humanCandidateServicesForStatement(x){
+ let key=statementNaturalKey(x),direct=[];
+ for(const r of state.recon||[]){
+   if(!r||r._supersededByCompositeClaim||num(r.paid)>.009)continue;
+   if(!sameStatementPatient(r,x))continue;
+   let linked=serviceHasStatementKey(r,key);
+   let sameDate=!!(x.date&&r.date&&x.date===r.date);
+   let repMatch=!!(x.rep&&serviceMatchREPs(r).includes(normREP(x.rep)));
+   let seqMatch=!!(x.seq&&serviceMatchSEQ(r)&&String(serviceMatchSEQ(r))===String(normText(x.seq).replace(/\.0$/,'')));
+   if(linked||(sameDate&&(repMatch||seqMatch||r.matchStatus==='ambiguous')))direct.push(r)
+ }
+ if(!direct.length){
+   direct=(state.recon||[]).filter(r=>r&&num(r.paid)<=.009&&sameStatementPatient(r,x)&&x.date&&r.date===x.date&&['ambiguous','rep-confirmed','unpaid'].includes(r.matchStatus))
+ }
+ return uniqServices(direct).filter(r=>num(exceptionExpectedAmount(r))>0).sort((a,b)=>num(exceptionExpectedAmount(b))-num(exceptionExpectedAmount(a)))
+}
+function ambiguityExceptionGroups(){
+ return ambiguityStatementRows().map(x=>{
+   let services=humanCandidateServicesForStatement(x),labels=[...new Set(services.map(r=>allocationServiceLabel(r)).filter(Boolean))];
+   let base=services[0]||{};
+   return {...base,
+     _id:'AMB-GROUP|'+humanStatementId(x),_ambiguityCaseId:humanStatementId(x),_ambiguityStatement:x,
+     _ambiguityCandidateIds:services.map(r=>r._id),registry_rep_ref:'',registry_seq:'',rep_ref:'',seq:'',
+     claim_rep_ref:normREP(x.rep||''),claim_seq:normText(x.seq||'').replace(/\.0$/,''),claim_ref_evidence:[x],repPaymentEvidence:[x],claims:[],
+     _exceptionFund:labels.length>1?'หลายบริการ / REP '+(x.rep||'-'):(base.service_type||base.source_sheet||base.fund_sub||'Statement'),
+     _exceptionService:`${services.length} บริการรอตรวจสอบ: ${labels.slice(0,6).join(' + ')}${labels.length>6?' …':''}`,
+     _exceptionExpected:0,_exceptionPaid:0,
+     _ambiguityReason:`Statement PP(AI) ${moneyFmt.format(num(x.pp_paid))} บาทมีบริการจริงที่เกี่ยวข้อง ${services.length} รายการ ระบบไม่เลือกชุดจากยอดเงิน ให้เจ้าหน้าที่ตรวจและยืนยัน`}
+ })
+}
+function statementForHumanCase(caseId){return (state.stm||[]).find(x=>humanStatementId(x)===caseId)||ambiguityStatementRows().find(x=>humanStatementId(x)===caseId)||null}
+function candidatesForHumanCase(caseId){
+ let x=statementForHumanCase(caseId);if(!x)return [];
+ let rows=humanCandidateServicesForStatement(x),d=state.humanAllocationLedger?.[caseId];
+ if(d){
+   let keys=new Set([...(d.allocations||[]).map(a=>a.serviceKey),...(d.excludedServiceKeys||[])]);
+   for(const s of state.services||[])if(keys.has(humanServiceKey(s)))rows.push(s)
+ }
+ return uniqServices(rows).sort((a,b)=>num(exceptionExpectedAmount(b))-num(exceptionExpectedAmount(a)))
+}
+function humanAllocationServiceByKey(key){return (state.services||[]).find(s=>humanServiceKey(s)===key)||null}
+function applyHumanVerifiedAllocation(x,b){
+ let d=humanDecisionForStatement(x);if(!d||d.status!=='verified')return false;
+ let allocs=[],sum=0,errors=[];
+ for(const a of d.allocations||[]){
+   let s=humanAllocationServiceByKey(a.serviceKey),amt=num(a.amount);
+   if(!s){errors.push('ไม่พบบริการ '+a.serviceKey);continue}
+   if(!sameStatementPatient(s,x)){errors.push('ผู้ป่วยไม่ตรง '+allocationServiceLabel(s));continue}
+   if(num(s.paid)>.009){errors.push('บริการถูกจัดสรรก่อนแล้ว '+allocationServiceLabel(s));continue}
+   if(amt<=0){errors.push('ยอดจัดสรรไม่ถูกต้อง');continue}
+   allocs.push({service:s,amount:amt,label:allocationServiceLabel(s)});sum+=amt
+ }
+ sum=Math.round(sum*100)/100;
+ if(errors.length||!allocs.length||Math.abs(sum-num(x.pp_paid))>.009){
+   state.humanDecisionIssues.push({statementId:d.statementId,errors:[...errors,Math.abs(sum-num(x.pp_paid))>.009?`ผลรวม ${sum} ไม่เท่ากับ PP(AI) ${num(x.pp_paid)}`:''].filter(Boolean)});return false
+ }
+ let formula=allocs.map(a=>`${a.label} ${moneyFmt.format(a.amount)}`).join(' + ');
+ applyAllocations(x,allocs,'Human Verified Allocation','human-verified',{formula,humanVerified:true,verifiedBy:d.verifiedBy,verifiedAt:d.verifiedAt,decisionId:d.id});
+ state.claimAnalyses.push({...x,analysisStatus:'human-verified',allocations:allocs.map(a=>({serviceId:a.service._id,service:a.label,amount:a.amount})),analysisFormula:formula,analysisNote:`เจ้าหน้าที่ยืนยันการจัดสรร · ${d.verifiedBy||'-'} · ${formula}`});
+ return true
+}
+function applyHumanValidatedBasket(x,b){
+ let target=num(x?.pp_paid);if(target<=0)return false;
+ for(const br of state.humanValidatedBaskets||[]){
+   if(!br?.active||Math.abs(target-num(br.total))>.009)continue;
+   let pool=uniqServices(b?.pool||[]).filter(s=>num(s.paid)<=.009),used=new Set(),allocs=[],ok=true;
+   for(const c of br.components||[]){
+     let matches=pool.filter(s=>!used.has(s._id)&&serviceDeterministicRuleId(s)===c.rule);
+     if(matches.length!==1){ok=false;break}
+     let s=matches[0],rule=aliasRuleById(c.rule),qty=Math.max(1,Math.round(num(c.qty)||1)),amount=Math.round(num(rule?.rate)*qty*100)/100;
+     if(!rule||Math.abs(amount-num(c.amount))>.009){ok=false;break}
+     if(qty>1){let m=repeatableQuantityRuleForService(s);if(!m||qty>m.maxQty){ok=false;break}s._validatedQuantityExpected=amount;s._validatedQuantity=qty;s._validatedQuantityRule=c.rule}
+     used.add(s._id);allocs.push({service:s,amount,label:rule.canonicalService||allocationServiceLabel(s)})
+   }
+   if(!ok||!allocs.length)continue;
+   let sum=Math.round(allocs.reduce((a,z)=>a+num(z.amount),0)*100)/100;if(Math.abs(sum-target)>.009)continue;
+   let formula=allocs.map(a=>`${a.label} ${moneyFmt.format(a.amount)}`).join(' + ');
+   applyAllocations(x,allocs,'Human-approved Validated Basket','human-validated-basket',{formula,basketRule:br.id,humanPromoted:true,approvedBy:br.approvedBy,approvedAt:br.approvedAt});
+   state.claimAnalyses.push({...x,analysisStatus:'human-validated-basket',bundleRule:br.id,analysisFormula:formula,allocations:allocs.map(a=>({serviceId:a.service._id,service:a.label,amount:a.amount})),analysisNote:`Validated Basket จากรูปแบบที่เจ้าหน้าที่ยืนยันซ้ำ ${br.evidenceCount||0} เคส · ${formula}`});
+   return true
+ }
+ return false
+}
+function humanReviewStatusChanged(el){
+ let tr=el.closest('tr'),amount=tr?.querySelector('.hv-amount');if(!amount)return;
+ if(el.value==='paid'&&!num(amount.value)){amount.value=amount.dataset.expected||'0'}
+ if(el.value==='unpaid'){amount.value='0';amount.disabled=true}else amount.disabled=el.value!=='paid';
+ updateHumanReviewTotals()
+}
+function updateHumanReviewTotals(){
+ let panel=document.getElementById('humanReviewPanel');if(!panel)return;
+ let target=num(panel.dataset.target),sum=0,pending=0,paidN=0;
+ panel.querySelectorAll('tr[data-service-key]').forEach(tr=>{let st=tr.querySelector('.hv-select')?.value||'pending',amt=num(tr.querySelector('.hv-amount')?.value);if(st==='paid'){sum+=amt;paidN++}else if(st==='pending')pending++});
+ sum=Math.round(sum*100)/100;let diff=Math.round((target-sum)*100)/100;
+ let s=document.getElementById('hvSelectedTotal'),d=document.getElementById('hvDifference'),p=document.getElementById('hvPendingCount'),btn=document.getElementById('hvConfirmBtn');
+ if(s)s.textContent=moneyFmt.format(sum);if(d){d.textContent=moneyFmt.format(diff);d.className='v '+(Math.abs(diff)<.009?'ok':'bad')}if(p)p.textContent=intFmt.format(pending);
+ if(btn)btn.disabled=!(paidN>0&&pending===0&&Math.abs(diff)<.009)
+}
+function humanAuditHTML(statementId){
+ let rows=(state.humanAuditTrail||[]).filter(a=>a.statementId===statementId).slice(0,20);
+ if(!rows.length)return '<div class="small muted">ยังไม่มีประวัติการยืนยัน</div>';
+ return rows.map(a=>`<div class="hv-audit-item"><div class="hv-audit-time">${esc(new Date(a.at).toLocaleString('th-TH'))}</div><div><b>${esc(a.action==='verify'?'ยืนยันการจัดสรร':a.action==='revoke'?'ถอนการยืนยัน':a.action==='promote'?'Promote Validated Basket':a.action)}</b><div class="small muted">${esc(a.summary||'')}</div></div><div class="hv-audit-actor">${esc(a.actor||'-')}</div></div>`).join('')
+}
+function openAmbiguityReview(caseId){
+ let x=statementForHumanCase(caseId);if(!x)return alert('ไม่พบ Statement สำหรับ Case นี้');
+ let candidates=candidatesForHumanCase(caseId),existing=humanDecisionForStatement(x),allocMap=new Map((existing?.allocations||[]).map(a=>[a.serviceKey,a])),excluded=new Set(existing?.excludedServiceKeys||[]);
+ let rows=candidates.map((s,i)=>{let sk=humanServiceKey(s),e=exceptionExpectedAmount(s),a=allocMap.get(sk),status=a?'paid':excluded.has(sk)?'unpaid':'pending',amount=a?num(a.amount):num(e);
+   return `<tr data-service-key="${esc(sk)}"><td>${i+1}</td><td><b>${esc(allocationServiceLabel(s))}</b><div class="small muted">${esc(s.item_detail||s.service_type||s.source_sheet||'')} · ${esc(s.date||'-')}</div><div class="small muted">REP ทะเบียน ${esc(serviceRegistryREP(s)||'-')} · SEQ ${esc(serviceRegistrySEQ(s)||'-')}</div></td><td class="num">${moneyFmt.format(e)}</td><td><select class="hv-select" onchange="humanReviewStatusChanged(this)"><option value="pending" ${status==='pending'?'selected':''}>รอตรวจ</option><option value="paid" ${status==='paid'?'selected':''}>ชดเชยรายการนี้</option><option value="unpaid" ${status==='unpaid'?'selected':''}>ไม่ได้ชดเชย</option></select></td><td class="num"><input class="hv-amount" data-expected="${e}" value="${status==='paid'?amount:e}" ${status==='paid'?'':'disabled'} oninput="updateHumanReviewTotals()"></td></tr>`
+ }).join('');
+ let audits=humanAuditHTML(caseId),decisionPattern=existing?.patternId?humanPatternStats(existing.patternId):{count:0};
+ let promotable=existing?.components?.length&&existing.components.every(c=>c.rule)&&decisionPattern.count>=3&&canPromoteHumanBasket();
+ let promoted=(state.humanValidatedBaskets||[]).some(b=>b.patternId===existing?.patternId&&b.active);
+ document.getElementById('modalContent').innerHTML=`<div id="humanReviewPanel" data-case-id="${esc(caseId)}" data-target="${num(x.pp_paid)}">
+   <h2>ตรวจสอบและยืนยันยอดกำกวม</h2>
+   <div class="small muted">Human-in-the-loop · ระบบเสนอเฉพาะบริการที่มีหลักฐานเชื่อมโยง เจ้าหน้าที่เป็นผู้ยืนยันจาก HIS/เวชระเบียน</div>
+   <div class="hv-banner"><b>หลัก Evidence-first:</b> ยอด PP(AI) เป็นเพียง checksum หลังยืนยัน service identity แล้ว ระบบจะไม่เลือกบริการจากยอดเงินแทนเจ้าหน้าที่</div>
+   <div class="hv-statement"><div class="hv-stat"><div class="l">REP</div><div class="v">${esc(x.rep||'-')}</div></div><div class="hv-stat"><div class="l">SEQ</div><div class="v">${esc(x.seq||'-')}</div></div><div class="hv-stat"><div class="l">วันที่ Statement</div><div class="v">${esc(x.date||'-')}</div></div><div class="hv-stat"><div class="l">PP(AI)</div><div class="v money">${moneyFmt.format(num(x.pp_paid))} บาท</div></div></div>
+   <div class="small muted" style="margin-bottom:8px">ผู้รับบริการ: ${esc(privacyPatientName(x.name||candidates[0]?.name||''))} · HN ${esc(x.hn||candidates[0]?.hn||'-')} · CID ${esc(privacyCID(x.cid||candidates[0]?.cid||''))}</div>
+   <div class="table-wrap"><table class="hv-table"><thead><tr><th>#</th><th>บริการจริง / Evidence</th><th class="num">มูลค่าตามสิทธิ</th><th>ผลตรวจของเจ้าหน้าที่</th><th class="num">ยอดจัดสรร</th></tr></thead><tbody>${rows||'<tr><td colspan="5">ไม่พบบริการ candidate</td></tr>'}</tbody></table></div>
+   <div class="hv-total"><div class="metric"><div class="l">ยอดที่เลือก</div><div class="v" id="hvSelectedTotal">0.00</div></div><div class="metric"><div class="l">PP(AI)</div><div class="v">${moneyFmt.format(num(x.pp_paid))}</div></div><div class="metric"><div class="l">ส่วนต่าง</div><div class="v bad" id="hvDifference">${moneyFmt.format(num(x.pp_paid))}</div></div><div class="metric"><div class="l">ยังไม่ตัดสิน</div><div class="v" id="hvPendingCount">${candidates.length}</div></div></div>
+   <label class="small" style="display:block;margin-top:12px;font-weight:800">หมายเหตุ/หลักฐานที่ตรวจ</label><textarea class="hv-note" id="hvReviewNote" placeholder="เช่น ตรวจหน้าจอ e-Claim/HIS/เวชระเบียนแล้ว ยืนยันว่าจ่ายเฉพาะ...">${esc(existing?.note||'')}</textarea>
+   <div class="hv-actions"><button class="btn" onclick="closeModal()">ปิดโดยยังไม่ยืนยัน</button>${existing?`<button class="btn danger" onclick="revokeHumanAllocation('${esc(caseId)}')">ถอนการยืนยัน</button>`:''}<button class="btn primary" id="hvConfirmBtn" onclick="confirmHumanAllocation('${esc(caseId)}')">ยืนยันการจัดสรรและคำนวณใหม่</button></div>
+   ${existing?`<div class="hv-pattern"><span class="hv-verified-pill">✓ Verified Allocation</span> ยืนยันโดย ${esc(existing.verifiedBy||'-')} · ${esc(new Date(existing.verifiedAt).toLocaleString('th-TH'))}<br>รูปแบบนี้ได้รับการยืนยันแล้ว <b>${decisionPattern.count}</b> เคส ${promoted?'<span class="hv-verified-pill">เป็น Validated Basket แล้ว</span>':promotable?`<button class="btn" style="margin-left:8px" onclick="promoteHumanPattern('${esc(existing.patternId)}')">Promote to Validated Basket</button>`:'<span class="small muted">(ต้อง ≥ 3 เคสและ Admin จึง Promote ได้)</span>'}</div>`:''}
+   <div class="hv-audit"><h3>Audit Trail</h3>${audits}</div>
+ </div>`;
+ document.getElementById('detailModal').classList.remove('hidden');updateHumanReviewTotals()
+}
+function confirmHumanAllocation(caseId){
+ if(!canHumanVerifyAllocations())return alert('บัญชีนี้ไม่มีสิทธิ์ยืนยันการจัดสรร');
+ let x=statementForHumanCase(caseId),panel=document.getElementById('humanReviewPanel');if(!x||!panel)return;
+ let allocations=[],excluded=[],pending=0,sum=0;
+ panel.querySelectorAll('tr[data-service-key]').forEach(tr=>{let sk=tr.dataset.serviceKey,st=tr.querySelector('.hv-select')?.value||'pending',amt=num(tr.querySelector('.hv-amount')?.value);if(st==='paid'){allocations.push({serviceKey:sk,amount:amt});sum+=amt}else if(st==='unpaid')excluded.push(sk);else pending++});
+ sum=Math.round(sum*100)/100;if(pending>0)return alert('กรุณาระบุผลตรวจของทุกบริการว่า ชดเชย / ไม่ได้ชดเชย');if(!allocations.length)return alert('ต้องมีอย่างน้อย 1 บริการที่ได้รับชดเชย');if(Math.abs(sum-num(x.pp_paid))>.009)return alert(`ยอดที่เลือก ${moneyFmt.format(sum)} ไม่เท่ากับ PP(AI) ${moneyFmt.format(num(x.pp_paid))}`);
+ let actor=humanActor(),components=humanDecisionComponents(allocations),patternId=humanPatternId(x.pp_paid,components),old=state.humanAllocationLedger?.[caseId]||null;
+ let decision={id:old?.id||'HVA-'+Date.now(),statementId:caseId,status:'verified',rep:normREP(x.rep||''),seq:normText(x.seq||'').replace(/\.0$/,''),date:x.date||'',ppPaid:num(x.pp_paid),allocations,excludedServiceKeys:excluded,components,patternId,note:document.getElementById('hvReviewNote')?.value||'',verifiedBy:actor.email,verifiedRole:actor.role,verifiedAt:new Date().toISOString(),version:'6.3.0'};
+ state.humanAllocationLedger=state.humanAllocationLedger||{};state.humanAllocationLedger[caseId]=decision;persistHumanLedger();
+ let summary=allocations.map(a=>{let s=humanAllocationServiceByKey(a.serviceKey);return `${allocationServiceLabel(s)} ${moneyFmt.format(a.amount)}`}).join(' + ');
+ appendHumanAudit('verify',caseId,{summary:`PP(AI) ${moneyFmt.format(x.pp_paid)} = ${summary}`,decisionId:decision.id});
+ closeModal();recomputeAll()
+}
+function revokeHumanAllocation(caseId){
+ let d=state.humanAllocationLedger?.[caseId];if(!d)return;if(!confirm('ถอนการยืนยันรายการนี้หรือไม่? ระบบจะกลับไปวิเคราะห์ใหม่ตาม Evidence-first rules'))return;
+ delete state.humanAllocationLedger[caseId];persistHumanLedger();appendHumanAudit('revoke',caseId,{summary:'ถอน Verified Allocation และส่งกลับเข้าสู่ Matching Engine'});closeModal();recomputeAll()
+}
+function promoteHumanPattern(patternId){
+ if(!canPromoteHumanBasket())return alert('เฉพาะ Admin เท่านั้นที่ Promote เป็น Validated Basket ได้');
+ let stats=humanPatternStats(patternId);if(stats.count<3)return alert('ต้องมีอย่างน้อย 3 เคสที่เจ้าหน้าที่ยืนยันรูปแบบเดียวกันก่อน');
+ let d=stats.decisions[0],components=d.components||[];if(!components.length||components.some(c=>!c.rule))return alert('รูปแบบนี้มีบริการที่ยังไม่มี deterministic PPFS69 rule จึง Promote อัตโนมัติไม่ได้');
+ if((state.humanValidatedBaskets||[]).some(b=>b.patternId===patternId&&b.active))return alert('รูปแบบนี้เป็น Validated Basket แล้ว');
+ let actor=humanActor(),br={id:'HUMAN_BASKET_'+patternId,patternId,total:d.ppPaid,components:components.map(c=>({rule:c.rule,qty:c.qty,amount:c.amount,label:c.label})),requireAllActual:true,active:true,evidenceCount:stats.count,approvedBy:actor.email,approvedAt:new Date().toISOString(),source:'Human Verification Workflow'};
+ state.humanValidatedBaskets=state.humanValidatedBaskets||[];state.humanValidatedBaskets.push(br);persistHumanBaskets();appendHumanAudit('promote',d.statementId,{summary:`Promote ${patternId} เป็น Validated Basket จาก ${stats.count} verified cases`});alert('Promote เป็น Validated Basket สำเร็จ ระบบจะใช้เฉพาะเมื่อพบบริการจริงครบตาม identity และยอด PP(AI) ตรง checksum');recomputeAll()
+}
+function openHumanVerifiedLedger(){
+ let decisions=Object.values(state.humanAllocationLedger||{}).sort((a,b)=>String(b.verifiedAt).localeCompare(String(a.verifiedAt)));
+ let baskets=(state.humanValidatedBaskets||[]).filter(b=>b.active);
+ let body=decisions.length?decisions.map(d=>{let st=humanDecisionStatement(d),alloc=(d.allocations||[]).map(a=>{let s=humanAllocationServiceByKey(a.serviceKey);return `${allocationServiceLabel(s)||a.serviceKey} ${moneyFmt.format(a.amount)}`}).join(' + ');return `<div class="hv-ledger-row"><div class="hv-ledger-head"><div><div class="hv-ledger-title">REP ${esc(d.rep||st?.rep||'-')} · PP(AI) ${moneyFmt.format(d.ppPaid)} บาท</div><div class="hv-ledger-sub">${esc(d.date||st?.date||'-')} · ยืนยันโดย ${esc(d.verifiedBy||'-')} · ${esc(new Date(d.verifiedAt).toLocaleString('th-TH'))}</div></div><button class="btn" onclick="openHumanDecisionFromLedger('${esc(d.statementId)}')">เปิด</button></div><div class="hv-ledger-alloc">${esc(alloc||'-')}</div></div>`}).join(''):'<div class="notice">ยังไม่มี Verified Allocation</div>';
+ let basketHtml=baskets.length?baskets.map(b=>`<div class="hv-ledger-row"><span class="hv-verified-pill">Active Basket</span> <b>${esc(b.id)}</b><div class="hv-ledger-sub">${moneyFmt.format(b.total)} บาท · ${b.components.map(c=>esc(c.label||c.rule)+(c.qty>1?' × '+c.qty:'')).join(' + ')} · Evidence ${b.evidenceCount} เคส</div></div>`).join(''):'<div class="small muted">ยังไม่มี Human-approved Validated Basket</div>';
+ document.getElementById('modalContent').innerHTML=`<h2>Verified Allocation Ledger</h2><div class="small muted">ประวัติการยืนยันโดยเจ้าหน้าที่ · สามารถตรวจย้อนหลัง ถอนการยืนยัน และใช้เป็นฐานเสนอ Validated Basket</div><div class="hv-banner"><b>${intFmt.format(decisions.length)}</b> เคสที่ยืนยันแล้ว · <b>${intFmt.format(baskets.length)}</b> Human-approved Validated Basket</div><div class="hv-actions" style="justify-content:flex-start"><button class="btn" onclick="exportHumanVerifiedLedger()">ส่งออก Ledger CSV</button></div><h3>รายการที่ยืนยันแล้ว</h3>${body}<h3 style="margin-top:18px">Validated Basket จาก Human Verification</h3>${basketHtml}`;document.getElementById('detailModal').classList.remove('hidden')
+}
+function openHumanDecisionFromLedger(caseId){let x=statementForHumanCase(caseId);if(x)return openAmbiguityReview(caseId);let d=state.humanAllocationLedger?.[caseId];if(!d)return;document.getElementById('modalContent').innerHTML=`<h2>Verified Allocation</h2><div class="notice">Statement ปัจจุบันไม่พบในชุดข้อมูลที่โหลด แต่ Ledger ยังคงเก็บ Audit ไว้</div><pre style="white-space:pre-wrap">${esc(JSON.stringify(d,null,2))}</pre><div class="hv-audit">${humanAuditHTML(caseId)}</div>`;document.getElementById('detailModal').classList.remove('hidden')}
+function exportHumanVerifiedLedger(){
+ let head=['Decision ID','Statement ID','REP','SEQ','วันที่','PP(AI)','Verified By','Role','Verified At','บริการที่จัดสรร','ไม่ชดเชย','หมายเหตุ','Pattern'];
+ let rows=[head,...Object.values(state.humanAllocationLedger||{}).map(d=>[d.id,d.statementId,d.rep,d.seq,d.date,d.ppPaid,d.verifiedBy,d.verifiedRole,d.verifiedAt,(d.allocations||[]).map(a=>{let s=humanAllocationServiceByKey(a.serviceKey);return `${allocationServiceLabel(s)||a.serviceKey}:${a.amount}`}).join(' | '),(d.excludedServiceKeys||[]).map(k=>allocationServiceLabel(humanAllocationServiceByKey(k))||k).join(' | '),d.note,d.patternId])];downloadCSV(rows,'PP_Verified_Allocation_Ledger.csv')
+}
+
 function repConfirmedExceptionGroups(){
  let groups=new Map();
  for(const r of state.recon||[]){
@@ -5051,20 +5297,16 @@ function buildExceptionItems(){
      addException(arr,'partial',r,Math.max(exp-paid,0),0)
    }
 
-   // REP-confirmed is added once per unresolved Statement below, not once per candidate service.
-   if(r.matchStatus==='ambiguous'){
-     let review=0;
-     if(Array.isArray(r.priceHints)&&r.priceHints.length)review=Math.max(...r.priceHints.map(x=>num(x.pp_paid||x.target||0)));
-     addException(arr,'ambiguous',r,0,review||exceptionRepValue(r)||exp)
-   }
+   // v6.3.0: ambiguous services are NOT emitted one row per service.
+   // They are grouped below as one Statement/REP case for human verification.
 
    // สำหรับ status ที่ไม่ใช่ unpaid: Data Quality ยังเป็น Action Item ได้ตามปกติ
    // unpaid + Data Quality ถูกจัดอยู่กลุ่มยังไม่พบ Statement ด้านบนแล้ว เพื่อไม่ให้ซ้ำข้ามกลุ่ม
-   if(r.matchStatus!=='unpaid'&&dataProblems.length&&noStatementEvidence){
+   if(r.matchStatus!=='unpaid'&&r.matchStatus!=='ambiguous'&&dataProblems.length&&noStatementEvidence){
      addException(arr,'data-error',r,0,0,dataProblems.join(' · '))
    }
 
-   if((r.priceMismatch && !r.priceRule)||((r.priceMissing||[]).length>0)){
+   if(r.matchStatus!=='ambiguous'&&((r.priceMismatch && !r.priceRule)||((r.priceMissing||[]).length>0))){
      let reason=r.priceMismatch
        ?`ยอดทะเบียน ${moneyFmt.format(num(r.registeredExpected||r.claim_expected))} บาท ไม่สอดคล้องกับอัตรา PPFS69 ${moneyFmt.format(num(r.officialPrice?.rate))} บาท`
        :'ยังไม่มีราคาทางการ: '+(r.priceMissing||[]).join(', ');
@@ -5076,6 +5318,12 @@ function buildExceptionItems(){
  for(const g of repConfirmedExceptionGroups()){
    let review=num(g._repGroupStatement?.pp_paid)||exceptionRepValue(g);
    addException(arr,'rep-confirmed',g,0,review,g._repGroupReason||EXCEPTION_META['rep-confirmed'].desc)
+ }
+
+ // v6.3.0: one ambiguous Action Item per Statement/REP, not per candidate service.
+ for(const g of ambiguityExceptionGroups()){
+   let review=num(g._ambiguityStatement?.pp_paid)||0;
+   addException(arr,'ambiguous',g,0,review,g._ambiguityReason||EXCEPTION_META.ambiguous.desc)
  }
 
  // STM with payment but no service match
@@ -5179,6 +5427,10 @@ function priorityBadge(x){
  return `<span class="priority-pill p-${x.priority}">● ${label} · ${x.score}</span>`
 }
 function exceptionDetailAction(x){
+ let humanCase=x?.source?._ambiguityCaseId||'';
+ if(x.type==='ambiguous'&&humanCase){
+   return `<button class="btn primary" onclick="openAmbiguityReview('${humanCase}')">ตรวจสอบและยืนยัน</button>`
+ }
  if(x.serviceId&&state.recon.some(r=>r._id===x.serviceId)){
    return `<button class="btn" onclick="showDetail('${encodeURIComponent(x.serviceId)}')">รายละเอียด</button>`
  }
@@ -5238,7 +5490,7 @@ function renderExceptionCenter(){
 
  let kpis=[
    ['Action Items',intFmt.format(all.length),'รายการที่ต้องดำเนินการ'],
-   ['Unique Cases',intFmt.format(unique),'ผู้ป่วย/Statement ไม่ซ้ำ'],
+   ['Unique Cases',intFmt.format(unique),`ผู้ป่วย/Statement ไม่ซ้ำ · Verified ${intFmt.format(Object.keys(state.humanAllocationLedger||{}).length)}`],
    ['Revenue at Risk',moneyFmt.format(risk),'บาท · ยังไม่ได้รับ/ได้รับไม่ครบ'],
    ['Evidence Review',moneyFmt.format(review),'บาท · พบเงินแล้วแต่ยังต้องยืนยัน'],
    ['Critical',intFmt.format(critical),'รายการความสำคัญสูงสุด'],
@@ -5263,7 +5515,7 @@ function renderExceptionCenter(){
  if(body)body.innerHTML=rows.length?rows.map(x=>`<tr>
    <td>${priorityBadge(x)}${x.days?`<div class="small muted" style="margin-top:5px">${intFmt.format(x.days)} วัน</div>`:''}</td>
    <td>
-     <div class="issue-title">${esc(EXCEPTION_META[x.type]?.label||x.type)}</div>
+     <div class="issue-title">${esc(EXCEPTION_META[x.type]?.label||x.type)} ${x.type==='ambiguous'&&x.source?._ambiguityCaseId?'<span class="hv-case-pill">1 Statement Case</span>':''}</div>
      <div class="issue-meta"><b>${esc(x.fund||'-')}</b> · ${esc(x.date||'-')}</div>
      <div class="issue-meta">${esc(x.service||'-')}</div>
      ${evidencePills(x)}
@@ -6318,7 +6570,7 @@ async function syncGoogleSheets(force=false){
    let svc=await loadServiceRegistryFromGoogle();
    let stm=await loadStatementFromGoogle();
    applyLiveGoogleData({
-    ok:true,version:'6.2.0-enterprise-ui-evidence-first',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
+    ok:true,version:'6.3.0-human-verification-evidence-first',serviceMode:'sheet-services',services:svc.rows,stm:stm.rows,
     meta:{syncedAt:new Date().toLocaleString('th-TH'),elapsedMs:Date.now()-started,
      service:{id:LIVE_GOOGLE_SHEETS.serviceId,name:svc.title,rows:svc.rows.length,sheetsRead:svc.sheetsRead,sheetsSkipped:svc.sheetsSkipped},
      statement:{id:LIVE_GOOGLE_SHEETS.statementId,name:stm.title,rows:stm.rows.length,paidRows:stm.paidRows,paidTotal:stm.paidTotal,ppColumn:'AI',sheetsRead:stm.sheetsRead,sheetsSkipped:stm.sheetsSkipped},
