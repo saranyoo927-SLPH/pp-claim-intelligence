@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.2.7 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.2.8 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -2007,7 +2007,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.2.7 · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.2.8 · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -4637,6 +4637,41 @@ function pruneExhaustedDerivedClaimReferences(){
  }
 }
 
+function repEvidenceClusterForStatement(s,x){
+ let rep=normREP(x?.rep||''),seq=normText(x?.seq||'').replace(/\.0$/,''),date=s?.date||x?.date||'';
+ let pool=(state.services||[]).filter(z=>{
+   if(!z||z._supersededByCompositeClaim||num(z.paid)>0.009)return false;
+   if(date&&z.date&&z.date!==date)return false;
+   if(!sameStatementPatient(z,s||x))return false;
+   let zReps=serviceMatchREPs(z),zSeq=serviceMatchSEQ(z);
+   if(rep&&(zReps.includes(rep)||normREP(z.claim_rep_ref||'')===rep))return true;
+   if(seq&&zSeq&&String(zSeq)===String(seq))return true;
+   return false
+ });
+ return uniqServices(pool)
+}
+function repEvidenceRowPlausibleForService(s,x){
+ /* v6.2.8 REP Evidence Plausibility Guard
+    ถ้า Statement ที่จะใช้เป็น REP Evidence มีมูลค่าสูงกว่ามูลค่าบริการจริงใน cluster เดียวกันมากเกินไป
+    และบริการใน cluster ล้วนมีราคาทางการชัดเจนแล้ว ให้ถือว่าเป็น false linkage
+    ไม่นำไปสร้างสถานะ REP · Evidence Gap สำหรับบริการเหล่านั้น
+ */
+ let cluster=repEvidenceClusterForStatement(s,x);
+ if(!cluster.length)return false;
+ let amounts=[],hasUnknown=false;
+ for(const z of cluster){
+   let amt=remainingExpectedForService(z);
+   if(amt==null){hasUnknown=true;break}
+   amt=num(amt);if(amt>0)amounts.push(amt)
+ }
+ if(hasUnknown||!amounts.length)return true;
+ let total=Math.round(amounts.reduce((a,b)=>a+b,0)*100)/100;
+ let target=num(x?.pp_paid);
+ if(target<=0)return true;
+ // Allow small/expected gaps from missing auxiliary components, but reject gross mismatches.
+ if(total+0.009 < target*0.8)return false;
+ return true
+}
 function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  let rows=[...(s.claim_ref_evidence||[])],reps=serviceMatchREPs(s);
  for(const rep of reps){
@@ -4653,6 +4688,9 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
  if(s.date){
    rows=rows.filter(x=>!x.date||x.date===s.date)
  }
+
+ // v6.2.8: reject statement links that are grossly implausible for the same-day service cluster.
+ rows=rows.filter(x=>repEvidenceRowPlausibleForService(s,x));
 
  let paid=rows.filter(x=>num(x.pp_paid)!==0);
  // Fully allocated Statement rows belong to the services that consumed them; they are not residual evidence for siblings.
