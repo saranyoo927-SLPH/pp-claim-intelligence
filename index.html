@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.2.5 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.2.7 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1506,6 +1506,18 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 
 
 .issue-secondary{margin-top:6px;font-size:12px;font-weight:700;color:#475467;line-height:1.5}
+
+/* v6.2.6 Simplified executive header */
+.topbar{min-height:78px!important;padding:14px 24px!important;justify-content:space-between}
+.topbar-leading{flex:1;min-width:0}
+.topbar-copy{display:flex;flex-direction:column;justify-content:center}
+.top-sub{display:none!important}
+.topbar-context{display:none!important}
+.top-kicker{font-size:8px;letter-spacing:.14em;color:#175cd3}
+.top-title{font-size:26px!important;line-height:1.1}
+.topbar-actions{margin-left:auto}
+@media (max-width:980px){.topbar{padding:14px 16px!important;min-height:auto!important}.top-title{font-size:22px!important}.top-kicker{font-size:7.5px}}
+
 </style>
 <script src="./config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -1555,13 +1567,8 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
     <div class="topbar-copy">
       <div class="top-kicker">ENTERPRISE HEALTH REVENUE INTELLIGENCE</div>
       <div class="top-title">PP Claim Intelligence</div>
-      <div class="top-sub" id="datasetLabel"></div>
+      <div class="top-sub" id="datasetLabel" aria-hidden="true"></div>
     </div>
-  </div>
-  <div class="topbar-context">
-    <span class="context-chip"><b>FY 2569</b><small>งบประมาณ</small></span>
-    <span class="context-chip"><b id="enterpriseLastSync">—</b><small>Last sync</small></span>
-    <span class="context-chip evidence"><b>Evidence-first</b><small>Allocation policy</small></span>
   </div>
   <div class="topbar-actions">
     <div class="auth-account">
@@ -2000,7 +2007,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.2.5 · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.2.7 · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -3586,6 +3593,43 @@ function statementRefCandidatesForService(s,idx){
  if(paid.length)rows=paid;
  return {rows,method}
 }
+/* ===== v6.2.7 Registry REP/SEQ Anchor Guard =====
+   ถ้าบริการบางแถวไม่มี REP/SEQ แต่บริการอื่นของผู้ป่วย "วันบริการเดียวกัน"
+   มี REP/SEQ จากทะเบียนจริงเพียงค่าเดียว ให้ใช้ทะเบียนจริงเป็น anchor ก่อน Statement
+   ห้ามอนุมานจากยอดเงิน และห้ามข้ามวันบริการ
+*/
+function buildSameDayRegistryReferenceIndex(){
+ let cidDate=new Map(),hnDate=new Map();
+ for(const s of state.services||[]){
+   if(!s?.date)continue;
+   let reps=serviceRegistryREPs(s),seq=serviceRegistrySEQ(s);
+   if(!reps.length&&!seq)continue;
+   let row={service:s,reps:[...reps],seq};
+   if(s.cid)pushMapArray(cidDate,s.cid+'|'+s.date,row);
+   if(s.hn)pushMapArray(hnDate,s.hn+'|'+s.date,row)
+ }
+ return {cidDate,hnDate}
+}
+function sameDayRegistryReferenceForService(s,idx){
+ if(!s?.date)return {rep:'',seq:'',rows:[],ambiguous:false};
+ let rows=[];
+ if(s.cid)rows.push(...(idx.cidDate.get(s.cid+'|'+s.date)||[]));
+ if(s.hn)rows.push(...(idx.hnDate.get(s.hn+'|'+s.date)||[]));
+ // ใช้เฉพาะ identifier ที่สอดคล้องกับผู้ป่วย และไม่ใช้แถวตัวเองเป็นหลักฐานซ้ำ
+ let uniq=new Map();
+ for(const r of rows){
+   let z=r.service;if(!z||z===s)continue;
+   if(s.cid&&z.cid&&s.cid!==z.cid)continue;
+   if(s.hn&&z.hn&&s.hn!==z.hn)continue;
+   let k=z._id||serviceId(z,z.row||0);if(!uniq.has(k))uniq.set(k,r)
+ }
+ rows=[...uniq.values()];
+ let reps=[...new Set(rows.flatMap(r=>r.reps||[]).map(normREP).filter(Boolean))];
+ let seqs=[...new Set(rows.map(r=>normText(r.seq||'').replace(/\.0$/,'')).filter(Boolean))];
+ return {rep:reps.length===1?reps[0]:'',seq:seqs.length===1?seqs[0]:'',rows,
+   ambiguous:reps.length>1||seqs.length>1,reps,seqs}
+}
+
 function deriveStatementClaimReference(s,idx){
  let rawReps=serviceRegistryREPs(s),rawSeq=serviceRegistrySEQ(s),c=statementRefCandidatesForService(s,idx),rows=c.rows;
  let reps=[...new Set(rows.map(x=>normREP(x.rep)).filter(Boolean))];
@@ -3600,28 +3644,56 @@ function deriveStatementClaimReference(s,idx){
  }
 }
 function enrichAllClaimReferences(){
- let idx=buildStatementReferenceIndex(),stats={
+ let idx=buildStatementReferenceIndex(),registryIdx=buildSameDayRegistryReferenceIndex(),stats={
    total:state.services.length,registryMissingRep:0,registryMissingSeq:0,
    recoveredRep:0,recoveredSeq:0,recoveredBoth:0,ambiguous:0,stillMissingBoth:0,
-   statementEvidence:0
+   statementEvidence:0,registrySiblingRep:0,registrySiblingSeq:0
  };
  state.services.forEach(s=>{
    if(s.registry_rep_ref===undefined)s.registry_rep_ref=s.rep_ref||'';
    if(s.registry_seq===undefined)s.registry_seq=s.seq||'';
    // Clear derived values on every recompute; never mutate the raw registry reference.
    s.claim_rep_ref='';s.claim_seq='';s.claim_ref_evidence=[];s.claim_ref_source='';s.claim_ref_ambiguous=false;
+   delete s._sameDayRegistryAnchor;
    let rawReps=serviceRegistryREPs(s),rawSeq=serviceRegistrySEQ(s);
    if(!rawReps.length)stats.registryMissingRep++;
    if(!rawSeq)stats.registryMissingSeq++;
+
+   // Evidence hierarchy: raw service REP/SEQ > same-day registry sibling > Statement backfill.
+   let sibling=sameDayRegistryReferenceForService(s,registryIdx);
+   let siblingRep=!rawReps.length?sibling.rep:'';
+   let siblingSeq=!rawSeq?sibling.seq:'';
    let d=deriveStatementClaimReference(s,idx);
-   s.claim_rep_ref=d.rep;s.claim_seq=d.seq;s.claim_ref_evidence=d.rows;
-   s.claim_ref_source=d.method;s.claim_ref_ambiguous=d.ambiguous;
-   s.claim_ref_candidate_reps=d.reps;s.claim_ref_candidate_seqs=d.seqs;
-   if(d.rows.length)stats.statementEvidence++;
-   if(!rawReps.length&&d.rep)stats.recoveredRep++;
-   if(!rawSeq&&d.seq)stats.recoveredSeq++;
-   if(!rawReps.length&&!rawSeq&&d.rep&&d.seq)stats.recoveredBoth++;
-   if(d.ambiguous)stats.ambiguous++;
+
+   if(siblingRep||siblingSeq){
+     s.claim_rep_ref=siblingRep||d.rep;
+     s.claim_seq=siblingSeq||d.seq;
+     s._sameDayRegistryAnchor={rep:siblingRep,seq:siblingSeq};
+     if(siblingRep)stats.registrySiblingRep++;
+     if(siblingSeq)stats.registrySiblingSeq++;
+
+     // Re-query Statement using the stronger registry-derived anchor.
+     let probe={...s,
+       registry_rep_ref:rawReps.length?serviceRegistryREP(s):(siblingRep||''),
+       registry_seq:rawSeq||(siblingSeq||'')
+     };
+     let c=statementRefCandidatesForService(probe,idx);
+     s.claim_ref_evidence=c.rows;
+     s.claim_ref_source='ทะเบียนบริการวันเดียวกัน'+(c.rows.length?' + '+(c.method||'Statement'):'');
+     s.claim_ref_ambiguous=!!sibling.ambiguous;
+     s.claim_ref_candidate_reps=siblingRep?[siblingRep]:d.reps;
+     s.claim_ref_candidate_seqs=siblingSeq?[siblingSeq]:d.seqs;
+   }else{
+     s.claim_rep_ref=d.rep;s.claim_seq=d.seq;s.claim_ref_evidence=d.rows;
+     s.claim_ref_source=d.method;s.claim_ref_ambiguous=d.ambiguous;
+     s.claim_ref_candidate_reps=d.reps;s.claim_ref_candidate_seqs=d.seqs;
+   }
+
+   if(s.claim_ref_evidence.length)stats.statementEvidence++;
+   if(!rawReps.length&&s.claim_rep_ref)stats.recoveredRep++;
+   if(!rawSeq&&s.claim_seq)stats.recoveredSeq++;
+   if(!rawReps.length&&!rawSeq&&s.claim_rep_ref&&s.claim_seq)stats.recoveredBoth++;
+   if(s.claim_ref_ambiguous)stats.ambiguous++;
    if(!serviceMatchREP(s)&&!serviceMatchSEQ(s))stats.stillMissingBoth++
  });
  state.claimRefAudit=stats;
@@ -4571,12 +4643,22 @@ function repEvidenceRowsForService(s,stmRepCID,stmRepHN){
    if(s.cid&&stmRepCID.has(String(rep)+'|'+s.cid))rows.push(...stmRepCID.get(String(rep)+'|'+s.cid));
    if(s.hn&&stmRepHN.has(String(rep)+'|'+s.hn))rows.push(...stmRepHN.get(String(rep)+'|'+s.hn));
  }
- let paid=uniqueStatementRows(rows).filter(x=>num(x.pp_paid)!==0);
- if(s.date&&paid.length){let same=paid.filter(x=>!x.date||x.date===s.date);if(same.length)paid=same}
+ rows=uniqueStatementRows(rows);
+
+ /* v6.2.7 Strict Service-Date Evidence Guard
+    REP+ผู้ป่วยอย่างเดียวไม่พอสำหรับสร้าง "REP · Evidence Gap" ข้ามวันบริการ
+    เพราะผู้ป่วยคนเดิมอาจมีหลาย claim/หลาย REP ในช่วงเวลาใกล้กัน
+    Cross-date ที่อนุญาตต้องถูกจัดสรรผ่าน Validated Cross-Date Basket ก่อนมาถึงจุดนี้
+ */
+ if(s.date){
+   rows=rows.filter(x=>!x.date||x.date===s.date)
+ }
+
+ let paid=rows.filter(x=>num(x.pp_paid)!==0);
  // Fully allocated Statement rows belong to the services that consumed them; they are not residual evidence for siblings.
  paid=paid.filter(x=>statementEvidenceAvailableForService(s,x));
  if(paid.length)return paid;
- return uniqueStatementRows(rows).filter(x=>num(x.pp_paid)===0||statementEvidenceAvailableForService(s,x))
+ return rows.filter(x=>num(x.pp_paid)===0||statementEvidenceAvailableForService(s,x))
 }
 function recomputeAll(){
  let idxSeq=new Map(),idxCD=new Map(),idxHD=new Map(),idxRepCID=new Map(),idxRepHN=new Map(),stmRepCID=new Map(),stmRepHN=new Map();state.autoAllocated=0;state.auxMaterialized=0;state.statementComponentMaterialized=0;state.validatedBasketMaterialized=0;state.validatedBasketAnalyses=0;state.crossDateRepAnalyses=0;state.sourceConflicts=[];
