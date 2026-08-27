@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.2.8 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.2.9 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -2007,7 +2007,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.2.8 · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.2.9 · Validated FP003_2x3 + Triferdine 375 Basket · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -3030,6 +3030,18 @@ const VALIDATED_STATEMENT_BASKET_RULES=[
    {rule:'ANC_LAB1_30012_600',qty:1},
    {rule:'ANC_PREG_TEST_30014_75',qty:1},
    {rule:'FLUORIDE_100',qty:1}
+  ]},
+ {id:'BASKET_FP_SINGLE3_TRIFERDINE_375',label:'FP003_2 ฮอร์โมนเดี่ยว 3 แผง + Triferdine = 375',
+  total:375,requireAllActual:true,crossDate:true,maxSpanDays:120,requireStatementDateAnchor:true,
+  // v6.2.9 ผู้ใช้ยืนยันจาก HIS/Statement:
+  // FP003_2 ยาเม็ดคุมกำเนิดชนิดฮอร์โมนเดี่ยว 80 x 3 = 240
+  // + 30016 Triferdine 135 = 375 บาท
+  // 30015 ตรวจหลังคลอด 150 เป็นบริการจริงใน visit เดียวกันได้ แต่ Statement 375 นี้ "ไม่ชดเชย 30015".
+  // Evidence-First: ต้องพบบริการจริง FP003_2 และ 30016 ก่อนเสมอ; PP(AI) 375 เป็น checksum เท่านั้น.
+  anchors:['FP_SINGLE_PILL_80','POSTNATAL_TRIFERDINE_30016_135'],
+  components:[
+   {rule:'FP_SINGLE_PILL_80',qty:3},
+   {rule:'POSTNATAL_TRIFERDINE_30016_135',qty:1}
   ]},
  {id:'BASKET_PNC_285',label:'PNC = 285 (30015 ตรวจหลังคลอด + 30016 Triferdine)',
   total:285,requireAllActual:true,crossDate:true,maxSpanDays:45,requireStatementDateAnchor:true,
