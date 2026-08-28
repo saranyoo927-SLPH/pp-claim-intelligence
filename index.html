@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PP Claim Intelligence v6.3.0 PDPA | โรงพยาบาลเสลภูมิ</title>
+<title>PP Claim Intelligence v6.3.1 PDPA | โรงพยาบาลเสลภูมิ</title>
 <meta name="description" content="ตรวจสอบบริการ PP เทียบผลการชดเชย สปสช. พร้อม Dashboard และตรวจสอบรายบุคคล" />
 <!-- Typography: Kanit (headings), Prompt (Thai UI), Inter (numbers/Latin).
      If offline, the CSS falls back to installed Thai/system sans-serif fonts. -->
@@ -1525,6 +1525,16 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 .hv-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}.hv-table th{background:#f8fafc;color:#475467;font-size:12px;padding:9px;border-bottom:1px solid #eaecf0;text-align:left}.hv-table td{padding:10px 9px;border-bottom:1px solid #f2f4f7;vertical-align:middle}.hv-table .num{text-align:right}.hv-select,.hv-amount,.hv-note{border:1px solid #d0d5dd;border-radius:9px;background:#fff;font:inherit;color:#344054}.hv-select{min-height:38px;padding:6px 8px}.hv-amount{width:110px;min-height:38px;padding:6px 9px;text-align:right;font-variant-numeric:tabular-nums}.hv-note{width:100%;min-height:72px;padding:9px 10px;resize:vertical;box-sizing:border-box}.hv-total{display:flex;align-items:center;justify-content:flex-end;gap:18px;padding:12px 4px 4px;flex-wrap:wrap}.hv-total .metric{text-align:right}.hv-total .metric .l{font-size:10px;color:#667085}.hv-total .metric .v{font-size:18px;font-weight:850;font-variant-numeric:tabular-nums}.hv-total .ok{color:#067647}.hv-total .bad{color:#b42318}.hv-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}.hv-actions .btn{min-height:42px}.hv-audit{margin-top:18px;border-top:1px solid #eaecf0;padding-top:14px}.hv-audit-item{display:grid;grid-template-columns:140px 1fr auto;gap:10px;padding:9px 0;border-bottom:1px solid #f2f4f7;font-size:11px;line-height:1.5}.hv-audit-time{color:#667085}.hv-audit-actor{color:#344054;font-weight:700}.hv-case-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#fff7ed;color:#b54708;border:1px solid #fedf89;font-size:10px;font-weight:800}.hv-verified-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#ecfdf3;color:#067647;border:1px solid #abefc6;font-size:10px;font-weight:800}.hv-ledger-row{padding:12px;border:1px solid #eaecf0;border-radius:12px;margin:8px 0;background:#fff}.hv-ledger-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hv-ledger-title{font-weight:850;color:#101828;font-size:13px}.hv-ledger-sub{font-size:11px;color:#667085;line-height:1.55;margin-top:4px}.hv-ledger-alloc{font-size:11px;color:#344054;margin-top:7px}.hv-pattern{margin-top:12px;padding:11px 12px;border-radius:12px;background:#f8fafc;border:1px solid #eaecf0;font-size:11px;line-height:1.55}.hv-warning{color:#b54708}.hv-success{color:#067647}.hv-pending{color:#667085}
 @media(max-width:760px){.hv-statement{grid-template-columns:1fr 1fr}.hv-audit-item{grid-template-columns:1fr}.hv-table{min-width:760px}}
 
+
+/* v6.3.1 Editable Verified Allocation */
+.hv-amount{min-width:92px;font-weight:750;text-align:right;background:#fff}
+.hv-amount:not(:disabled){border-color:#84adff;box-shadow:0 0 0 2px rgba(21,94,239,.06)}
+.hv-amount-hint{font-size:10px;line-height:1.35;color:#98a2b3;margin-top:4px;text-align:right;max-width:190px;margin-left:auto}
+.hv-amount-hint.ok{color:#067647;font-weight:700}.hv-amount-hint.warn{color:#b54708;font-weight:700}
+.hv-override-row{background:#fffcf5}.hv-override-row td:last-child{box-shadow:inset -3px 0 0 #f79009}
+.hv-total{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:760px){.hv-total{grid-template-columns:repeat(2,minmax(0,1fr))}.hv-amount-hint{max-width:130px}}
+
 </style>
 <script src="./config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -2015,7 +2025,7 @@ body{font-size:16px;line-height:1.65;-webkit-text-size-adjust:100%;text-renderin
 </details>
 
 </section>
-<div class="footer">PP Claim Intelligence v6.3.0 · Human Verification Workflow · Verified Allocation Ledger · Audit Trail · Human Validated Basket · Validated FP003_2x3 + Triferdine 375 Basket · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
+<div class="footer">PP Claim Intelligence v6.3.1 · Editable Verified Allocation · Human Verification Workflow · Verified Allocation Ledger · Audit Trail · Human Validated Basket · Validated FP003_2x3 + Triferdine 375 Basket · REP Evidence Plausibility Guard · Registry REP/SEQ Anchor Guard · Strict Service-Date Evidence · Statement-First Action Classification · Unified Action Item Guard · Executive Readability · Performance Guard · Evidence-First Allocation · Statement Exhaustion Index · ANC 1,435/1,535 Validated Baskets · PNC 285 / PNC+FP003_2x3 525 Validated Baskets · Validated Cross-Date Basket · Registry-Missing Recovery · TOP 5,510/5,585/5,910 · Pregnancy+Ferrofolic 155 · Validated Statement Basket · Composite & Quantity Guard · ANC 960 Composite Guard · PDPA Display Guard · Exact Statement Reconciliation Guard · Multi-REP Evidence Guard · Family Planning Evidence Guard · ANC/Postnatal Package Guard · Duplicate Guard & Claim Reference Audit · Automated Claim Reconciliation · Revenue Intelligence · Executive Intelligence · Selaphum Hospital</div>
 </div></main></div>
 <div id="detailModal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">ปิด</button><div id="modalContent"></div></div></div>
 <script id="prefill" type="application/json">{"sourceLabel":"ยังไม่ได้โหลดข้อมูล — ไปที่เมนู “นำเข้า/จัดการข้อมูล”","services":[],"stm":[],"inferredRates":{}}</script>
@@ -5117,6 +5127,12 @@ function applyHumanVerifiedAllocation(x,b){
    if(!sameStatementPatient(s,x)){errors.push('ผู้ป่วยไม่ตรง '+allocationServiceLabel(s));continue}
    if(num(s.paid)>.009){errors.push('บริการถูกจัดสรรก่อนแล้ว '+allocationServiceLabel(s));continue}
    if(amt<=0){errors.push('ยอดจัดสรรไม่ถูกต้อง');continue}
+   // v6.3.1: ถ้าเจ้าหน้าที่ยืนยันยอดที่เป็นจำนวนหน่วยของบริการ repeatableQty
+   // เช่น FP003_2 80 x 3 = 240 ให้ปรับ expected quantity ของ Case นี้ด้วย โดยไม่แก้ราคา PPFS69 กลาง.
+   let meta=humanVerifiedAllocationMeta(s,amt);
+   if(meta.changed&&meta.validQty&&meta.rule?.repeatableQty){
+     s._validatedQuantityExpected=amt;s._validatedQuantity=meta.qty;s._validatedQuantityRule=meta.ruleId;s._humanVerifiedQuantity=true
+   }
    allocs.push({service:s,amount:amt,label:allocationServiceLabel(s)});sum+=amt
  }
  sum=Math.round(sum*100)/100;
@@ -5150,19 +5166,35 @@ function applyHumanValidatedBasket(x,b){
  }
  return false
 }
+function humanVerifiedAllocationMeta(service,amount){
+ let expected=num(exceptionExpectedAmount(service)),ruleId=serviceDeterministicRuleId(service),rule=ruleId?aliasRuleById(ruleId):null,rate=num(rule?.rate),amt=num(amount),qty=null,validQty=false;
+ if(rule?.repeatableQty&&rate>0&&amt>0){let q=amt/rate,rq=Math.round(q),maxQty=num(rule.maxQty)||12;if(rq>=1&&rq<=maxQty&&Math.abs(q-rq)<.001){qty=rq;validQty=true}}
+ return {expected,ruleId,rule,rate,amount:amt,changed:Math.abs(amt-expected)>.009,qty,validQty}
+}
+function updateHumanAllocationRow(tr){
+ if(!tr)return;let st=tr.querySelector('.hv-select')?.value||'pending',input=tr.querySelector('.hv-amount'),hint=tr.querySelector('.hv-amount-hint');if(!input)return;
+ let service=humanAllocationServiceByKey(tr.dataset.serviceKey),meta=humanVerifiedAllocationMeta(service,input.value);
+ tr.classList.toggle('hv-override-row',st==='paid'&&meta.changed);
+ if(!hint)return;
+ if(st!=='paid'){hint.textContent='';hint.className='hv-amount-hint';return}
+ if(meta.changed&&meta.validQty){hint.textContent=`ยืนยันยอดใหม่: ${moneyFmt.format(meta.rate)} × ${meta.qty} = ${moneyFmt.format(meta.amount)}`;hint.className='hv-amount-hint ok'}
+ else if(meta.changed){hint.textContent=`ยอดจัดสรรต่างจากมูลค่าเดิม ${moneyFmt.format(meta.expected)} บาท — ต้องมีหมายเหตุ/หลักฐานยืนยัน`;hint.className='hv-amount-hint warn'}
+ else {hint.textContent='ใช้ยอดตามมูลค่าเดิม';hint.className='hv-amount-hint'}
+}
+function humanReviewAmountChanged(el){let tr=el.closest('tr');updateHumanAllocationRow(tr);updateHumanReviewTotals()}
 function humanReviewStatusChanged(el){
  let tr=el.closest('tr'),amount=tr?.querySelector('.hv-amount');if(!amount)return;
  if(el.value==='paid'&&!num(amount.value)){amount.value=amount.dataset.expected||'0'}
  if(el.value==='unpaid'){amount.value='0';amount.disabled=true}else amount.disabled=el.value!=='paid';
- updateHumanReviewTotals()
+ updateHumanAllocationRow(tr);updateHumanReviewTotals()
 }
 function updateHumanReviewTotals(){
  let panel=document.getElementById('humanReviewPanel');if(!panel)return;
- let target=num(panel.dataset.target),sum=0,pending=0,paidN=0;
- panel.querySelectorAll('tr[data-service-key]').forEach(tr=>{let st=tr.querySelector('.hv-select')?.value||'pending',amt=num(tr.querySelector('.hv-amount')?.value);if(st==='paid'){sum+=amt;paidN++}else if(st==='pending')pending++});
+ let target=num(panel.dataset.target),sum=0,pending=0,paidN=0,overrideN=0;
+ panel.querySelectorAll('tr[data-service-key]').forEach(tr=>{let st=tr.querySelector('.hv-select')?.value||'pending',amt=num(tr.querySelector('.hv-amount')?.value),service=humanAllocationServiceByKey(tr.dataset.serviceKey);if(st==='paid'){sum+=amt;paidN++;if(humanVerifiedAllocationMeta(service,amt).changed)overrideN++}else if(st==='pending')pending++;updateHumanAllocationRow(tr)});
  sum=Math.round(sum*100)/100;let diff=Math.round((target-sum)*100)/100;
- let s=document.getElementById('hvSelectedTotal'),d=document.getElementById('hvDifference'),p=document.getElementById('hvPendingCount'),btn=document.getElementById('hvConfirmBtn');
- if(s)s.textContent=moneyFmt.format(sum);if(d){d.textContent=moneyFmt.format(diff);d.className='v '+(Math.abs(diff)<.009?'ok':'bad')}if(p)p.textContent=intFmt.format(pending);
+ let s=document.getElementById('hvSelectedTotal'),d=document.getElementById('hvDifference'),p=document.getElementById('hvPendingCount'),o=document.getElementById('hvOverrideCount'),btn=document.getElementById('hvConfirmBtn');
+ if(s)s.textContent=moneyFmt.format(sum);if(d){d.textContent=moneyFmt.format(diff);d.className='v '+(Math.abs(diff)<.009?'ok':'bad')}if(p)p.textContent=intFmt.format(pending);if(o)o.textContent=intFmt.format(overrideN);
  if(btn)btn.disabled=!(paidN>0&&pending===0&&Math.abs(diff)<.009)
 }
 function humanAuditHTML(statementId){
@@ -5174,7 +5206,7 @@ function openAmbiguityReview(caseId){
  let x=statementForHumanCase(caseId);if(!x)return alert('ไม่พบ Statement สำหรับ Case นี้');
  let candidates=candidatesForHumanCase(caseId),existing=humanDecisionForStatement(x),allocMap=new Map((existing?.allocations||[]).map(a=>[a.serviceKey,a])),excluded=new Set(existing?.excludedServiceKeys||[]);
  let rows=candidates.map((s,i)=>{let sk=humanServiceKey(s),e=exceptionExpectedAmount(s),a=allocMap.get(sk),status=a?'paid':excluded.has(sk)?'unpaid':'pending',amount=a?num(a.amount):num(e);
-   return `<tr data-service-key="${esc(sk)}"><td>${i+1}</td><td><b>${esc(allocationServiceLabel(s))}</b><div class="small muted">${esc(s.item_detail||s.service_type||s.source_sheet||'')} · ${esc(s.date||'-')}</div><div class="small muted">REP ทะเบียน ${esc(serviceRegistryREP(s)||'-')} · SEQ ${esc(serviceRegistrySEQ(s)||'-')}</div></td><td class="num">${moneyFmt.format(e)}</td><td><select class="hv-select" onchange="humanReviewStatusChanged(this)"><option value="pending" ${status==='pending'?'selected':''}>รอตรวจ</option><option value="paid" ${status==='paid'?'selected':''}>ชดเชยรายการนี้</option><option value="unpaid" ${status==='unpaid'?'selected':''}>ไม่ได้ชดเชย</option></select></td><td class="num"><input class="hv-amount" data-expected="${e}" value="${status==='paid'?amount:e}" ${status==='paid'?'':'disabled'} oninput="updateHumanReviewTotals()"></td></tr>`
+   return `<tr data-service-key="${esc(sk)}"><td>${i+1}</td><td><b>${esc(allocationServiceLabel(s))}</b><div class="small muted">${esc(s.item_detail||s.service_type||s.source_sheet||'')} · ${esc(s.date||'-')}</div><div class="small muted">REP ทะเบียน ${esc(serviceRegistryREP(s)||'-')} · SEQ ${esc(serviceRegistrySEQ(s)||'-')}</div></td><td class="num">${moneyFmt.format(e)}</td><td><select class="hv-select" onchange="humanReviewStatusChanged(this)"><option value="pending" ${status==='pending'?'selected':''}>รอตรวจ</option><option value="paid" ${status==='paid'?'selected':''}>ชดเชยรายการนี้</option><option value="unpaid" ${status==='unpaid'?'selected':''}>ไม่ได้ชดเชย</option></select></td><td class="num"><input class="hv-amount" type="number" min="0" step="0.01" data-expected="${e}" value="${status==='paid'?amount:e}" ${status==='paid'?'':'disabled'} oninput="humanReviewAmountChanged(this)"><div class="hv-amount-hint"></div></td></tr>`
  }).join('');
  let audits=humanAuditHTML(caseId),decisionPattern=existing?.patternId?humanPatternStats(existing.patternId):{count:0};
  let promotable=existing?.components?.length&&existing.components.every(c=>c.rule)&&decisionPattern.count>=3&&canPromoteHumanBasket();
@@ -5182,11 +5214,11 @@ function openAmbiguityReview(caseId){
  document.getElementById('modalContent').innerHTML=`<div id="humanReviewPanel" data-case-id="${esc(caseId)}" data-target="${num(x.pp_paid)}">
    <h2>ตรวจสอบและยืนยันยอดกำกวม</h2>
    <div class="small muted">Human-in-the-loop · ระบบเสนอเฉพาะบริการที่มีหลักฐานเชื่อมโยง เจ้าหน้าที่เป็นผู้ยืนยันจาก HIS/เวชระเบียน</div>
-   <div class="hv-banner"><b>หลัก Evidence-first:</b> ยอด PP(AI) เป็นเพียง checksum หลังยืนยัน service identity แล้ว ระบบจะไม่เลือกบริการจากยอดเงินแทนเจ้าหน้าที่</div>
+   <div class="hv-banner"><b>หลัก Evidence-first:</b> ยืนยัน service identity จาก HIS/e-Claim ก่อน จากนั้นเจ้าหน้าที่สามารถแก้ไข <b>ยอดจัดสรร</b> ให้ตรงยอดที่ สปสช.ชดเชยจริงได้ เช่น 80 บาท × 3 แผง = 240 บาท โดยการแก้ไขนี้มีผลเฉพาะ Case ที่ยืนยัน ไม่แก้ตารางราคา PPFS69 กลาง</div>
    <div class="hv-statement"><div class="hv-stat"><div class="l">REP</div><div class="v">${esc(x.rep||'-')}</div></div><div class="hv-stat"><div class="l">SEQ</div><div class="v">${esc(x.seq||'-')}</div></div><div class="hv-stat"><div class="l">วันที่ Statement</div><div class="v">${esc(x.date||'-')}</div></div><div class="hv-stat"><div class="l">PP(AI)</div><div class="v money">${moneyFmt.format(num(x.pp_paid))} บาท</div></div></div>
    <div class="small muted" style="margin-bottom:8px">ผู้รับบริการ: ${esc(privacyPatientName(x.name||candidates[0]?.name||''))} · HN ${esc(x.hn||candidates[0]?.hn||'-')} · CID ${esc(privacyCID(x.cid||candidates[0]?.cid||''))}</div>
-   <div class="table-wrap"><table class="hv-table"><thead><tr><th>#</th><th>บริการจริง / Evidence</th><th class="num">มูลค่าตามสิทธิ</th><th>ผลตรวจของเจ้าหน้าที่</th><th class="num">ยอดจัดสรร</th></tr></thead><tbody>${rows||'<tr><td colspan="5">ไม่พบบริการ candidate</td></tr>'}</tbody></table></div>
-   <div class="hv-total"><div class="metric"><div class="l">ยอดที่เลือก</div><div class="v" id="hvSelectedTotal">0.00</div></div><div class="metric"><div class="l">PP(AI)</div><div class="v">${moneyFmt.format(num(x.pp_paid))}</div></div><div class="metric"><div class="l">ส่วนต่าง</div><div class="v bad" id="hvDifference">${moneyFmt.format(num(x.pp_paid))}</div></div><div class="metric"><div class="l">ยังไม่ตัดสิน</div><div class="v" id="hvPendingCount">${candidates.length}</div></div></div>
+   <div class="table-wrap"><table class="hv-table"><thead><tr><th>#</th><th>บริการจริง / Evidence</th><th class="num">มูลค่าตามสิทธิ</th><th>ผลตรวจของเจ้าหน้าที่</th><th class="num">ยอดจัดสรร<br><span class="small muted">แก้ไขได้หลังเลือก “ชดเชยรายการนี้”</span></th></tr></thead><tbody>${rows||'<tr><td colspan="5">ไม่พบบริการ candidate</td></tr>'}</tbody></table></div>
+   <div class="hv-total"><div class="metric"><div class="l">ยอดที่เลือก</div><div class="v" id="hvSelectedTotal">0.00</div></div><div class="metric"><div class="l">PP(AI)</div><div class="v">${moneyFmt.format(num(x.pp_paid))}</div></div><div class="metric"><div class="l">ส่วนต่าง</div><div class="v bad" id="hvDifference">${moneyFmt.format(num(x.pp_paid))}</div></div><div class="metric"><div class="l">ยังไม่ตัดสิน</div><div class="v" id="hvPendingCount">${candidates.length}</div></div><div class="metric"><div class="l">แก้ยอดจัดสรร</div><div class="v" id="hvOverrideCount">0</div></div></div>
    <label class="small" style="display:block;margin-top:12px;font-weight:800">หมายเหตุ/หลักฐานที่ตรวจ</label><textarea class="hv-note" id="hvReviewNote" placeholder="เช่น ตรวจหน้าจอ e-Claim/HIS/เวชระเบียนแล้ว ยืนยันว่าจ่ายเฉพาะ...">${esc(existing?.note||'')}</textarea>
    <div class="hv-actions"><button class="btn" onclick="closeModal()">ปิดโดยยังไม่ยืนยัน</button>${existing?`<button class="btn danger" onclick="revokeHumanAllocation('${esc(caseId)}')">ถอนการยืนยัน</button>`:''}<button class="btn primary" id="hvConfirmBtn" onclick="confirmHumanAllocation('${esc(caseId)}')">ยืนยันการจัดสรรและคำนวณใหม่</button></div>
    ${existing?`<div class="hv-pattern"><span class="hv-verified-pill">✓ Verified Allocation</span> ยืนยันโดย ${esc(existing.verifiedBy||'-')} · ${esc(new Date(existing.verifiedAt).toLocaleString('th-TH'))}<br>รูปแบบนี้ได้รับการยืนยันแล้ว <b>${decisionPattern.count}</b> เคส ${promoted?'<span class="hv-verified-pill">เป็น Validated Basket แล้ว</span>':promotable?`<button class="btn" style="margin-left:8px" onclick="promoteHumanPattern('${esc(existing.patternId)}')">Promote to Validated Basket</button>`:'<span class="small muted">(ต้อง ≥ 3 เคสและ Admin จึง Promote ได้)</span>'}</div>`:''}
@@ -5197,14 +5229,16 @@ function openAmbiguityReview(caseId){
 function confirmHumanAllocation(caseId){
  if(!canHumanVerifyAllocations())return alert('บัญชีนี้ไม่มีสิทธิ์ยืนยันการจัดสรร');
  let x=statementForHumanCase(caseId),panel=document.getElementById('humanReviewPanel');if(!x||!panel)return;
- let allocations=[],excluded=[],pending=0,sum=0;
- panel.querySelectorAll('tr[data-service-key]').forEach(tr=>{let sk=tr.dataset.serviceKey,st=tr.querySelector('.hv-select')?.value||'pending',amt=num(tr.querySelector('.hv-amount')?.value);if(st==='paid'){allocations.push({serviceKey:sk,amount:amt});sum+=amt}else if(st==='unpaid')excluded.push(sk);else pending++});
+ let allocations=[],excluded=[],pending=0,sum=0,manualOverrides=[];
+ panel.querySelectorAll('tr[data-service-key]').forEach(tr=>{let sk=tr.dataset.serviceKey,st=tr.querySelector('.hv-select')?.value||'pending',amt=num(tr.querySelector('.hv-amount')?.value),service=humanAllocationServiceByKey(sk),meta=humanVerifiedAllocationMeta(service,amt);if(st==='paid'){allocations.push({serviceKey:sk,amount:amt,originalExpected:meta.expected,unitRate:meta.rate||0,verifiedQty:meta.validQty?meta.qty:null,amountOverridden:meta.changed});if(meta.changed)manualOverrides.push({serviceKey:sk,label:allocationServiceLabel(service),...meta});sum+=amt}else if(st==='unpaid')excluded.push(sk);else pending++});
  sum=Math.round(sum*100)/100;if(pending>0)return alert('กรุณาระบุผลตรวจของทุกบริการว่า ชดเชย / ไม่ได้ชดเชย');if(!allocations.length)return alert('ต้องมีอย่างน้อย 1 บริการที่ได้รับชดเชย');if(Math.abs(sum-num(x.pp_paid))>.009)return alert(`ยอดที่เลือก ${moneyFmt.format(sum)} ไม่เท่ากับ PP(AI) ${moneyFmt.format(num(x.pp_paid))}`);
+ let note=document.getElementById('hvReviewNote')?.value?.trim()||'';
+ let unexplainedOverride=manualOverrides.some(m=>!m.validQty);if(unexplainedOverride&&!note)return alert('มีการแก้ยอดจัดสรรที่ไม่ใช่จำนวนหน่วยตามอัตรามาตรฐาน กรุณาระบุหมายเหตุ/หลักฐานที่ตรวจสอบก่อนยืนยัน');
  let actor=humanActor(),components=humanDecisionComponents(allocations),patternId=humanPatternId(x.pp_paid,components),old=state.humanAllocationLedger?.[caseId]||null;
- let decision={id:old?.id||'HVA-'+Date.now(),statementId:caseId,status:'verified',rep:normREP(x.rep||''),seq:normText(x.seq||'').replace(/\.0$/,''),date:x.date||'',ppPaid:num(x.pp_paid),allocations,excludedServiceKeys:excluded,components,patternId,note:document.getElementById('hvReviewNote')?.value||'',verifiedBy:actor.email,verifiedRole:actor.role,verifiedAt:new Date().toISOString(),version:'6.3.0'};
+ let decision={id:old?.id||'HVA-'+Date.now(),statementId:caseId,status:'verified',rep:normREP(x.rep||''),seq:normText(x.seq||'').replace(/\.0$/,''),date:x.date||'',ppPaid:num(x.pp_paid),allocations,excludedServiceKeys:excluded,components,patternId,note,manualOverrides:manualOverrides.map(m=>({serviceKey:m.serviceKey,label:m.label,originalExpected:m.expected,verifiedAmount:m.amount,unitRate:m.rate||0,verifiedQty:m.validQty?m.qty:null,quantityValidated:!!m.validQty})),verifiedBy:actor.email,verifiedRole:actor.role,verifiedAt:new Date().toISOString(),version:'6.3.1'};
  state.humanAllocationLedger=state.humanAllocationLedger||{};state.humanAllocationLedger[caseId]=decision;persistHumanLedger();
  let summary=allocations.map(a=>{let s=humanAllocationServiceByKey(a.serviceKey);return `${allocationServiceLabel(s)} ${moneyFmt.format(a.amount)}`}).join(' + ');
- appendHumanAudit('verify',caseId,{summary:`PP(AI) ${moneyFmt.format(x.pp_paid)} = ${summary}`,decisionId:decision.id});
+ appendHumanAudit('verify',caseId,{summary:`PP(AI) ${moneyFmt.format(x.pp_paid)} = ${summary}${manualOverrides.length?` · แก้ยอดจัดสรร ${manualOverrides.map(m=>`${m.label} ${moneyFmt.format(m.expected)}→${moneyFmt.format(m.amount)}${m.validQty?` (${moneyFmt.format(m.rate)}×${m.qty})`:''}`).join(' | ')}`:''}`,decisionId:decision.id});
  closeModal();recomputeAll()
 }
 function revokeHumanAllocation(caseId){
